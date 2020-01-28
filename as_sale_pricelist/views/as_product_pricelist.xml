@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<record id="as_product_pricelist_item_form_view" model="ir.ui.view">
+		<field name="name">as.product.pricelist.item.form.inherit.view</field>
+		<field name="model">product.pricelist.item</field>
+		<field name="inherit_id" ref="product.product_pricelist_item_form_view"/>
+		<field name="arch" type="xml">
+			<xpath expr="//sheet//group[@name='pricelist_rule_computation']" position="after">
+				
+				<group string="Calculos Adicionales" col="6" groups="product.group_sale_pricelist">
+					<label for="as_utilidad" />
+					<div >
+						<field name="as_utilidad"
+								class="oe_inline"
+						/>
+								%%
+					</div>
+				</group>
+				
+			</xpath>
+		</field>
+	</record>
+	
+	
+</odoo>

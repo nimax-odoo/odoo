@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <data>
+
+    <record id="product_last_prices_form_view" model="ir.ui.view">
+
+      <field name="model">product.product</field>
+      <field name="inherit_id" ref="product.product_normal_form_view"/>
+      <field name="arch" type="xml">
+        <xpath expr="//page[@name='general_information']" position="after">
+          <page string="Last Price">
+
+            <table style="width:100%">
+              <tr>
+                <th>Last Purchase</th>
+                <th/>
+                <th>Last Sale</th>
+                <th/>
+              </tr>
+              <tr>
+                <td>Vendor</td>
+                <td><field name="last_supplier_id" class="oe_inline"/></td>
+                <td>Cutomer</td>
+                <td><field name="last_customer_id" class="oe_inline"/></td>
+
+              </tr>
+              <tr>
+                <td>Purchase Price</td>
+                <td><field name="last_purchase_price" class="oe_inline" attrs="{'invisible':[('last_purchase_price','==',0.0)]}"/></td>
+                <td>Sale Price</td>
+                <td><field name="last_sale_price" class="oe_inline" attrs="{'invisible':[('last_sale_price','==',0.0)]}"/></td>
+              </tr>
+              <tr>
+                <td>Purchase Date</td>
+                <td><field name="last_purchase_date" class="oe_inline"/></td>
+                <td>Sale Date</td>
+                <td><field name="last_sale_date" class="oe_inline"/></td>
+              </tr>
+            </table>
+          </page>
+
+        </xpath>
+
+      </field>
+
+    </record>
+
+    <record id="as_product_template_only_form_view" model="ir.ui.view">
+
+      <field name="model">product.template</field>
+      <field name="inherit_id" ref="product.product_template_only_form_view"/>
+      <field name="arch" type="xml">
+        <xpath expr="//page[@name='general_information']" position="after">
+          <page string="Last Price">
+
+            <table style="width:100%">
+              <tr>
+                <th>Last Purchase</th>
+                <th/>
+                <th>Last Sale</th>
+                <th/>
+              </tr>
+              <tr>
+                <td>Vendor</td>
+                <td><field name="as_last_supplier_id" class="oe_inline"/></td>
+                <td>Cutomer</td>
+                <td><field name="as_last_customer_id" class="oe_inline"/></td>
+
+              </tr>
+              <tr>
+                <td>Purchase Price</td>
+                <td><field name="as_last_purchase_price" class="oe_inline" attrs="{'invisible':[('as_last_purchase_price','==',0.0)]}"/></td>
+                <td>Sale Price</td>
+                <td><field name="as_last_sale_price" class="oe_inline" attrs="{'invisible':[('as_last_sale_price','==',0.0)]}"/></td>
+              </tr>
+              <tr>
+                <td>Purchase Date</td>
+                <td><field name="as_last_purchase_date" class="oe_inline"/></td>
+                <td>Sale Date</td>
+                <td><field name="as_last_sale_date" class="oe_inline"/></td>
+              </tr>
+            </table>
+          </page>
+
+        </xpath>
+
+      </field>
+
+    </record>
+
+  </data>
+</odoo>
