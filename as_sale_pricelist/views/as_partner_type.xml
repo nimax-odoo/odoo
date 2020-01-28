@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="as_partner_type_tree" model="ir.ui.view">
+            <field name="name">Tipo de Cliente</field>
+            <field name="model">as.partner.type</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="as_partner_type_form" model="ir.ui.view">
+            <field name="name">Tipo de Cliente</field>
+            <field name="model">as.partner.type</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        Tipo de Cliente
+                    </header>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="as_partner_type_action" model="ir.actions.act_window">
+            <field name="name">Tipo de Cliente</field>
+            <field name="res_model">as.partner.type</field>
+            <field name="view_mode">tree,form</field>
+        </record> 
+
+        <menuitem id="as_partner_type_action_menu" name="Tipo de Cliente"
+            parent="contacts.res_partner_menu_config" sequence="30"
+            action="as_partner_type_action" groups="base.group_user"
+        />
+
+    </data>
+</odoo>

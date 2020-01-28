@@ -3,3 +3,6 @@
 
 from . import sale_order_inherit
 from . import as_pricelist
+from . import as_partner_type
+from . import as_partner
+from . import as_product_template
