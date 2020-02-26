@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) Softhealer Technologies.
 
 from odoo import fields,models,api
 from datetime import date
@@ -11,7 +10,7 @@ class SaleOrderPricelistWizard(models.Model):
     _name = 'sale.order.pricelist.wizard'
     _description = 'Pricelist Wizard'
     
-    shs_pricelist_id = fields.Many2one('product.pricelist',string="Pricelist")
+    sh_pricelist_id = fields.Many2one('product.pricelist',string="Pricelist")
     pricelist_line = fields.One2many('sale.order.pricelist.wizard.line','pricelist_id',string='PricelistLine Id')
     
     @api.model
@@ -81,5 +80,6 @@ class SaleOrderPricelistWizardLine(models.Model):
             self.line_id.write({
                 'price_unit':self.sh_unit_price,
                 'margin2':self.sh_margin,
+                'as_pricelist_id':self.sh_pricelist_id
                                 })
         

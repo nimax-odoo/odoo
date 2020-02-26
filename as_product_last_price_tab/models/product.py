@@ -24,7 +24,7 @@
 #   Pedro M. Baeza <pedro.baeza@serviciosbaeza.com>
 #   Ana Juaristi <anajuaristi@avanzosc.es>
 ##############################################################################
-from openerp import api, fields, models
+from odoo import api, fields, models
 
 
 class ProductProductAmore(models.Model):
