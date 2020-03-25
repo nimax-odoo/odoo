@@ -1,0 +1,112 @@
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="tf_history_promo_tree_view">
+            <field name="name">tf.history.promo tree</field>
+            <field name="model">tf.history.promo</field>
+            <field name="arch" type="xml">
+                <tree string="History Promo">
+                    <field name="promotion_id" optional="show"/>
+                    <field name="create_date" optional="show"/>
+                    <field name="vendor_id" optional="show"/>
+                    <field name="product_id" optional="show"/>
+                    <field name="customer_id" optional="show"/>
+                    <field name="customer_type" optional="show"/>
+                    <field name="category_id" optional="show"/>
+                    <field name="qty" optional="show"/>
+                    <field name="recalculated_price_unit" optional="hide"/>
+                    <field name="recalculated_price_unit_mxp" optional="hide"/>
+                    <field name="recalculated_cost_nimax_usd" optional="hide"/>
+                    <field name="recalculated_cost_nimax_mxp" optional="hide"/>
+                    <field name="margin_mxp" optional="hide"/>
+                    <field name="margin_usd" optional="hide"/>
+                    <field name="total_usd" optional="hide"/>
+                    <field name="total_mxp" optional="hide"/>
+                    <field name="last_applied_promo" optional="hide"/>
+                    <field name="salesman_id" optional="hide"/>
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="tf_history_promo_form_view">
+            <field name="name">itf.history.promo Form</field>
+            <field name="model">tf.history.promo</field>
+            <field name="arch" type="xml">
+                <form string="History Promo">
+                    <sheet>
+                        <group>
+                            <group id="header_left_group">
+                                <field name="promotion_id"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="create_date"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="vendor_id"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="product_id"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="customer_id"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="customer_type"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="category_id"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="qty"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="recalculated_price_unit"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="recalculated_price_unit_mxp"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="recalculated_cost_nimax_usd"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="recalculated_cost_nimax_mxp"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="margin_mxp"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="margin_usd"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="total_usd"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="total_mxp"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="last_applied_promo"/>
+                            </group>
+                            <group id="header_left_group">
+                                <field name="salesman_id"/>
+                            </group>
+                        </group>
+                    </sheet>
+
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="tf_history_promo_action_window">
+            <field name="name">History Promo</field>
+            <field name="res_model">tf.history.promo</field>
+            <field name="view_mode">tree,form</field>
+
+        </record>
+
+        <menuitem name="History Promo" id="menu_tf_history_promo_main"/>
+
+        <menuitem name="History Promo" id="menu_tf_history_promo" action="tf_history_promo_action_window"
+                  parent="menu_tf_history_promo_main"/>
+
+    </data>
+</odoo>
