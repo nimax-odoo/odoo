@@ -18,7 +18,10 @@ Lista de precios por linea de producto en ventas.
         'product',
         'sale_margin',
         'as_product_last_price_tab',
-        "purchase"
+        "purchase",
+        "sale_coupon",
+        "crm",
+        "stock"
         ],
     "application" : True,
     "data" : [
@@ -27,8 +30,14 @@ Lista de precios por linea de producto en ventas.
               'views/as_product_pricelist.xml',
               'views/as_partner_type.xml',
               'views/as_partner.xml',
+              'views/as_marca.xml',
+              'views/as_sale_coupon_program.xml',
               'views/as_product_template.xml',
+              'views/tf_as_partner.xml',
+              'views/history_promo.xml',
+              'views/product_pricelist.xml',
               'wizard/sale_order_pricelist_update_wizard.xml',
+              'wizard/as_promotion.xml',
             ],            
     "images": ["static/description/background.png",],              
     "auto_install":False,

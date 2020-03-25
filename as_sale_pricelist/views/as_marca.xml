@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="as_marca_tree" model="ir.ui.view">
+            <field name="name">Marca</field>
+            <field name="model">as.marca</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="as_marca_form" model="ir.ui.view">
+            <field name="name">Marca</field>
+            <field name="model">as.marca</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        Marca
+                    </header>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="as_marca_action" model="ir.actions.act_window">
+            <field name="name">Marca</field>
+            <field name="res_model">as.marca</field>
+            <field name="view_mode">tree,form</field>
+        </record> 
+
+        <menuitem id="as_marca_action_menu" name="Marcas"
+            parent="contacts.res_partner_menu_config" sequence="30"
+            action="as_marca_action" groups="base.group_user"
+        />
+
+    </data>
+</odoo>

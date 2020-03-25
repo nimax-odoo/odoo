@@ -6,3 +6,8 @@ from . import as_pricelist
 from . import as_partner_type
 from . import as_partner
 from . import as_product_template
+from . import as_sale_coupon_program
+from . import as_marca
+from . import tf_as_partner
+from . import historic_promo
+from . import product_pricelist

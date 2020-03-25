@@ -25,6 +25,12 @@
 									<field name="as_descuento"/>
 
 									<field name="line_id" invisible="1"/>
+
+									<field name="price_based_usd" optional="hide"/>
+									<field name="nimax_price_usd" optional="hide"/>
+									<field name="cost_nimax_usd" optional="hide"/>
+									<field name="COST_NIMAX_MXP" optional="hide"/>
+
 									<button name="update_sale_line_unit_price" string="Aplicar" type="object"/>
 								</tree>	
 							</field>

@@ -10,7 +10,7 @@ class tfResPartner(models.Model):
     vendor_id = fields.Many2one('res.partner', 'Vendor')
     product_id = fields.Many2one('product.product', 'Product')
     customer_id = fields.Many2one('res.partner', 'Customer')
-    customer_type = fields.Many2one('as_partner_type', 'Type Customer')
+    customer_type = fields.Many2one('as.partner.type', 'Type Customer')
     category_id = fields.Many2one('product.category', 'Product Category')
     qty = fields.Float('Qty')
     recalculated_price_unit = fields.Float('Recalculated Price Unit')

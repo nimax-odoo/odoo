@@ -8,6 +8,8 @@
             <field name="arch" type="xml">
                 <tree>
                     <field name="name"/>
+                    <field name="as_marca"/>
+                    <field name="as_proveedor" domain = "[('supplier', '=', 'True')] "/>
                 </tree>
             </field>
         </record>
@@ -23,6 +25,8 @@
                     <sheet>
                         <group>
                             <field name="name"/>
+                            <field name="as_marca"/>
+                            <field name="as_proveedor"/>
                         </group>
                     </sheet>
                 </form>
