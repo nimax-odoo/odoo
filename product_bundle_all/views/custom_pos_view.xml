@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    
+		<!-- Add custom js for product_bundle_all -->	    
+        <template id="assets_for_product_bundle_all" inherit_id="point_of_sale.assets">
+            <xpath expr="." position="inside">
+                <script type="text/javascript" src="/product_bundle_all/static/src/js/pos_product_bundle_pack.js"/>
+            </xpath>
+        </template>
+        
+    </data>
+</odoo>

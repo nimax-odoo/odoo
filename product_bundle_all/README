@@ -1,0 +1,5 @@
+
+Version 13.0.0.1 : (17/01/20)
+		- Solve issue of onchange method in sale.order.line
+
+=> 13.0.0.2 : Improved demanded apps link in index file.
