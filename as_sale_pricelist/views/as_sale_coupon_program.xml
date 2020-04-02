@@ -9,7 +9,9 @@
             <xpath expr="//field[@name='program_type']" position="after">
                 <field name="as_price_list" />
                 <field name="as_type" />
-
+                <field name="PRICE_UNIT_USD"/>
+                <field name="COST_NIMAX_USD"/>
+                <field name="DISCOUNT_AMOUNT_USD"/>
             </xpath>
         </field>
     </record>

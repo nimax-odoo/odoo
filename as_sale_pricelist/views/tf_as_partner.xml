@@ -63,10 +63,10 @@
 
         </record>
 
-        <menuitem name="Vendor Parameter" id="menu_tf_res_partner_main"/>
+        <!-- <menuitem name="Vendor Parameter" id="menu_tf_res_partner_main"/> -->
 
-        <menuitem name="Vendor Parameter" id="menu_tf_res_partner" action="tf_res_partner_action_window"
-                  parent="menu_tf_res_partner_main"/>
+        <menuitem name="Parametros de Proveedor" id="menu_tf_res_partner" action="tf_res_partner_action_window"
+                  parent="sale.product_menu_catalog"/>
 
     </data>
 </odoo>

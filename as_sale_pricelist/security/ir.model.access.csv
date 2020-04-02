@@ -6,3 +6,4 @@ access_sale_order_promo_wizard,access_sale_order_promo_wizard,model_as_sale_orde
 access_sale_order_promo_wizard_line,access_sale_order_promo_wizard_line,model_as_sale_order_promo_wizard_line,,1,1,1,1
 access_tf.res.partner,access_tf.res.partner,model_tf_res_partner,,1,1,1,1
 access.tf.history.promo,access.tf.history.promo,model_tf_history_promo,,1,1,1,1
+access.tf.gift.coupon.program,access.tf.gift.coupon.program,model_tf_gift_coupon_program,,1,1,1,1

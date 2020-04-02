@@ -11,3 +11,4 @@ from . import as_marca
 from . import tf_as_partner
 from . import historic_promo
 from . import product_pricelist
+from . import tf_promotions_gift

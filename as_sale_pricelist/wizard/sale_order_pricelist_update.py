@@ -36,23 +36,22 @@ class SaleOrderPricelistWizard(models.Model):
                             price_unit = so_line_obj.product_id.list_price *(1-descuento/100)
                             margin2 = price_unit * (pricelist.item_ids.as_utilidad / 100)
 
-                        tf_partner_id = self.env['tf.res.partner'].search([('partner_id', '=', so_line_obj.order_id.partner_id.id),
+                        tf_partner_id = self.env['tf.res.partner'].search([('partner_type', '=', so_line_obj.order_id.partner_id.as_partner_type.id),
                                                            ('category_id', '=', so_line_obj.product_id.categ_id.id)],
                                                           limit=1)
-                        pricelist_id = so_line_obj.order_id.pricelist_id
-                        price_based_usd = (so_line_obj.product_id.standard_price - (so_line_obj.product_id.standard_price * tf_partner_id.partner_discount))*tf_partner_id.cost_deal_import
-                        cost_nimax_usd = ((so_line_obj.product_id.standard_price - (so_line_obj.product_id.standard_price*tf_partner_id.purchase_discount))-(so_line_obj.product_id.standard_price*tf_partner_id.fulfillment_rebate))*tf_partner_id.cost_deal_import*so_line_obj.product_id.product_tmpl_id.tf_import_tax
+                        price_based_usd = (so_line_obj.product_id.list_price - (so_line_obj.product_id.list_price * tf_partner_id.partner_discount/100))*tf_partner_id.cost_deal_import/100
+                        cost_nimax_usd = ((so_line_obj.product_id.list_price - (so_line_obj.product_id.list_price*tf_partner_id.purchase_discount/100))-(so_line_obj.product_id.list_price*tf_partner_id.fulfillment_rebate/100))*(tf_partner_id.cost_deal_import/100)*(so_line_obj.product_id.product_tmpl_id.tf_import_tax/100)
                         wz_line_id = self.env['sale.order.pricelist.wizard.line'].create({'sh_pricelist_id' :pricelist.id,
                                                                                     'sh_unit_price':price_unit,
                                                                                     'sh_unit_measure':so_line_obj.product_uom.id,
-                                                                                    'sh_unit_cost':so_line_obj.product_id.standard_price,
+                                                                                    'sh_unit_cost':so_line_obj.product_id.list_price,
                                                                                     'sh_margin':margin2,
                                                                                     'sh_margin_per':margin_per,
                                                                                     'line_id': so_line,
                                                                                     'as_precio_proveedor':so_line_obj.product_id.as_last_purchase_price,
                                                                                     'as_descuento':descuento,
                                                                                     'price_based_usd': price_based_usd,
-                                                                                    'nimax_price_usd': (price_based_usd)/(1-pricelist_id.expected_earning),
+                                                                                    'nimax_price_usd': (price_based_usd)/(1-pricelist.expected_earning/100),
                                                                                     'cost_nimax_usd': cost_nimax_usd,
                                                                                     })
                         
@@ -86,25 +85,37 @@ class SaleOrderPricelistWizardLine(models.Model):
     # as_product_id = fields.Many2one('product.product', string='Product ID',  required=True, ondelete='cascade', index=True, copy=False)      
 
     price_based_usd = fields.Float('PRICE BASE USD')
-    nimax_price_usd = fields.Float('NIMAX PRICE USD')
-    cost_nimax_usd = fields.Float('COST NIMAX USD')
+    nimax_price_usd = fields.Float('Precio NIMAX USD')
+    cost_nimax_usd = fields.Float('Costo NIMAX USD')
 
     COST_NIMAX_MXP = fields.Float('COST NIMAX MXP')
 
     def update_sale_line_unit_price(self):
         if self.line_id:
+
+            price_unit = self.nimax_price_usd
+            RECALCULATED_PRICE_UNIT = price_unit
+            NIMAX_PRICE_MXP = RECALCULATED_PRICE_UNIT*self.env.user.company_id.currency_id.rate/100
+            COST_NIMAX_USD = self.cost_nimax_usd
+            COST_NIMAX_MXP = self.COST_NIMAX_MXP
+            MARGIN_MXP = (NIMAX_PRICE_MXP*self.line_id.product_uom_qty)-(COST_NIMAX_MXP*self.line_id.product_uom_qty)
+            MARGIN_USD = (RECALCULATED_PRICE_UNIT*self.line_id.product_uom_qty)-(COST_NIMAX_USD*self.line_id.product_uom_qty)
+            TOTAL_USD = RECALCULATED_PRICE_UNIT*self.line_id.product_uom_qty
+            TOTAL_MXP = NIMAX_PRICE_MXP * self.line_id.product_uom_qty
+
+
             self.line_id.write({
-                'price_unit':self.sh_unit_price,
+                'price_unit':price_unit,
                 'margin2':self.sh_margin,
                 'as_pricelist_id':self.sh_pricelist_id,
-                'RECALCULATED_PRICE_UNIT': self.sh_unit_price,
-                'NIMAX_PRICE_MXP': self.sh_unit_price*self.env.user.company_id.currency_id.rate,
-                'COST_NIMAX_USD': self.cost_nimax_usd,
-                'COST_NIMAX_MXP': self.COST_NIMAX_MXP,
-                'MARGIN_MXP': ((self.sh_unit_price*self.env.user.company_id.currency_id.rate)*(self.line_id.product_uom_qty))-(self.COST_NIMAX_MXP*self.line_id.product_uom_qty),
-                'MARGIN_USD': (self.sh_unit_price*self.line_id.product_uom_qty)-(self.cost_nimax_usd*self.line_id.product_uom_qty),
-                'TOTAL_USD': self.sh_unit_price*self.line_id.product_uom_qty,
-                'TOTAL_MXP': self.sh_unit_price*self.env.user.company_id.currency_id.rate*self.line_id.product_uom_qty,
+                'RECALCULATED_PRICE_UNIT': RECALCULATED_PRICE_UNIT,
+                'NIMAX_PRICE_MXP': NIMAX_PRICE_MXP,
+                'COST_NIMAX_USD': COST_NIMAX_USD,
+                'COST_NIMAX_MXP': COST_NIMAX_MXP,
+                'MARGIN_MXP': MARGIN_MXP,
+                'MARGIN_USD': MARGIN_USD,
+                'TOTAL_USD': TOTAL_USD,
+                'TOTAL_MXP': TOTAL_MXP,
                                 })
         
 
@@ -127,3 +138,13 @@ class SaleOrderPricelistWizardLine(models.Model):
                 # last_applied_promo=,
                 salesman_id=self.line_id.order_id.user_id.id,
             ))
+
+
+
+
+
+
+
+
+
+

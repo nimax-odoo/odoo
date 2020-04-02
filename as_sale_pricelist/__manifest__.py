@@ -38,6 +38,7 @@ Lista de precios por linea de producto en ventas.
               'views/product_pricelist.xml',
               'wizard/sale_order_pricelist_update_wizard.xml',
               'wizard/as_promotion.xml',
+              'views/tf_promotions_gift.xml',
             ],            
     "images": ["static/description/background.png",],              
     "auto_install":False,

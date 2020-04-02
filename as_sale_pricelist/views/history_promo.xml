@@ -103,10 +103,10 @@
 
         </record>
 
-        <menuitem name="History Promo" id="menu_tf_history_promo_main"/>
+        <!-- <menuitem name="History Promo" id="menu_tf_history_promo_main"/> -->
 
-        <menuitem name="History Promo" id="menu_tf_history_promo" action="tf_history_promo_action_window"
-                  parent="menu_tf_history_promo_main"/>
+        <menuitem name="Historico de Promociones" id="menu_tf_history_promo" action="tf_history_promo_action_window"
+                  parent="sale.product_menu_catalog"/>
 
     </data>
 </odoo>

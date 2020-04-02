@@ -19,6 +19,7 @@ class SaleOrderLine(models.Model):
     TOTAL_MXP = fields.Float('TOTAL MXP')
 
     coupon_ids = fields.Many2many('sale.coupon.program', string='Coupons')
+    RECALCULATED_COST_NIMAX_USD = fields.Float('RECALCULATED COST NIMAX USD')
         
     # apply pricelist
     def pricelist_apply(self):
@@ -39,26 +40,6 @@ class SaleOrderLine(models.Model):
                 'type': 'ir.actions.act_window',
                 'target': 'new',
                 'context': {'promo_apply_dis_per': 'promo_apply_dis_per'},
-            }
-
-    def product_promo_apply_dis_value(self):
-        return {
-                'view_type': 'form',
-                'view_mode': 'form',
-                'res_model': 'as.sale.order.promo.wizard',
-                'type': 'ir.actions.act_window',
-                'target': 'new',
-                'context': {'product_promo_apply_dis_value':'product_promo_apply_dis_value'},
-            }
-
-    def prduct_promo_apply_dis_per(self):
-        return {
-                'view_type': 'form',
-                'view_mode': 'form',
-                'res_model': 'as.sale.order.promo.wizard',
-                'type': 'ir.actions.act_window',
-                'target': 'new',
-                'context': {'prduct_promo_apply_dis_per':'prduct_promo_apply_dis_per'},
             }
     
 class SaleOrder(models.Model):

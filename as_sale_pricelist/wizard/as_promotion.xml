@@ -15,14 +15,16 @@
 									<tree editable="bottom" create="0" edit="0" delete="0">
 										<field name="sh_promo_id"/>			
 										<!-- <field name="sh_unit_measure"/> -->
-										<field name="sh_unit_price"/>
+<!--										<field name="sh_unit_price"/>-->
 										<!-- <field name="sh_unit_cost"/> -->
 										<!-- <field name="sh_margin"/> -->
 										<!-- <field name="sh_margin_per"/> -->
 
 										<!-- <field name="as_precio_proveedor"/> -->
-										<field name="as_descuento"/>
-										<field name="tf_dis_amount"/>
+<!--										<field name="as_descuento"/>-->
+<!--										<field name="tf_dis_amount"/>-->
+										<field name="RECALCULATED_PRICE_UNIT"/>
+										<field name="RECALCULATED_COST_NIMAX_USD"/>
 
 										<field name="line_id" invisible="1"/>
 										<button name="update_sale_line_unit_price_promo" string="Aplicar" type="object"/>
