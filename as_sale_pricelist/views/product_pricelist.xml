@@ -1,0 +1,15 @@
+<odoo>
+    <data>
+        <record id="tf_product_pricelist_view_inherit" model="ir.ui.view">
+            <field name="name">product.pricelist.form.inherit</field>
+            <field name="model">product.pricelist</field>
+            <field name="inherit_id" ref="product.product_pricelist_view"/>
+            <field name="arch" type="xml">
+                <field name="company_id" position="after">
+                    <field name="expected_earning"/>
+                    <field name="as_tarifa_base"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>

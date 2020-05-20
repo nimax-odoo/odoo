@@ -8,3 +8,10 @@ from . import as_partner
 from . import as_product_template
 from . import as_sale_coupon_program
 from . import as_marca
+from . import tf_as_partner
+from . import historic_promo
+from . import product_pricelist
+from . import tf_promotions_gift
+from . import as_invoice
+from . import as_tabla_comisiones
+from . import as_res_config

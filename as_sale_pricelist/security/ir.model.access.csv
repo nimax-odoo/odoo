@@ -2,6 +2,12 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_sale_order_pricelist_wizard,access_sale_order_pricelist_wizard,model_sale_order_pricelist_wizard,,1,1,1,1
 access_sale_order_pricelist_wizard_line,access_sale_order_pricelist_wizard_line,model_sale_order_pricelist_wizard_line,,1,1,1,1
 access_as_partner_type,access_as_partner_type,model_as_partner_type,,1,1,1,1
-access_as_marca,access_as_marca,model_as_marca,,1,1,1,1
 access_sale_order_promo_wizard,access_sale_order_promo_wizard,model_as_sale_order_promo_wizard,,1,1,1,1
 access_sale_order_promo_wizard_line,access_sale_order_promo_wizard_line,model_as_sale_order_promo_wizard_line,,1,1,1,1
+access_tf.res.partner,access_tf.res.partner,model_tf_res_partner,,1,1,1,1
+access.tf.history.promo,access.tf.history.promo,model_tf_history_promo,,1,1,1,1
+access.tf.gift.coupon.program,access.tf.gift.coupon.program,model_tf_gift_coupon_program,,1,1,1,1
+access.as.tabla.comisiones,access.as.tabla.comisiones,model_as_tabla_comisiones,sales_team.group_sale_salesman,1,1,1,1
+access.as.comisiones,access.as.comisiones,model_as_comisiones,sales_team.group_sale_salesman,1,1,1,1
+access.as.marca,access.as.marca,model_as_marca,sales_team.group_sale_salesman,1,1,1,1
+access.as.aprobe.sale,access.as.aprobe.sale,model_as_aprobe_sale,sales_team.group_sale_salesman,1,1,1,1

@@ -1,0 +1,46 @@
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="as_tabla_comisiones_tree_view">
+            <field name="name">as.tabla.comisiones tree</field>
+            <field name="model">as.tabla.comisiones</field>
+            
+            <field name="arch" type="xml">
+                <tree string="Tabla Comisiones" >
+                    <field name="as_desde" />
+                    <field name="as_hasta" />
+                    <field name="as_comision" />
+                    <field name="as_division" />
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="tabla_comisiones_form_view">
+            <field name="name">ias.tabla.comisiones Form</field>
+            <field name="model">as.tabla.comisiones</field>
+            <field name="arch" type="xml">
+                <form string="Tabla Comisiones">
+                    <sheet>
+                        <group>
+                          <field name="as_desde" />
+                    <field name="as_hasta" />
+                    <field name="as_comision" />
+                    <field name="as_division" />
+                        </group>
+                    </sheet>
+
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="as_tabla_comsiones_action_window">
+            <field name="name">Tabla Comisiones</field>
+            <field name="res_model">as.tabla.comisiones</field>
+            <field name="view_mode">tree,form</field>
+
+        </record>
+        <menuitem name="Tabla de Comisiones" id="menu_tabla_comisiones_promo" action="as_tabla_comsiones_action_window"
+                  parent="sale.product_menu_catalog"/>
+
+    </data>
+</odoo>

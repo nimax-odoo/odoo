@@ -11,4 +11,4 @@ class as_product_template(models.Model):
     _inherit = 'product.template'
    
     as_proveedor = fields.Many2one(comodel_name='res.partner', string='Cliente - Proveedor')
-    
+    tf_import_tax = fields.Float('IMPORT TAX')

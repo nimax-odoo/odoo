@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="view_aprobar_ventas_wiz" model="ir.ui.view">
+        <field name="name">Aprobar Margen de utilidad</field>
+        <field name="model">as.aprobe.sale</field>
+        <field name="arch" type="xml">
+            <form string="Aprobar Margen de utilidad">
+                <group col="4">
+                    <field name="as_password" password="True" />
+                    <field name="as_sale" invisible="True"/>
+                  
+                </group>
+                <footer>
+                    <button name="as_aprobe_sale" 
+                        default_focus="1"
+                        string="Aprobar" 
+                        type="object" 
+                        class="oe_highlight"
+                        icon="fa-download"/>
+                    <button string="Cancel" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_aprobe_sales_qweb" model="ir.actions.act_window">
+        <field name="name">Aprobar Margen de utilidad</field>
+        <field name="res_model">as.aprobe.sale</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_aprobar_ventas_wiz"/>
+        <field name="target">new</field>
+    </record>
+
+  
+</data>
+</odoo>

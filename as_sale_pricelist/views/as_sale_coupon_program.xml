@@ -9,8 +9,25 @@
             <xpath expr="//field[@name='program_type']" position="after">
                 <field name="as_price_list" />
                 <field name="as_type" />
-
+                <field name="PRICE_UNIT_USD"/>
+                <field name="COST_NIMAX_USD"/>
+                <field name="DISCOUNT_AMOUNT_USD"/>
+                <field name="COSTO"/>
             </xpath>
+<!--            <group name="validity" position="after">-->
+<!--                <group name="promotion_compute" string="Promo Apply">-->
+<!--                    <field name="PROMO_count"/>-->
+<!--                    <field name="PROMO_countdown"/>-->
+<!--                    <field name="PROMO_show"/>-->
+<!--                </group>-->
+<!--            </group>-->
+            <group name="validity" position="after">
+                <group name="gift" string="Gift">
+                    <field name="tf_max_gifted_qty"/>
+                    <field name="tf_gifted_qty"/>
+                    <field name="tf_balance"/>
+                </group>
+            </group>
         </field>
     </record>
 </odoo>

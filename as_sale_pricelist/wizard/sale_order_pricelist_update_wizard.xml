@@ -15,16 +15,22 @@
 							<field name="pricelist_line" readonly="1">
 								<tree editable="bottom" create="0" edit="0" delete="0">
 									<field name="sh_pricelist_id"/>			
-									<field name="sh_unit_measure"/>
+									<!-- <field name="sh_unit_measure"/>
 									<field name="sh_unit_price"/>
 									<field name="sh_unit_cost"/>
 									<field name="sh_margin"/>
-									<!-- <field name="sh_margin_per"/> -->
+									<field name="sh_margin_per"/>
 
 									<field name="as_precio_proveedor"/>
-									<field name="as_descuento"/>
+									<field name="as_descuento"/> -->
 
 									<field name="line_id" invisible="1"/>
+
+									<!-- <field name="price_based_usd" optional="hide"/> -->
+									<field name="nimax_price_usd" optional="show"/>
+									<field name="cost_nimax_usd" optional="show"/>
+									<!-- <field name="COST_NIMAX_MXP" optional="hide"/> -->
+
 									<button name="update_sale_line_unit_price" string="Aplicar" type="object"/>
 								</tree>	
 							</field>

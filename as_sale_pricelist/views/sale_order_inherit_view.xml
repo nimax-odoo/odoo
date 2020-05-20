@@ -9,18 +9,35 @@
 		<field name="arch" type="xml">
 			<xpath expr="//notebook//page[@name='order_lines']/field[@name='order_line']/tree/field[@name='price_total']" position="after">
 				<button name="promo_apply" type="object" string="Promo" icon="fa-percent" context="{'as_pricelist_id': as_pricelist_id }"/>
-
 			</xpath>			
 			<xpath expr="//notebook//page[@name='order_lines']/field[@name='order_line']/tree/field[@name='price_total']" position="after">
 				<button name="pricelist_apply" type="object" string="Precios" icon="fa-cart-plus"/>
 			</xpath>
-			<xpath expr="//notebook//page[@name='order_lines']/field[@name='order_line']/tree/field[@name='price_total']" position="after">
-				<button name="product_promo_apply_dis_value" type="object" string="Promo_new" icon="fa-percent" context="{'as_pricelist_id': as_pricelist_id }"/>
-				<button name="prduct_promo_apply_dis_per" type="object" string="Promo_product" icon="fa-percent" context="{'as_pricelist_id': as_pricelist_id }"/>
-			</xpath>
+
 			<xpath expr="//tree//field[@name='product_uom_qty']" position="after">
 				<field name="margin2" optional="show" string="Margen"/>
 				<field name="as_pricelist_id" optional="show" string="Lista Precio"/>
+			</xpath>
+			<xpath expr="//notebook//page[@name='order_lines']/field[@name='order_line']/tree" position="inside">
+				<field name="RECALCULATED_PRICE_UNIT" optional="hide"/>
+				<field name="NIMAX_PRICE_MXP" optional="hide"/>
+				<field name="COST_NIMAX_USD" optional="hide"/>
+				<field name="COST_NIMAX_MXP" optional="hide"/>
+				<field name="MARGIN_MXP" optional="hide"/>
+				<field name="MARGIN_USD" optional="hide"/>
+				<field name="TOTAL_USD" optional="hide"/>
+				<field name="TOTAL_MXP" optional="hide"/>
+				<field name="RECALCULATED_COST_NIMAX_USD" optional="hide"/>
+				<field name="as_margin_porcentaje" optional="hide"/>
+			</xpath>
+			<field name="payment_term_id" position="after">
+				<field name="last_promo_id" invisible="1"/>
+				<field name="currency_aux_id"/>
+				<field name="margin"/>
+				<field name="as_aprobe" invisible="True"/>
+			</field>
+			<xpath expr="//field[@name='pricelist_id']" position="attributes">
+				  <attribute name="invisible">1</attribute>
 			</xpath>
 		</field>
 	</record>

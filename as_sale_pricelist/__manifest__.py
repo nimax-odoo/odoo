@@ -11,7 +11,7 @@
     "description": """
 Lista de precios por linea de producto en ventas.
 """,    
-    "version":"13.0.1",
+    "version":"13.1.5",
     "depends" : [
         "base",
         "sale_management",
@@ -22,6 +22,8 @@ Lista de precios por linea de producto en ventas.
         "sale_coupon",
         "crm",
         "stock"
+        ,'report_xlsx',
+        "sale",
         ],
     "application" : True,
     "data" : [
@@ -33,8 +35,18 @@ Lista de precios por linea de producto en ventas.
               'views/as_marca.xml',
               'views/as_sale_coupon_program.xml',
               'views/as_product_template.xml',
+              'views/tf_as_partner.xml',
+              'views/history_promo.xml',
+              'views/product_pricelist.xml',
               'wizard/sale_order_pricelist_update_wizard.xml',
               'wizard/as_promotion.xml',
+              # 'views/tf_promotions_gift.xml',
+              'views/report/as_sale_report_templates.xml',
+              'views/report/as_report_invoice.xml',
+              'views/as_tabla_comisiones.xml',
+              'wizard/as_report_comisiones.xml',
+              'views/as_res_config.xml',
+              'wizard/as_aprobe_utility.xml'
             ],            
     "images": ["static/description/background.png",],              
     "auto_install":False,
