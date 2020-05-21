@@ -9,8 +9,8 @@ as_type = ([
     ('NORMAL','Normal'),
     ('DEAL','Oportunidad'),
     ('DEMO','Demo'),
-    ('ESPECIAL','Especial'),
-    ('FABRICANTE','Fabricante'),
+    ('ESPECIAL','Precio Especial'),
+    ('FABRICANTE','Rebate'),
     ])
 
 class as_SaleCouponProgram(models.Model):

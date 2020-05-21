@@ -43,9 +43,13 @@ class asSaleOrderPromoWizard(models.Model):
                 for producto in productos:
                     if so_line_obj.product_id.id == producto.id:
                         promos_aprobadas.append(promo)
-            tf_partner_id = self.env['tf.res.partner'].search([('partner_type', '=', so_line_obj.order_id.partner_id.as_partner_type.id),
-                                ('category_id', '=', so_line_obj.product_id.categ_id.id)],
-                                limit=1)
+            tf_partner_id = self.env['tf.res.partner']
+            for x in so_line_obj.order_id.partner_id.tf_vendor_parameter_ids:
+                if x.category_id.id == so_line_obj.product_id.categ_id.id:
+                    tf_partner_id = x
+            # tf_partner_id = self.env['tf.res.partner'].search([('partner_type', '=', so_line_obj.order_id.partner_id.as_partner_type.id),
+            #                     ('category_id', '=', so_line_obj.product_id.categ_id.id)],
+            #                     limit=1)
             price_unitt = so_line_obj.currency_id._convert(so_line_obj.price_unit, self.env.user.company_id.currency_id, self.env.user.company_id, so_line_obj.order_id.date_order)
             if promos_aprobadas:
                 for promo in promos_aprobadas:
@@ -95,7 +99,7 @@ class asSaleOrderPromoWizard(models.Model):
                         discount = promo.discount_fixed_amount
                         discount_percentage = promo.discount_percentage
                         # price_unit = so_line_obj.product_id.standard_price - discount) # de precio de lista
-                        price_unit = so_line_obj.product_id.standard_price - discount
+                        price_unit = so_line_obj.product_id.list_price - discount
                         if price_unit:
                             C57 = so_line_obj.product_id.list_price
                             C58 = so_line_obj.COST_NIMAX_USD
