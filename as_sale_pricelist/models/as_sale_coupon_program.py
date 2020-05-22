@@ -17,7 +17,7 @@ class as_SaleCouponProgram(models.Model):
     _inherit = 'sale.coupon.program'
     
     as_price_list = fields.Many2one('product.pricelist', string='Lista de Precios')
-    as_type = fields.Selection(as_type, string='Tipo de Promocion',default='NORMAL',required=True)
+    as_type = fields.Selection(as_type, string='Tipo de Promocion',default='Normal')
 
     PRICE_UNIT_USD = fields.Float('PRICE UNIT USD')
     COST_NIMAX_USD = fields.Float('COST NIMAX USD')
