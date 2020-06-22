@@ -10,7 +10,7 @@ class SaleOrderLine(models.Model):
     _inherit="sale.order.line"
     
     margin2 = fields.Float('Margen 2', digits='Product Price', default=0)
-    as_pricelist_id = fields.Many2one('product.pricelist', string='Lista de Precios')
+    as_pricelist_id = fields.Many2one('product.pricelist', string='Lista de Precios',required=True)
 
     RECALCULATED_PRICE_UNIT = fields.Float('RECALCULATED PRICE UNIT')
     NIMAX_PRICE_MXP = fields.Float('NIMAX PRICE MXP')
@@ -90,7 +90,7 @@ class SaleOrder(models.Model):
     _inherit = "sale.order"
 
             
-    margin = fields.Float(string='Total', store=True, readonly=True, compute='_amount_all_marigin', tracking=4)
+    margin = fields.Float(string='Margen(%)', store=True, readonly=True, compute='_amount_all_marigin', tracking=4)
     as_aprobe = fields.Boolean(string='Aporbar Venta',default=False)
 
     @api.depends('order_line.price_unit','order_line.product_uom_qty')
@@ -112,7 +112,7 @@ class SaleOrder(models.Model):
                 if total_price > 0:
                     total_margin += (total_price-total_cost)/total_price
             order.update({
-                'margin': total_margin,
+                'margin': total_margin*100,
             })
     
     @api.onchange('partner_id','pricelist_id')
