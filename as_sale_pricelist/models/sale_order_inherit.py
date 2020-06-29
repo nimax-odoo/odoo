@@ -90,7 +90,7 @@ class SaleOrder(models.Model):
     _inherit = "sale.order"
 
             
-    margin = fields.Float(string='Margen(%)', store=True, readonly=True, compute='_amount_all_marigin', tracking=4)
+    as_margin = fields.Float(string='Margen(en %)', store=True, readonly=True, compute='_amount_all_marigin', tracking=4)
     as_aprobe = fields.Boolean(string='Aporbar Venta',default=False)
 
     @api.depends('order_line.price_unit','order_line.product_uom_qty')
@@ -112,7 +112,7 @@ class SaleOrder(models.Model):
                 if total_price > 0:
                     total_margin += (total_price-total_cost)/total_price
             order.update({
-                'margin': total_margin*100,
+                'as_margin': total_margin*100,
             })
     
     @api.onchange('partner_id','pricelist_id')
@@ -148,7 +148,7 @@ class SaleOrder(models.Model):
         margin_minimo = self.env['ir.config_parameter'].sudo().get_param('as_sale_pricelist.as_margin_minimo')
         margin_global = self.env['ir.config_parameter'].sudo().get_param('as_sale_pricelist.as_margin_global')
         if self.as_aprobe == False:
-            if (self.margin > 0) and (self.margin < float(margin_minimo)):
+            if (self.as_margin > 0) and (self.as_margin < float(margin_minimo)):
                 action = self.env.ref('as_sale_pricelist.action_aprobe_sales_qweb').read()[0]
                 action.update({
                     'context': {
@@ -157,7 +157,7 @@ class SaleOrder(models.Model):
                     },
                 })
                 return action  
-            elif (float(self.margin) < float(margin_global)):
+            elif (float(self.as_margin) < float(margin_global)):
                 raise ValidationError('No se puede confirmar la venta, modifique sus precios')
 
         res = super(SaleOrder, self).action_confirm()

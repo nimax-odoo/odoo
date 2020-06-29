@@ -33,7 +33,7 @@
 			<field name="payment_term_id" position="after">
 				<field name="last_promo_id" invisible="1"/>
 				<field name="currency_aux_id"/>
-				<field name="margin"/>
+				<field name="as_margin"/>
 				<field name="as_aprobe" invisible="True"/>
 			</field>
 			<xpath expr="//field[@name='pricelist_id']" position="attributes">
