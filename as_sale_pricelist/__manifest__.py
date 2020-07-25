@@ -31,13 +31,13 @@ Lista de precios por linea de producto en ventas.
     "application" : True,
     "data" : [
               "security/ir.model.access.csv",
+              'views/as_product_template.xml',
               'views/sale_order_inherit_view.xml',
               'views/as_product_pricelist.xml',
               'views/as_partner_type.xml',
               'views/as_partner.xml',
               'views/as_marca.xml',
               'views/as_sale_coupon_program.xml',
-              'views/as_product_template.xml',
               'views/tf_as_partner.xml',
               'views/history_promo.xml',
               'views/product_pricelist.xml',
@@ -50,7 +50,7 @@ Lista de precios por linea de producto en ventas.
               'views/as_tabla_comisiones.xml',
               'wizard/as_report_comisiones.xml',
               'views/as_res_config.xml',
-              'views/as_report_component.xml',
+              #'views/as_report_component.xml',
               'wizard/as_aprobe_utility.xml'
             ],            
     "images": ["static/description/background.png",],              
