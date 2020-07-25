@@ -15,3 +15,4 @@ from . import tf_promotions_gift
 from . import as_invoice
 from . import as_tabla_comisiones
 from . import as_res_config
+from . import as_res_currency

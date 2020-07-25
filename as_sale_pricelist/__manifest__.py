@@ -16,6 +16,7 @@ Lista de precios por linea de producto en ventas.
         "base",
         "sale_management",
         'product',
+        'account',
         'sale_margin',
         'as_product_last_price_tab',
         "purchase",
@@ -24,6 +25,8 @@ Lista de precios por linea de producto en ventas.
         "stock"
         ,'report_xlsx',
         "sale",
+        "l10n_mx_edi",
+        "bi_manual_currency_exchange_rate",
         ],
     "application" : True,
     "data" : [
@@ -38,6 +41,7 @@ Lista de precios por linea de producto en ventas.
               'views/tf_as_partner.xml',
               'views/history_promo.xml',
               'views/product_pricelist.xml',
+              'views/as_report_format.xml',
               'wizard/sale_order_pricelist_update_wizard.xml',
               'wizard/as_promotion.xml',
               # 'views/tf_promotions_gift.xml',
@@ -46,6 +50,7 @@ Lista de precios por linea de producto en ventas.
               'views/as_tabla_comisiones.xml',
               'wizard/as_report_comisiones.xml',
               'views/as_res_config.xml',
+              'views/as_report_component.xml',
               'wizard/as_aprobe_utility.xml'
             ],            
     "images": ["static/description/background.png",],              

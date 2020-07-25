@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="footer_invoice_l10n_nimax">
+
+        <div class="footer" style="font-family: 'Arial' !important;">
+            <style>
+                .parrafo {
+                    font-size: 11px;
+                    text-align: justify;
+                    line-height: 18px;
+                    background: #ccc;
+                    padding: 5px;
+                    line-height: 15px;
+                }
+
+                .parrafo2 {
+                    font-size: 11px;
+                    text-align: justify;
+                    line-height: 15px;
+                }
+
+                body {
+                    font-family: 'Helvetica Neue LT Std' !important;
+                }
+
+                .letra {
+                    font-family: 'Helvetica Neue LT Std' !important;
+                    font-size: 12px !important;
+                    margin: 0px;
+                }
+
+                .letrafont {
+                    font-family: 'Helvetica Neue LT Std' !important;
+                    font-size: 12px !important;
+                    margin: 0px;
+                    color: rgb(82, 86, 89);
+                }
+
+                .letrablue {
+                    font-family: 'Helvetica Neue LT Std' !important;
+                    font-size: 12px !important;
+                    margin: 0px;
+                    color: rgb(47 94 130);
+                }
+
+                .class {
+                    text-align: left:
+                }
+            </style>
+            <t t-if="o.l10n_mx_edi_cfdi_uuid">
+                <!--New global variables-->
+                <t t-set="xml" t-value="o.l10n_mx_edi_get_xml_etree()" />
+                <t t-set="tfd" t-value="o.l10n_mx_edi_get_tfd_etree(xml)" />
+                <t t-set="tfd_original_string" t-value="o._get_l10n_mx_edi_cadena()" />
+                <t t-set="external" t-value="o.l10n_mx_edi_get_et_etree(xml)" />
+            </t>
+            <div class="row mt0 mb0">
+                <div class="col-12 parrafo">
+                    <b>NOTA IMPORTANTE:</b> No hay devoluciones después de 5 días naturales. No hay devoluciones
+                    en
+                    refacciones, consumibles, cabezales de impresión y software. <b>TODA DEVOLUCIÓN AUTORIZADA
+                        TENDRÁ UN CARGO
+                        DE 20% SOBRE EL PRECIO BRUTO FACTURADO </b> y se realizará a través de nota de crédito.
+                    Debo y pagaré incondicionalmente por el presente <b>PAGARÉ a TECNOLOGÍA NIMAX S.A. DE
+                        C.V.,</b>
+                    la cantidad total de esta factura que corresponde las mercancías detalladas en el presente
+                    documento en el domicilio
+                    de la empresa, obligándome a pagar para el caso de mora un interés del 1% mensual durante
+                    todo
+                    el tiempo que permanezca insoluto.
+                </div>
+            </div>
+            <div class="row mt0 mb0">
+                <div class="col-2 barcode" id='complement1'>
+
+                    <t t-set="sello" t-value="xml.get('Sello', 'No identificado')[-8:]" />
+                    <img alt="Barcode" t-att-src="'/report/barcode/?type=QR&amp;value=%s' % quote_plus(
+                            'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?' + keep_query(
+                                re=o.l10n_mx_edi_cfdi_supplier_rfc, rr=o.l10n_mx_edi_cfdi_customer_rfc,
+                                tt=o.l10n_mx_edi_cfdi_amount, id=o.l10n_mx_edi_cfdi_uuid)
+                                + '&amp;fe=%s' % quote_plus(
+                                    sello, 'utf-8', 'strict', '=/').replace('%2B', '+'))" />
+
+                </div>
+
+                <div class="col-10 parrafo2" id='complement3'>
+                    <div class="digital-stamp" style="text-align:left !important;">
+                        <span>Datos del Timbrado Fiscal</span>
+                    </div>
+                    <div class="digital-stamp-content">
+                        <b>Sello del CFDi:</b><br />
+                        <span t-esc="'/report/barcode/?type=QR&amp;value=%s' % quote_plus(
+                            'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?' + keep_query(
+                                re=o.l10n_mx_edi_cfdi_supplier_rfc, rr=o.l10n_mx_edi_cfdi_customer_rfc,
+                                tt=o.l10n_mx_edi_cfdi_amount, id=o.l10n_mx_edi_cfdi_uuid)
+                                + '&amp;fe=%s' % quote_plus(
+                                    sello, 'utf-8', 'strict', '=/').replace('%2B', '+'))" />''\'\'
+                        <span t-esc="xml.get('sello', xml.get('Sello', 'No identificado'))" />
+                    </div>
+
+                    <div class="digital-stamp-content">
+                        <b>Sello del SAT:</b><br />
+                        <span t-esc="tfd.get('selloSAT', tfd.get('SelloSAT', 'No identificado'))" />
+                    </div>
+
+                    <div class="digital-stamp-content">
+                        <b>Folio Fiscal:</b> <span t-esc="tfd.get('UUID')" /> | <b>No. de serie de certificado
+                            SAT:</b>: <span t-esc="tfd.get('NoCertificadoSAT')" /> | <b>Fecha de Certificacion:</b>
+                        <span t-esc="xml.get('fecha', xml.get('Fecha', '')).replace('T', ' ')" />
+                    </div>
+                </div>
+                <div class="row mt0 mb0">
+                    <div class="col-12 parrafo2">
+                        <b> <span t-esc="o.company_id.name" /></b> | <p style="color:blue">RFC: <span
+                                t-esc="o.company_id.vat" class="letra" /> | <p icon="fa-street"> <span
+                                    t-esc="o.company_id.street" class="letra" />, <span
+                                    t-esc="o.company_id.l10n_mx_edi_locality" class="letra" /> <span
+                                    t-esc="o.company_id.state_id.name" class="letra" /></p> | <span icon="fa-phone"
+                                t-esc="o.company_id.phone" /></p>
+                    </div>
+                </div>
+                <br /> <b>Pagina </b>
+                <label class="page" />/<label class="topage" />
+            </div>
+        </div>
+
+    </template>
+    <template id="account.report_invoice">
+        <t t-call="web.html_container">
+            <t t-call="as_sale_pricelist.header_invoice_nimax" t-lang="lang" />
+            <t t-foreach="docs" t-as="o">
+
+                <t t-set="lang"
+                    t-value="o.invoice_user_id.lang if o.type in ('in_invoice', 'in_refund') else o.partner_id.lang" />
+
+                <t t-call="account.report_invoice_document" t-lang="lang" />
+                <t t-call="as_sale_pricelist.footer_invoice_l10n_nimax" t-lang="lang" />
+
+
+            </t>
+            <!-- <t t-call="as_sale_pricelist.footer_invoice_nimax" t-lang="lang" /> -->
+        </t>
+    </template>
+
+    <template id="account.report_invoice_with_payments">
+        <t t-call="web.html_container">
+            <t t-call="as_sale_pricelist.header_invoice_nimax" t-lang="lang" />
+            <t t-foreach="docs" t-as="o">
+                <t t-set="lang"
+                    t-value="o.invoice_user_id.lang if o.type in ('in_invoice', 'in_refund') else o.partner_id.lang" />
+                <t t-call="account.report_invoice_document_with_payments" t-lang="lang" />
+                <t t-call="as_sale_pricelist.footer_invoice_l10n_nimax" t-lang="lang" />
+            </t>
+        </t>
+    </template>
+</odoo>
