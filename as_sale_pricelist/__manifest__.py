@@ -46,7 +46,7 @@ Lista de precios por linea de producto en ventas.
               'wizard/as_promotion.xml',
               # 'views/tf_promotions_gift.xml',
               'views/report/as_sale_report_templates.xml',
-              'views/report/as_report_invoice.xml',
+              #'views/report/as_report_invoice.xml',
               'views/as_tabla_comisiones.xml',
               'wizard/as_report_comisiones.xml',
               'views/as_res_config.xml',
