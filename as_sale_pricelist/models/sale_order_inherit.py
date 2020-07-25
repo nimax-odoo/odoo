@@ -21,7 +21,7 @@ class SaleOrderLine(models.Model):
     TOTAL_USD = fields.Float('TOTAL USD')
     TOTAL_MXP = fields.Float('TOTAL MXP')
     as_margin_porcentaje = fields.Float('Margen Porcentaje',compute='get_margin_porcentaje',store=True)
-    as_product_comisionable = fields.Boolean(related="product_id.as_product_comisionable")
+    as_product_comisionable = fields.Boolean('Producto no Comisionable')
     coupon_ids = fields.Many2many('sale.coupon.program', string='Coupons')
     RECALCULATED_COST_NIMAX_USD = fields.Float('RECALCULATED COST NIMAX USD')
 
