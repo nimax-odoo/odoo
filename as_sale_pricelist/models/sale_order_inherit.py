@@ -21,7 +21,7 @@ class SaleOrderLine(models.Model):
     TOTAL_USD = fields.Float('TOTAL USD')
     TOTAL_MXP = fields.Float('TOTAL MXP')
     as_margin_porcentaje = fields.Float('Margen Porcentaje',compute='get_margin_porcentaje',store=True)
-    as_product_comisionable = fields.Boolean('Producto no Comisionable')
+    as_product_comisionable = fields.Boolean(related="product_id.as_product_comisionable")
     coupon_ids = fields.Many2many('sale.coupon.program', string='Coupons')
     RECALCULATED_COST_NIMAX_USD = fields.Float('RECALCULATED COST NIMAX USD')
 
@@ -72,7 +72,7 @@ class SaleOrderLine(models.Model):
         moneda_usd = self.env['res.currency'].search([('id','=',2)])
         for sale_line in self:
             if sale_line.product_id.as_zebra:
-                sale_line.order_id.x_studio_zebra=True
+                sale_line.order_id.as_zebra_sale=True
             if not sale_line.as_product_comisionable:
                 if moneda_mxn == sale_line.currency_id:
                     new_amrgin= (sale_line.price_unit*sale_line.product_uom_qty)-(sale_line.COST_NIMAX_MXP*sale_line.product_uom_qty)
@@ -137,6 +137,8 @@ class SaleOrder(models.Model):
             
     as_margin = fields.Float(string='Margen(en %)', store=True, readonly=True, compute='_amount_all_marigin', tracking=4)
     as_aprobe = fields.Boolean(string='Aporbar Venta',default=False)
+    as_zebra_sale = fields.Boolean(string="Es Zebra")
+    as_usuario_final = fields.Char(string="Usuario Final")
 
     @api.depends('order_line.price_unit','order_line.product_uom_qty','order_line.COST_NIMAX_USD')
     def _amount_all_marigin(self):

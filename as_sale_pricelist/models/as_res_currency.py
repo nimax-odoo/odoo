@@ -1,9 +1,5 @@
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-from odoo import fields, api, models, _
-
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-
+from odoo import fields, api, models, _
 import logging
 import math
 import re
@@ -14,16 +10,7 @@ from odoo import api, fields, models, tools, _
 
 _logger = logging.getLogger(__name__)
 
-try:
-    from num2words import num2words
-except ImportError:
-    _logger.warning("The num2words python library is not installed, amount-to-text features won't be fully available.")
-    num2words = None
-
-CURRENCY_DISPLAY_PATTERN = re.compile(r'(\w+)\s*(?:\((.*)\))?')
-
 class ResCurrency(models.Model):
-
     _inherit = "res.currency"
 
     @api.model
