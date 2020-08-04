@@ -39,6 +39,9 @@ class SaleOrderLine(models.Model):
                 price_total_cost = sale_line.COST_NIMAX_USD*sale_line.product_uom_qty
                 if price_total_unit > 0:
                     sale_line.as_margin_porcentaje = ((price_total_unit-price_total_cost)/price_total_unit)*100
+            else:
+                sale_line.as_margin_porcentaje = 0
+
         
     # apply pricelist
     def pricelist_apply(self):
@@ -224,12 +227,9 @@ class SaleOrder(models.Model):
                     # if promo.PROMO_count <= promo.PROMO_countdown:
                     #     raise ValidationError('Not Much Promos are allowed!\n Promo Name is : %s'%promo.name)
                     # promo.PROMO_countdown += 1
-                    if (promo.tf_max_gifted_qty - promo.tf_gifted_qty) <= 0:
-                        raise ValidationError('Not Much Promos are allowed!\n Promo Name is : %s' % promo.name)
-                    if promo.as_type == 'DEMO':
-                        promo.tf_gifted_qty += line.product_uom_qty
-                    elif promo.as_type == 'ESPECIAL':
-                        promo.tf_gifted_qty += line.product_uom_qty
+                    promo.tf_gifted_qty += line.product_uom_qty
+                    if promo.tf_gifted_qty > promo.tf_max_gifted_qty:
+                        raise ValidationError('No se permiten muchas promociones!\n Para la promoción: %s' % promo.name)
                 tf_history_id = self.env['tf.history.promo'].search([('sale_id', '=', rec.id),('product_id', '=', line.product_id.id)], order='create_date desc', limit=1)
                 if tf_history_id:
                     tf_history_id.last_applied_promo = True
@@ -250,8 +250,6 @@ class SaleOrder(models.Model):
                 for promo in line.coupon_ids:
                     # promo.PROMO_countdown -= 1
 
-                    if promo.as_type == 'DEMO':
-                        promo.tf_gifted_qty -= line.product_uom_qty
-                    elif promo.as_type == 'ESPECIAL':
-                        promo.tf_gifted_qty -= line.product_uom_qty
+                    promo.tf_gifted_qty -= line.product_uom_qty
         return res
+

@@ -9,30 +9,39 @@
                             .header {
                                 margin: 0px;
                                 padding: 0px;
+                                line-height: 17px;
+                            }
+
+                            @font-face {
+                                font-family: 'Helvetica Neue';
+                                src: url('/as_sale_pricelist/static/Helvetica LT 57 Condensed.ttf') format('truetype');
+                                font-weight: normal;
+                                font-style: normal;
                             }
 
                             body {
-                                font-family: 'Arial' !important;
+                                font-family: Helvetica Neue !important;
                             }
 
                             .letra {
-                                font-family: 'Arial' !important;
-                                font-size: 12px !important;
+                                font-family: Helvetica Neue !important;
+                                font-size: 14px !important;
                                 margin: 0px;
+
                             }
 
                             .letrafont {
-                                font-family: 'Arial' !important;
-                                font-size: 12px !important;
+                                font-family: Helvetica Neue !important;
+                                font-size: 14px !important;
                                 margin: 0px;
-                                color: #898D97;
+                                color: #8c8c8c;
                             }
 
                             .letrablue {
-                                font-family: 'Arial' !important;
-                                font-size: 12px !important;
+                                font-family: Helvetica Neue !important;
+                                font-size: 14px !important;
                                 margin: 0px;
-                                color: #3A4C79;
+                                color: #465f7a;
                             }
 
                             .class {
@@ -40,25 +49,20 @@
                             }
 
                             .content {
-                                background: #898D97;
+                                background: #8c8c8c;
                                 padding: 5px;
                                 color: #fff;
-                                border: 2px solid #898D97;
+                                border: 2px solid #8c8c8c;
                             }
 
                             .content2 {
                                 background: #fff;
                                 color: red;
                                 padding: 5px;
-                                border: 2px solid #898D97;
+                                border: 2px solid #8c8c8c;
                             }
                         </style>
-                        <t t-if="not o.l10n_mx_edi_cfdi_uuid and o.l10n_mx_edi_is_required()">
-                            <!-- due to HTML preview for device responsive -->
-                            <button t-attf-class="btn-danger #{'btn' if report_type != 'html' else ''}">
-                                <h1>A signature of this invoice is required, but it is not signed.</h1>
-                            </button>
-                        </t>
+
                         <t t-if="o.l10n_mx_edi_cfdi_uuid">
                             <!--New global variables-->
                             <t t-set="xml" t-value="o.l10n_mx_edi_get_xml_etree()" />
@@ -68,10 +72,10 @@
                         </t>
                         <div class="row mt0 mb0 as_header">
 
-                            <div class="col-4" style="text-align:left; margin-bottom:10px;font-size:15px;">
+                            <div class="col-4" style="text-align:left;">
                                 <t t-if="o.company_id.logo">
                                     <img t-att-src="image_data_uri(o.company_id.logo)"
-                                        style="height: 85px; width:100%" />
+                                        style="height: 55px; width:100%" />
                                     <br />
                                 </t>
                                 <div class="letra">
@@ -88,14 +92,14 @@
 
                             </div>
                             <div class="col-4" style="text-align:left;" name='as_titulo'>
+                                <br />
                                 <table style="width:100%;padding:10px;">
                                     <tr class="content">
                                         <td><b>FACTURA</b></td>
                                         <td class="content2"><b> <span t-esc="o.name" /></b></td>
                                     </tr>
                                 </table>
-                                <br />
-                                <br />
+
                                 <div class="letra">
                                     <b>
                                         <span t-esc="o.partner_shipping_id.name" />
@@ -108,28 +112,51 @@
                                     t-esc="o.partner_shipping_id.zip" class="letra" /><br />
                                 <span class="letra" t-esc="o.partner_shipping_id.email" />
                             </div>
-                            <div class="col-4" style="text-align:left; ">
-                                <p class="letrafont"><b>Folio Fiscal</b></p>
-                                <p class="letrafont"><span t-esc="o.l10n_mx_edi_cfdi_uuid" /></p>
-                                <p class="letrafont"><b>No. de Serie del CSD del SAT</b></p>
-                                <p class="letrafont"><span t-if="o.l10n_mx_edi_cfdi_uuid and tfd" t-esc="tfd.get('NoCertificadoSAT')" /></p>
-                                <p class="letrafont"><b>Fecha y Hora de Certificación</b></p>
-                                <p class="letrafont"><span t-if="o.l10n_mx_edi_cfdi_uuid and tfd" t-esc="tfd.get('FechaTimbrado', '').replace('T', ' ')" /></p>
-                                <p class="letrafont"><b>No. de Serie del CSD del Emisor</b></p>
-                                <p class="letrafont"><span t-if="o.l10n_mx_edi_cfdi_uuid and xml" t-esc="xml.get('noCertificado', xml.get('NoCertificado'))" />
-                                </p>
-                                <p class="letrafont"><b>Fecha y Hora de Emisión</b></p>
-                                <p class="letrafont"><span t-if="o.l10n_mx_edi_cfdi_uuid and xml"
-                                        t-esc="xml.get('fecha', xml.get('Fecha', '')).replace('T', ' ')" />
-                                </p>
+                            <div class="col-4" style="text-align:left;">
+                                <br />
+                                <t t-if="o.l10n_mx_edi_cfdi_uuid">
+                                    <p class="letrafont"><b>Folio Fiscal</b></p>
+                                    <p class="letrafont"><span t-esc="o.l10n_mx_edi_cfdi_uuid" /></p>
+                                    <p class="letrafont"><b>No. de Serie del CSD del SAT</b></p>
+                                    <p class="letrafont"><span t-esc="tfd.get('NoCertificadoSAT')" /></p>
+                                    <p class="letrafont"><b>Fecha y Hora de Certificación</b></p>
+                                    <p class="letrafont"><span t-esc="tfd.get('FechaTimbrado', '').replace('T', ' ')" />
+                                    </p>
+                                    <p class="letrafont"><b>No. de Serie del CSD del Emisor</b></p>
+                                    <p class="letrafont"><span t-esc="xml.get('NoCertificado')" />
+                                    </p>
+                                    <p class="letrafont"><b>Fecha y Hora de Emisión</b></p>
+                                    <p class="letrafont"><span
+                                            t-esc="xml.get('fecha', xml.get('Fecha', '')).replace('T', ' ')" />
+                                    </p>
+                                </t>
+
+                            </div>
+
+                        </div>
+                        <br />
+                        <div id="informations" class="row mt0 mb0">
+                            <div class="col-3" t-if="o.invoice_date" name="invoice_date">
+                                <b class='letrablue'>FECHA DE FACTURA: </b>
+                                <span class="letra" t-field="o.invoice_date" />
+                            </div>
+                            <div class="col-3"
+                                t-if="o.invoice_date_due and o.type == 'out_invoice' and o.state == 'posted'"
+                                name="due_date">
+                                <b class='letrablue'>FECHA DE VENCIMIENTO: </b>
+                                <span class="letra" t-field="o.invoice_date_due" />
+                            </div>
+                            <div class="col-3" t-if="o.invoice_origin" name="origin">
+                                <b class='letrablue'>ORIGEN:</b>
+                                <span class="letra" t-field="o.invoice_origin" />
+                            </div>
+                            <div class="col-3" t-if="o.invoice_origin" name="origin">
+                                <b class='letrablue'>ORDEN DE COMPRA:</b>
+                                <span class="letra" t-esc="o.get_referencia_pedido()" />
                             </div>
 
                         </div>
 
-
-                        <table width="100%" class="table table-borderless borde1">
-
-                        </table>
                     </div>
                     <t t-call="web.internal_layout">
                         <t t-if="o.l10n_mx_edi_cfdi_uuid">
@@ -140,134 +167,121 @@
                             <t t-set="external" t-value="o.l10n_mx_edi_get_et_etree(xml)" />
                         </t>
                         <div class="page">
-                            <div id="informations" class="row mt0 mb0">
-                                <style type="text/css">
-                                    body {
-                                        font-family: 'Arial' !important;
-                                    }
+                            <style type="text/css">
+                                body {
+                                    font-family: Helvetica Neue !important;
+                                }
 
-                                    .letra {
-                                        font-family: 'Arial' !important;
-                                        font-size: 12px !important;
-                                        margin: 0px;
-                                    }
+                                @font-face {
+                                    font-family: 'Helvetica Neue';
+                                    src: url('/as_sale_pricelist/static/Helvetica LT 57 Condensed.ttf') format('truetype');
+                                    font-weight: normal;
+                                    font-style: normal;
+                                }
 
-                                    .letrafont {
-                                        font-family: 'Arial' !important;
-                                        font-size: 12px !important;
-                                        margin: 0px;
-                                        color: #898D97;
-                                    }
+                                .letra {
+                                    font-family: Helvetica Neue !important;
+                                    font-size: 13px !important;
+                                    margin: 0px;
+                                }
 
-                                    .letrablue {
-                                        font-family: 'Arial' !important;
-                                        font-size: 12px !important;
-                                        margin: 0px;
-                                        color: #3A4C79 !important;
-                                    }
+                                .letrafont {
+                                    font-family: Helvetica Neue !important;
+                                    font-size: 13px !important;
+                                    margin: 0px;
+                                    color: #8c8c8c;
+                                }
 
-                                    .class {
-                                        text-align: left:
-                                    }
+                                .letrablue {
+                                    font-family: Helvetica Neue !important;
+                                    font-size: 13px !important;
+                                    margin: 0px;
+                                    color: #465f7a !important;
+                                }
 
-                                    .content {
-                                        background: #898D97;
-                                        padding: 5px;
-                                        color: #fff;
-                                    }
+                                .class {
+                                    text-align: left:
+                                }
 
-                                    .content2 {
-                                        background: #fff;
-                                        color: red;
-                                        padding: 5px;
-                                        border: 2px solid #898D97;
-                                    }
+                                .content {
+                                    background: #8c8c8c;
+                                    padding: 5px;
+                                    color: #fff;
+                                }
 
-                                    body {
-                                        font-family: 'Arial' !important;
-                                    }
+                                .content2 {
+                                    background: #fff;
+                                    color: red;
+                                    padding: 5px;
+                                    border: 2px solid #8c8c8c;
+                                }
 
-                                    .letra {
-                                        font-family: 'Arial' !important;
-                                        font-size: 12px !important;
+                                body {
+                                    font-family: Helvetica Neue !important;
+                                }
 
-                                    }
+                                .letra {
+                                    font-family: Helvetica Neue !important;
+                                    font-size: 13px !important;
 
-                                    .letrafont {
-                                        font-family: 'Arial' !important;
-                                        font-size: 12px !important;
+                                }
 
-                                        color: #3A4C79;
-                                        background: #fff !important;
-                                    }
+                                .letrafont {
+                                    font-family: Helvetica Neue !important;
+                                    font-size: 13px !important;
 
-                                    .content {
-                                        font-family: 'Arial' !important;
-                                        font-size: 10px !important;
-                                        color: #898D97;
+                                    color: #465f7a;
+                                    background: #fff !important;
+                                }
 
-                                    }
+                                .content {
+                                    font-family: Helvetica Neue !important;
+                                    font-size: 10px !important;
+                                    color: #8c8c8c;
 
-                                    .header_table {
-                                        background: #898D97;
-                                        color: #fff;
-                                        font-size: 12px !important;
-                                    }
+                                }
 
-                                    .invoice_tbody {
-                                        border: 2 px solid #898D97;
-                                        font-size: 11px !important;
-                                    }
+                                .header_table {
+                                    background: #8c8c8c;
+                                    color: #fff;
+                                    font-size: 16px !important;
+                                }
 
-                                    .text2 {
-                                        font-family: 'Arial' !important;
-                                        font-size: 12px !important;
+                                .invoice_tbody {
+                                    border: 2 px solid #8c8c8c;
+                                    font-size: 11px !important;
+                                }
 
-                                        color: #3A4C79;
-                                    }
+                                .text2 {
+                                    font-family: Helvetica Neue !important;
+                                    font-size: 13px !important;
 
-                                    .class {
-                                        text-align: left:
-                                    }
+                                    color: #465f7a;
+                                }
 
-                                    .content2 {
-                                        background: #fff;
-                                        color: red;
-                                        padding: 5px;
-                                        border: 2px solid #898D97;
-                                    }
+                                .class {
+                                    text-align: left:
+                                }
 
-                                    .table_info {
-                                        border: 2px solid #fff;
-                                        width: 100%;
-                                        font-size: 10px !important;
-                                    }
+                                .content2 {
+                                    background: #fff;
+                                    color: red;
+                                    padding: 5px;
+                                    border: 2px solid #8c8c8c;
+                                }
 
-                                    .invoice_tbody tr .border {
-                                        border-left: 2px solid #898D97 !important;
-                                        border-right: 2px solid #898D97 !important;
-                                    }
-                                </style>
-                                <div class="col-3" t-if="o.invoice_date" name="invoice_date">
-                                    <b class='letrablue'>FECHA DE FACTURA: </b>
-                                    <p class="letra" t-field="o.invoice_date" />
-                                </div>
-                                <div class="col-3"
-                                    t-if="o.invoice_date_due and o.type == 'out_invoice' and o.state == 'posted'"
-                                    name="due_date">
-                                    <b class='letrablue'>FECHA DE VENCIMIENTO: </b>
-                                    <p class="letra" t-field="o.invoice_date_due" />
-                                </div>
-                                <div class="col-3" t-if="o.invoice_origin" name="origin">
-                                    <b class='letrablue'>ORIGEN:</b>
-                                    <p class="letra" t-field="o.invoice_origin" />
-                                </div>
-                                <div class="col-3" t-if="o.invoice_origin" name="origin">
-                                    <b class='letrablue'>ORDEN DE COMPRA:</b>
-                                    <p class="letra" t-esc="o.get_referencia_pedido()" />
-                                </div>
+                                .table_info {
+                                    border: 2px solid #fff;
+                                    width: 100%;
+                                    font-size: 10px !important;
+                                }
 
-                            </div>
+                                .invoice_tbody tr .border {
+                                    border-left: 2px solid #8c8c8c !important;
+                                    border-right: 2px solid #8c8c8c !important;
+                                    font-size: 13px !important;
+                                }
+                            </style>
 
                             <table class="table table-sm o_main_table" name="invoice_line_table">
                                 <thead class="header_table">
@@ -300,7 +314,7 @@
                                                 <td class='border' name="as_sat_code"><span
                                                         t-if="line.product_id.l10n_mx_edi_code_sat_id.code"
                                                         t-field="line.product_id.l10n_mx_edi_code_sat_id.code" /></td>
-                                                <td class='border' name="account_invoice_line_name">
+                                                <td class='border' name="account_invoice_line_name" style="width:400px">
                                                     <span t-field="line.name" /><br />
                                                     <span t-esc="o.get_product_lot(line.product_id.id)" />
                                                     <b><span t-field="line.l10n_mx_edi_customs_number" /></b>
@@ -308,12 +322,12 @@
                                                     <table class="table_info" name="infor_adicional_line">
                                                         <thead>
                                                             <tr>
+                                                                <td name="as_impuesto"><span
+                                                                        class="letrafont">Impuesto</span></td>
                                                                 <td name="as_tasa"><span class="letrafont">Tasa</span>
                                                                 </td>
                                                                 <td name="as_base"><span class="letrafont">Base</span>
                                                                 </td>
-                                                                <td name="as_impuesto"><span
-                                                                        class="letrafont">Impuesto</span></td>
                                                                 <td name="as_impuesto"><span
                                                                         class="letrafont">Importe</span></td>
 
@@ -321,15 +335,15 @@
                                                             <t t-foreach="o.get_tasa_xml(line.product_id.default_code)"
                                                                 t-as="tax">
                                                                 <tr>
+                                                                    <td name="as_tax3"><span class="text2">
+                                                                            <t t-esc="tax['Impuesto']" /></span>
+                                                                    </td>
                                                                     <td name="as_tax"><span class="text2">
                                                                             <t t-esc="tax['Tasa']" /></span></td>
                                                                     <td name="as_tax2"><span class="text2">
                                                                             <t t-esc="tax['Base']"
                                                                                 t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
                                                                         </span></td>
-                                                                    <td name="as_tax3"><span class="text2">
-                                                                            <t t-esc="tax['Impuesto']" /></span>
-                                                                    </td>
                                                                     <td name="as_tax3"><span class="text2">
                                                                             <t t-esc="tax['Importe']"
                                                                                 t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
@@ -341,7 +355,7 @@
                                                     </table>
                                                 </td>
                                                 <td class="text-right border">
-                                                    <span t-field="line.quantity" />
+                                                    <span t-esc="int(line.quantity)" />
                                                     <!-- <span t-field="line.product_uom_id" groups="uom.group_uom" /> -->
                                                 </td>
                                                 <td class='border'
@@ -375,33 +389,38 @@
                                         <td colspan="6">
                                             <div id="total" class="row">
                                                 <div class="col-8">
-                                                    <t t-if="o.l10n_mx_edi_cfdi_uuid">
-                                                        <p class="header_table">
+
+                                                    <p class="header_table">
+                                                        <t t-if="not o.l10n_mx_edi_amount_to_text()">
+                                                            <b><span
+                                                                    t-esc="o.company_id.currency_id.amount_to_text(o.amount_total)" /></b>
+                                                        </t>
+                                                        <t t-if="o.l10n_mx_edi_amount_to_text()">
                                                             <b><span style="padding:5px"
                                                                     t-esc="o.l10n_mx_edi_amount_to_text()" /></b>
-                                                        </p>
-                                                    </t>
+                                                        </t>
+                                                    </p>
+
                                                     <div id="total2" class="row">
                                                         <div class="col-5" style="text-align:right;">
-                                                            <p class="letra"> <b>METODO DE PAGO:</b>
-                                                                <t t-if="o.l10n_mx_edi_cfdi_uuid and xml"
-                                                                    t-esc="xml.get('formaDePago', xml.get('MetodoPago'))" />
-                                                            </p>
-                                                            <p class="letra"><b>FORMA DE PAGO:</b>
-                                                                <t t-esc="o.l10n_mx_edi_payment_method_id.code" />
-                                                            </p>
-                                                            <p class="letra"><b>USO DE CFDI:</b>
-                                                                <t t-if="o.l10n_mx_edi_cfdi_uuid and xml" t-esc="xml.Receptor.get('UsoCFDI', False)" />
-                                                            </p>
-                                                            <p class="letra"><b>VERSIÓN CFDI:</b>
-                                                                <t t-if="o.l10n_mx_edi_cfdi_uuid and tfd" t-esc="tfd.get('Version')" />
-                                                            </p>
-                                                            <p class="letra"><b>MONEDA:</b>
-                                                                <t t-esc="o.currency_id.name" />
-                                                            </p>
-
-
-
+                                                            <t t-if="o.l10n_mx_edi_cfdi_uuid">
+                                                                <p class="letra"> <b>METODO DE PAGO:</b>
+                                                                    <t
+                                                                        t-esc="xml.get('formaDePago', xml.get('MetodoPago'))" />
+                                                                </p>
+                                                                <p class="letra"><b>FORMA DE PAGO:</b>
+                                                                    <t t-esc="o.l10n_mx_edi_payment_method_id.code" />
+                                                                </p>
+                                                                <p class="letra"><b>USO DE CFDI:</b>
+                                                                    <t t-esc="xml.Receptor.get('UsoCFDI', False)" />
+                                                                </p>
+                                                                <p class="letra"><b>VERSIÓN CFDI:</b>
+                                                                    <t t-esc="tfd.get('Version')" />
+                                                                </p>
+                                                                <p class="letra"><b>MONEDA:</b>
+                                                                    <t t-esc="o.currency_id.name" />
+                                                                </p>
+                                                            </t>
                                                         </div>
                                                         <div class="col-7">
                                                             <br />
@@ -418,7 +437,7 @@
                                                         <tr class="o_subtotal" style="">
                                                             <td><strong class='letrafont'>Subtotal</strong></td>
                                                             <td class="text-right">
-                                                                <b> <span t-field="o.amount_untaxed" /></b>
+                                                                <b> <span class='letra' t-field="o.amount_untaxed" /></b>
                                                             </td>
                                                         </tr>
                                                         <t t-foreach="o.amount_by_group" t-as="amount_by_group">
@@ -471,7 +490,7 @@
                     </t>
                     <t t-call="web.internal_layout">
 
-                        <div class="footer" style="font-family: 'Arial' !important;">
+                        <div class="footer" style="font-family: Helvetica Neue !important;">
                             <style>
                                 .parrafo {
                                     font-size: 12px;
@@ -482,38 +501,43 @@
                                     line-height: 15px;
                                 }
 
+                                @font-face {
+                                    font-family: 'Helvetica Neue';
+                                    src: url('/as_sale_pricelist/static/Helvetica LT 57 Condensed.ttf') format('truetype');
+                                    font-weight: normal;
+                                    font-style: normal;
+                                }
+
                                 .parrafo2 {
-                                    font-size: 9px;
+                                    font-size: 12px;
                                     text-align: justify;
-                                    line-height: 10px;
+                                    line-height: 15px;
                                 }
 
                                 body {
-                                    font-family: 'Arial' !important;
+                                    font-family: Helvetica Neue !important;
                                 }
 
                                 .letra {
-                                    font-family: 'Arial' !important;
+                                    font-family: Helvetica Neue !important;
                                     font-size: 12px !important;
                                 }
 
                                 .letrafont {
-                                    font-family: 'Arial' !important;
+                                    font-family: Helvetica Neue !important;
                                     font-size: 12px !important;
-                                    color: #898D97;
+                                    color: #8c8c8c;
                                 }
 
                                 .letrablue {
-                                    font-family: 'Arial' !important;
+                                    font-family: Helvetica Neue !important;
                                     font-size: 12px !important;
-                                    color: #3A4C79;
+                                    color: #465f7a;
                                 }
 
                                 .class {
                                     text-align: left:
                                 }
-
-                               
                             </style>
                             <t t-if="o.l10n_mx_edi_cfdi_uuid">
                                 <!--New global variables-->
@@ -544,54 +568,63 @@
                                     el tiempo que permanezca insoluto.
                                 </div>
                             </div>
-                            <div class="row mt0 mb0">
-                                <div class="col-2 barcode" id='complement1'>
+                            <t t-if="o.l10n_mx_edi_cfdi_uuid">
+                                <div class="row mt0 mb0">
+                                    <div class="col-2 barcode" id='complement1'>
 
-                                    <t t-set="sello" t-if="o.l10n_mx_edi_cfdi_uuid and xml" t-value="xml.get('Sello', 'No identificado')[-8:]" />
-                                    <img alt="Barcode" t-att-src="'/report/barcode/?type=QR&amp;value=%s' % quote_plus(
+                                        <t t-set="sello" t-value="xml.get('Sello', 'No identificado')[-8:]" />
+                                        <img alt="Barcode" t-att-src="'/report/barcode/?type=QR&amp;value=%s' % quote_plus(
                             'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?' + keep_query(
                                 re=o.l10n_mx_edi_cfdi_supplier_rfc, rr=o.l10n_mx_edi_cfdi_customer_rfc,
                                 tt=o.l10n_mx_edi_cfdi_amount, id=o.l10n_mx_edi_cfdi_uuid)
                                 + '&amp;fe=%s' % quote_plus(
                                     sello, 'utf-8', 'strict', '=/').replace('%2B', '+'))"
-                                        style="width:150px;height:150px;margin:0px;padding:0px" />
+                                            style="width:145px;height:145px;margin:0px;padding:0px" />
+
+                                    </div>
+
+                                    <div class="col-10 parrafo2" id='complement3'>
+                                        <div class="digital-stamp" style="text-align:left !important;">
+                                            <span>Datos del Timbrado Fiscal</span>
+                                        </div>
+                                        <div class="digital-stamp-content">
+                                            <b>Sello del CFDi:</b><br />
+                                            <span t-esc="xml.get('sello', xml.get('Sello', 'No identificado'))" />
+                                        </div>
+
+                                        <div class="digital-stamp-content">
+                                            <b>Sello del SAT:</b><br />
+                                            <span t-esc="tfd.get('selloSAT', tfd.get('SelloSAT', 'No identificado'))" />
+                                        </div>
+
+                                        <div class="digital-stamp-content">
+                                            <b>Folio Fiscal:</b> <span t-esc="tfd.get('UUID')" /> | <b>No. de serie de
+                                                certificado
+                                                SAT:</b>: <span t-esc="tfd.get('NoCertificadoSAT')" /> | <b>Fecha de
+                                                Certificacion:</b>
+                                            <span t-esc="xml.get('fecha', xml.get('Fecha', '')).replace('T', ' ')" />
+                                        </div>
+                                        <br />
+                                    </div>
 
                                 </div>
-
-                                <div class="col-10 parrafo2" id='complement3'>
-                                    <div class="digital-stamp" style="text-align:left !important;">
-                                        <span>Datos del Timbrado Fiscal</span>
+                            </t>
+                            <div style="font-size:14px !important">
+                                <b>
+                                    <div style="color:#465f7a;">
+                                        <t t-esc="o.company_id.name" style="color:#000000; !important" />
+                                        | RFC:
+                                        <t t-esc="o.company_id.vat" /> | <img width="18px" height="18px"
+                                            src="/as_sale_pricelist/static/ubica.png" />
+                                        <t t-esc="o.company_id.street" />,
+                                        <t t-esc="o.company_id.l10n_mx_edi_locality" />
+                                        <t t-esc="o.company_id.state_id.name" />| <img width="18px" height="18px"
+                                            src="/as_sale_pricelist/static/phone.png" />
+                                        <t icon="fa-phone" t-esc="o.company_id.phone" />
                                     </div>
-                                    <div class="digital-stamp-content">
-                                        <b>Sello del CFDi:</b><br />
-                                        <span t-if="o.l10n_mx_edi_cfdi_uuid and xml" t-esc="xml.get('sello', xml.get('Sello', 'No identificado'))" />
-                                    </div>
 
-                                    <div class="digital-stamp-content">
-                                        <b>Sello del SAT:</b><br />
-                                        <span t-if="o.l10n_mx_edi_cfdi_uuid and tfd" t-esc="tfd.get('selloSAT', tfd.get('SelloSAT', 'No identificado'))" />
-                                    </div>
-
-                                    <div class="digital-stamp-content">
-                                        <b>Folio Fiscal:</b> <span t-if="o.l10n_mx_edi_cfdi_uuid and tfd" t-esc="tfd.get('UUID')" /> | <b>No. de serie de
-                                            certificado
-                                            SAT:</b>: <span t-if="o.l10n_mx_edi_cfdi_uuid and tfd" t-esc="tfd.get('NoCertificadoSAT')" /> | <b>Fecha de
-                                            Certificacion:</b>
-                                        <span t-if="o.l10n_mx_edi_cfdi_uuid and xml" t-esc="xml.get('fecha', xml.get('Fecha', '')).replace('T', ' ')" />
-                                    </div>
-                                    <br />
-                                </div>
-
-                            </div>
-                             <div style="font-size:11px !important">
-                                    <b> <div style="color:#3A4C79;"><t t-esc="o.company_id.name" /> | RFC: <t
-                                            t-esc="o.company_id.vat"/> |  <t
-                                                t-esc="o.company_id.street"/>, <t
-                                                t-esc="o.company_id.l10n_mx_edi_locality"/> <t
-                                                t-esc="o.company_id.state_id.name"/>| <t
-                                            icon="fa-phone" t-esc="o.company_id.phone" /></div> 
-                                    <br /></b>
-                                    <p>Pág. <label class="page" />/<label class="topage" /></p>
+                                </b>
+                                <p style="float:right">Pág. <label class="page" />/<label class="topage" /></p>
                             </div>
 
 

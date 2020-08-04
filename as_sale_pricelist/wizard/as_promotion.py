@@ -4,6 +4,8 @@ from odoo import fields, models, api
 from datetime import date, time
 from odoo.tools.safe_eval import safe_eval
 import logging
+from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 #from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
@@ -273,6 +275,7 @@ class as_SaleOrderPromoWizardLine(models.Model):
                     'MARGIN_MXP':  MARGIN_MXP,
                     'TOTAL_MXP':  TOTAL_MXP,
                 })
+                self.get_sentinel_qty_promotion(self.sh_promo_id,self.line_id.product_uom_qty)
             elif self.sh_promo_id.as_type == 'DEMO':
                 moneda_mxn = self.env['res.currency'].search([('id','=',33)])
                 moneda_usd = self.env['res.currency'].search([('id','=',2)])
@@ -298,7 +301,7 @@ class as_SaleOrderPromoWizardLine(models.Model):
                     'MARGIN_MXP':  MARGIN_MXP,
                     'TOTAL_MXP':  TOTAL_MXP,
                 })
-
+                self.get_sentinel_qty_promotion(self.sh_promo_id,self.line_id.product_uom_qty)
                 # gift_id = self.env['tf.gift.coupon.program'].search([('coupon_id', '=', self.sh_promo_id.id),
                 #                                            ('name', '=', self.sh_promo_id.as_type)], limit=1)
                 # if gift_id:
@@ -329,6 +332,7 @@ class as_SaleOrderPromoWizardLine(models.Model):
                     'MARGIN_MXP':  MARGIN_MXP,
                     'TOTAL_MXP':  TOTAL_MXP,
                 })
+                self.get_sentinel_qty_promotion(self.sh_promo_id,self.line_id.product_uom_qty)
                 # gift_id = self.env['tf.gift.coupon.program'].search([('coupon_id', '=', self.sh_promo_id.id),
                 #                                            ('name', '=', self.sh_promo_id.as_type)], limit=1)
                 # if gift_id:
@@ -358,6 +362,7 @@ class as_SaleOrderPromoWizardLine(models.Model):
                     'MARGIN_MXP':  MARGIN_MXP,
                     'TOTAL_MXP':  TOTAL_MXP,
                 })
+                self.get_sentinel_qty_promotion(self.sh_promo_id,self.line_id.product_uom_qty)
             precio_nimax= self.env.user.company_id.currency_id._convert_nimax(self.RECALCULATED_PRICE_UNIT, self.line_id.currency_id, self.env.user.company_id, self.line_id.order_id.date_order,self.line_id.id)
             data_update.update({
                 'price_unit': precio_nimax,
@@ -389,3 +394,12 @@ class as_SaleOrderPromoWizardLine(models.Model):
             })
 
             self.line_id.order_id.last_promo_id = self.sh_promo_id.id
+
+    def get_sentinel_qty_promotion(self,promo,qty):
+        balance = promo.tf_balance
+        maximo = promo.tf_max_gifted_qty
+        quantity = promo.tf_gifted_qty+qty
+        if quantity > maximo:
+            raise ValidationError('La cantidad a vender supera la permitida para la promoción (%s)' % str(promo.name))
+
+

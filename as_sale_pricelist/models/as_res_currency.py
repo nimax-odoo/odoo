@@ -42,8 +42,8 @@ class ResCurrency(models.Model):
         assert date, "convert amount from unknown date"
         # apply conversion rate
         if self == to_currency:
-            to_amount = from_amount
+            to_amount = to_currency.round(from_amount)
         else:
-            to_amount = from_amount * self._get_conversion_rate_nimax(self, to_currency, company, date,line_id)
+            to_amount = to_currency.round(from_amount) * self._get_conversion_rate_nimax(self, to_currency, company, date,line_id)
         # apply rounding
         return to_currency.round(to_amount) if round else to_amount
