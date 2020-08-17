@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+<data>
         <report id="as_account_invoices_new_mx" 
         model="account.move" 
         string="Factura" 
         report_type="qweb-pdf"
-        name="as_sale_pricelist.report_invoice_print" file="as_sale_pricelist.report_invoice_print"
-        print_report_name="'%s' % (object._get_report_base_filename())"                 
+        name="as_sale_pricelist.report_invoice_print" 
+        file="as_sale_pricelist.report_invoice_print"
+        print_report_name="'%s' % (object._get_report_base_filename())" 
+        attachment_use="False"                
         attachment="object.l10n_mx_edi_is_required() and object.l10n_mx_edi_cfdi_name and object.l10n_mx_edi_cfdi_name.replace('.xml', '.pdf') or (object.state == 'posted') and ('INV'+(object.name or '').replace('/','')+'.pdf')"
         menu="True" />
       
+  <record id="as_sale_pricelist.as_account_invoices_new_mx" model="ir.actions.report">
+        <field name="attachment">object.l10n_mx_edi_is_required() and object.l10n_mx_edi_cfdi_name and object.l10n_mx_edi_cfdi_name.replace('.xml', '.pdf') or (object.state == 'posted') and ('INV'+(object.name or '').replace('/','')+'.pdf')</field>
+    </record>
 
         <record id="as_reporte_invoice_mx_paperformat" model="report.paperformat">
                 <field name="name">Factura Localizacion Mexicana</field>
@@ -18,7 +24,7 @@
                 <field name="page_width">0</field>
                 <field name="orientation">Portrait</field>
                 <field name="margin_top">61</field>
-                <field name="margin_bottom">68</field>
+                <field name="margin_bottom">20</field>
                 <field name="margin_left">10</field>
                 <field name="margin_right">10</field>
                 <field name="header_line" eval="False" />
@@ -26,13 +32,28 @@
                 <field name="dpi">90</field>
                 <field name="report_ids" eval="[(4, ref('as_sale_pricelist.as_account_invoices_new_mx'))]" />
         </record>
-        <report id="account.account_invoices_without_payment" model="account.invoice" string="Invoices without Payment"
-        report_type="qweb-pdf" name="account.report_invoice" file="account.report_invoice"
-        attachment="(object.state in ('open','in_payment','paid')) and ('INV'+(object.number or '').replace('/','')+'.pdf')"
-        print_report_name="(object._get_report_base_filename())" menu="True" />
-        <report id="account.account_invoices" model="account.invoice" string="Invoices" report_type="qweb-pdf"
-        name="account.report_invoice_with_payments" file="account.report_invoice_with_payments"
-        attachment="(object.state in ('open','in_payment','paid')) and ('INV'+(object.number or '').replace('/','')+'.pdf')"
-        print_report_name="(object._get_report_base_filename())" groups="account.group_account_invoice" menu="False" />
-
+         <report
+            id="account.account_invoices"
+            model="account.move"
+            string="Invoices"
+            report_type="qweb-pdf"
+           name="as_sale_pricelist.report_invoice_print" 
+        file="as_sale_pricelist.report_invoice_print"
+            attachment="(object.state == 'posted') and ((object.name or 'INV').replace('/','_')+'.pdf')"
+            print_report_name="(object._get_report_base_filename())"
+            groups="account.group_account_invoice"
+            menu="False"
+        />
+        <report
+            id="account.account_invoices_without_payment"
+            model="account.move"
+            string="Invoices without Payment"
+            report_type="qweb-pdf"
+            name="account.report_invoice"
+            file="account.report_invoice"
+            attachment="(object.state == 'posted') and ((object.name or 'INV').replace('/','_')+'.pdf')"
+            print_report_name="(object._get_report_base_filename())"
+            menu="False"
+        />
+</data>
 </odoo>

@@ -11,7 +11,7 @@
     "description": """
 Lista de precios por linea de producto en ventas.
 """,    
-    "version":"13.2.1",
+    "version":"13.2.3",
     "depends" : [
         "base",
         "sale_management",
@@ -50,10 +50,10 @@ Lista de precios por linea de producto en ventas.
               'wizard/as_report_comisiones.xml',
               'views/as_res_config.xml',
               #'views/as_report_component.xml',
-              'views/report/as_report_invoice_mx.xml',
+              'views/as_report_invoice_mx.xml',
               'wizard/as_aprobe_utility.xml',
               'views/as_report_format.xml',
-              'views/as_interface.xml',
+              'data/mail_template_data.xml',
             ],            
     "images": ["static/description/background.png",],              
     "auto_install":False,

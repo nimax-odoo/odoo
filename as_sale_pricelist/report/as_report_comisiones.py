@@ -111,6 +111,7 @@ class CalculoComisiones(models.AbstractModel):
                 so.date_order::date BETWEEN '"""+str(data['form']['start_date'])+"""' AND  '"""+str(data['form']['end_date'])+"""'"""+filtro+""" 
                 and ru.id="""+str(partner[0])+"""
                 and thp.last_applied_promo=True
+                and so.invoice_status ='invoiced'
                 group by 1
                 """)
             #_logger.debug(query_movements)
