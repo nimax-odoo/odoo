@@ -83,6 +83,7 @@
                                         style="height: 55px; width:100%" />
                                     <br />
                                 </t>
+                                 <br />
                                 <div class="letra">
                                     <b>
                                         <span t-esc="o.company_id.name" />
@@ -104,7 +105,7 @@
                                         <td class="content2"><b> <span t-esc="o.name" /></b></td>
                                     </tr>
                                 </table>
-
+                               <br />
                                 <div class="letra">
                                     <b>
                                         <span t-esc="o.partner_shipping_id.name" />
@@ -459,9 +460,9 @@
                                                                 <p class="letra"><b>USO DE CFDI:</b>
                                                                     <t t-esc="xml.Receptor.get('UsoCFDI', False)" />
                                                                 </p>
-                                                                <p class="letra"><b>VERSIÓN CFDI:</b>
+                                                                <!-- <p class="letra"><b>VERSIÓN CFDI:</b>
                                                                     <t t-esc="tfd.get('Version')" />
-                                                                </p>
+                                                                </p> -->
                                                                 <p class="letra"><b>MONEDA:</b>
                                                                     <t t-esc="o.currency_id.name" />
                                                                 </p>
