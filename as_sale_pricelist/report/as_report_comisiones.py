@@ -82,6 +82,7 @@ class CalculoComisiones(models.AbstractModel):
         sheet.write(filas, 3, 'TOTAL MARGEN VENTAS $US',titulo4) #cliente/proveedor
         sheet.write(filas, 4, '% DE COMISION <= LIMITE 1',titulo4) #cliente/proveedor
         sheet.write(filas, 5, 'A PAGAR MXP',titulo4) #cliente/proveedor
+        sheet.write(filas, 6, 'TOTAL VENTAS',titulo4) #cliente/proveedor
         total_margen = 0.0 
         total_pagar = 0.0 
         sheet.set_row(filas,30,titulo4)
@@ -101,7 +102,7 @@ class CalculoComisiones(models.AbstractModel):
         for partner in users:
             query_movements = ("""
                 select 
-                rp.name,sum(margin_usd)
+                rp.name,sum(margin_usd),sum(thp.total_usd)
                 from tf_history_promo thp
                 inner join sale_order so on thp.sale_id = so.id
                 inner join res_users ru on ru.id = thp.salesman_id
@@ -143,6 +144,7 @@ class CalculoComisiones(models.AbstractModel):
                     total_pagar += pagar
                 sheet.write(filas, 4,  str(round(porcentaje*100,2))+str('%'),number_right_col1)
                 sheet.write(filas, 5,  pagar,number_right_col1)
+                sheet.write(filas, 6,  history[2],number_right_col1)
                 filas += 1
 
         sheet.merge_range('A'+str(filas+1)+':C'+str(filas+1),'TOTAL ', number_right_col)
