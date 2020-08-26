@@ -10,7 +10,7 @@ class as_accountinvoice(models.Model):
     _inherit = "account.move"
 
     def _onchange_terms(self):
-        invoice_terms =  self.company_id.with_context(lang=self.partner_id.lang).invoice_terms
+        invoice_terms =  self.company_id.invoice_terms
         return invoice_terms
 
     @api.model

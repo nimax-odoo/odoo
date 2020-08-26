@@ -85,6 +85,7 @@ class CalculoComisiones(models.AbstractModel):
         sheet.write(filas, 6, 'TOTAL VENTAS',titulo4) #cliente/proveedor
         total_margen = 0.0 
         total_pagar = 0.0 
+        total_ventas = 0.0 
         sheet.set_row(filas,30,titulo4)
         filas += 1
         cantidad = 0
@@ -145,9 +146,11 @@ class CalculoComisiones(models.AbstractModel):
                 sheet.write(filas, 4,  str(round(porcentaje*100,2))+str('%'),number_right_col1)
                 sheet.write(filas, 5,  pagar,number_right_col1)
                 sheet.write(filas, 6,  history[2],number_right_col1)
+                total_ventas += float(history[2])
                 filas += 1
 
         sheet.merge_range('A'+str(filas+1)+':C'+str(filas+1),'TOTAL ', number_right_col)
         sheet.write(filas, 4,  0.0,number_right_col)
         sheet.write(filas, 3, total_margen, number_right_col) 
         sheet.write(filas, 5, total_pagar, number_right_col) 
+        sheet.write(filas, 6, total_ventas, number_right_col) 
