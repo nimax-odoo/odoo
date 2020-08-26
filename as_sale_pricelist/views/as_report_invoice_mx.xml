@@ -528,30 +528,7 @@
                                     <tr>
                                         <td colspan="6">
                                             <div class="parrafo2">
-                                                <b>NOTA IMPORTANTE:</b> No hay devoluciones después de 5 días
-                                                naturales. No hay
-                                                devoluciones
-                                                en
-                                                refacciones, consumibles, cabezales de impresión y software. <b>TODA
-                                                    DEVOLUCIÓN
-                                                    AUTORIZADA
-                                                    TENDRÁ UN CARGO
-                                                    DE 20% SOBRE EL PRECIO BRUTO FACTURADO </b> y se realizará a
-                                                través de nota de
-                                                crédito.
-                                                Debo y pagaré incondicionalmente por el presente <b>PAGARÉ a
-                                                    TECNOLOGÍA NIMAX S.A.
-                                                    DE
-                                                    C.V.,</b>
-                                                la cantidad total de esta factura que corresponde las mercancías
-                                                detalladas en el
-                                                presente
-                                                documento en el domicilio
-                                                de la empresa, obligándome a pagar para el caso de mora un interés
-                                                del 1% mensual
-                                                durante
-                                                todo
-                                                el tiempo que permanezca insoluto.
+                                                <b>NOTA IMPORTANTE:</b> <b>  <t t-esc="o._onchange_terms()" /></b>
                                             </div>
 
                                         </td>

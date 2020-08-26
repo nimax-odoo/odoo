@@ -108,10 +108,10 @@ class CalculoComisiones(models.AbstractModel):
                 inner join res_partner rp on ru.partner_id = rp.id
                 where 
                 so.state not in ('cancel','draft') and
-                so.date_order::date BETWEEN '"""+str(data['form']['start_date'])+"""' AND  '"""+str(data['form']['end_date'])+"""'"""+filtro+""" 
+                thp.fecha_factura::date BETWEEN '"""+str(data['form']['start_date'])+"""' AND  '"""+str(data['form']['end_date'])+"""'"""+filtro+""" 
                 and ru.id="""+str(partner[0])+"""
                 and thp.last_applied_promo=True
-                and so.invoice_status ='invoiced'
+                and thp.invoice_name != ''
                 group by 1
                 """)
             #_logger.debug(query_movements)
