@@ -69,13 +69,19 @@ class SaleOrderLine(models.Model):
                 'context': {'promo_apply_dis_per': 'promo_apply_dis_per'},
             }
 
-    @api.onchange('price_unit','COST_NIMAX_USD')
+    @api.depends('product_id')
+    def get_option_zebra(self):    
+        for sale_line in self:
+            if sale_line.product_id.as_zebra:
+                sale_line.order_id.as_zebra_sale = True
+    
+    @api.onchange('price_unit','product_uom_qty')
     def get_margin_utilidad(self):
         moneda_mxn = self.env['res.currency'].search([('id','=',33)])
         moneda_usd = self.env['res.currency'].search([('id','=',2)])
         for sale_line in self:
             if sale_line.product_id.as_zebra:
-                sale_line.order_id.as_zebra_sale=True
+                sale_line.order_id.as_zebra_sale = True
             if not sale_line.as_product_comisionable:
                 if moneda_mxn == sale_line.currency_id:
                     new_amrgin= (sale_line.price_unit*sale_line.product_uom_qty)-(sale_line.COST_NIMAX_MXP*sale_line.product_uom_qty)
@@ -179,7 +185,7 @@ class SaleOrder(models.Model):
     as_zebra_sale = fields.Boolean(string="Es Zebra")
     as_usuario_final = fields.Char(string="Usuario Final")
 
-    @api.onchange('order_line.price_unit','order_line.COST_NIMAX_USD')
+    @api.depends('order_line.price_unit','order_line.COST_NIMAX_USD')
     def _amount_all_marigin(self):
         total_price = 0.0
         total_cost = 0.0
@@ -256,7 +262,6 @@ class SaleOrder(models.Model):
                 raise ValidationError('No se puede confirmar la venta, modifique sus precios')
         product=[]
         res = super(SaleOrder, self).action_confirm()
-
         for rec in self:
             for line in rec.order_line:
                 for promo in line.coupon_ids:
@@ -270,14 +275,26 @@ class SaleOrder(models.Model):
                 query_ids = ("""
                 SELECT id FROM tf_history_promo tf 
                 where
-                tf.sale_id = """+str(rec.id)+""" and tf.product_id = """+str(line.product_id.id)+""" and sale_order_line= """+str(line.id)+""" and tf.promo_id is not null
-                order by tf.create_date desc
+                tf.sale_id = """+str(rec.id)+""" and tf.product_id = """+str(line.product_id.id)+""" and sale_order_line= """+str(line.id)+""" 
+                order by tf.create_date desc limit 1
                 """)
                 self.env.cr.execute(query_ids)
                 history_table = [j for j in self.env.cr.fetchall()]
                 tf_history_id = self.env['tf.history.promo'].search([('id', 'in', history_table)])
                 if tf_history_id:
                     tf_history_id.last_applied_promo = True
+                #tomamos la ultima tarifa aplicada
+                # query_ids1 = ("""
+                # SELECT id FROM tf_history_promo tf 
+                # where
+                # tf.sale_id = """+str(rec.id)+""" and tf.product_id = """+str(line.product_id.id)+""" and tf.promo_id is null
+                # order by tf.create_date desc limit 1
+                # """)
+                # self.env.cr.execute(query_ids1)
+                # history_table1 = [j for j in self.env.cr.fetchall()]
+                # tf_history_id1 = self.env['tf.history.promo'].search([('id', 'in', history_table1)])
+                # if tf_history_id1:
+                #     tf_history_id1.last_applied_promo = True
             for line in rec.order_line:
                 if not line.as_pricelist_id and not line.as_product_comisionable:
                     product.append(line.product_id.name)
