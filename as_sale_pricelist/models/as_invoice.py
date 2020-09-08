@@ -119,7 +119,8 @@ class as_accountinvoice(models.Model):
         for pick in sale_order.picking_ids:
             for move in pick.move_line_ids_without_package:
                 if product_id == move.product_id.id:
-                    names += str(move.lot_id.name)+', '
+                    if move.lot_id.name:
+                        names += str(move.lot_id.name)+', '
         return names
         
     def get_referencia_pedido(self):

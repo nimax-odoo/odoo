@@ -155,7 +155,7 @@
                                         <span class="letra" t-field="o.invoice_date_due" />
                                     </div>
                                 </td>
-                                <td style="width:15%"> <b class='letrablue'>ORIGEN:</b>
+                                <td style="width:18%"> <b class='letrablue'>ORIGEN:</b>
                                     <span class="letra" t-field="o.invoice_origin" />
                                 </td>
                                 <td style="width:25%"> <b class='letrablue'>ORDEN DE COMPRA:</b>
@@ -380,12 +380,17 @@
                                                         t-if="line.product_id.l10n_mx_edi_code_sat_id.code"
                                                         t-field="line.product_id.l10n_mx_edi_code_sat_id.code" /></td>
                                                 <td class='border' name="account_invoice_line_name" style="width:400px">
-                                                    <span t-field="line.product_id.name" />
+                                                    <span t-field="line.product_id.name" /> <br/>
+                                                    <t t-if="line.l10n_mx_edi_customs_number != 'False'">
                                                     <t t-foreach="line.l10n_mx_edi_customs_number.split(',') if line.l10n_mx_edi_customs_number else []"
                                                         t-as="pedimento">
                                                         <b>PED: <span t-esc="pedimento" /></b>
                                                     </t>
+                                                    </t>
+                                                     <t t-if="o.get_product_lot(line.product_id.id)">
                                                     <span t-esc="o.get_product_lot(line.product_id.id)" />
+                                           
+                                                        </t>
 
 
                                                     <table class="table_info" name="infor_adicional_line">
