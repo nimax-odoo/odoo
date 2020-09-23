@@ -105,31 +105,32 @@ class SaleOrderLine(models.Model):
                 for x in sale_line.order_id.partner_id.tf_vendor_parameter_ids:
                     if x.category_id.id == sale_line.product_id.categ_id.id:
                         tf_partner_id = x
-                if sale_line.as_pricelist_id and sale_line.as_log_price:
-                    sale_id = self.env['sale.order'].search([('name','=',sale_line.order_id.name)])
-                    self.env['tf.history.promo'].create(dict(
-                        # promotion_id=,
-                        vendor_id=tf_partner_id.partner_id.id,
-                        product_id=sale_line.product_id.id,
-                        customer_id=sale_line.order_id.partner_id.id,
-                        customer_type=tf_partner_id.partner_type.id,
-                        as_pricelist_id = sale_line.as_pricelist_id.id,
-                        category_id=sale_line.product_id.categ_id.id,
-                        qty=sale_line.product_uom_qty,
-                        recalculated_price_unit=sale_line.RECALCULATED_PRICE_UNIT,
-                        recalculated_price_unit_mxp=sale_line.NIMAX_PRICE_MXP,
-                        recalculated_cost_nimax_usd=sale_line.COST_NIMAX_USD,
-                        recalculated_cost_nimax_mxp=sale_line.COST_NIMAX_MXP,
-                        margin_mxp=sale_line.MARGIN_MXP,
-                        margin_usd=sale_line.MARGIN_USD,
-                        total_usd=sale_line.TOTAL_USD,
-                        total_mxp=sale_line.TOTAL_MXP,
-                        # last_applied_promo=,
-                        salesman_id=sale_line.order_id.user_id.id,
+            if sale_line.as_pricelist_id and sale_line.as_log_price:
+                sale_id = self.env['sale.order'].search([('name','=',sale_line.order_id.name)])
+                sale_line_id = self.env['sale.order.line'].search([('name','=',sale_line.name)])
+                promo = self.env['tf.history.promo'].create(dict(
+                    # promotion_id=,
+                    vendor_id=tf_partner_id.partner_id.id,
+                    product_id=sale_line.product_id.id,
+                    customer_id=sale_line.order_id.partner_id.id,
+                    customer_type=tf_partner_id.partner_type.id,
+                    as_pricelist_id = sale_line.as_pricelist_id.id,
+                    category_id=sale_line.product_id.categ_id.id,
+                    qty=sale_line.product_uom_qty,
+                    recalculated_price_unit=sale_line.RECALCULATED_PRICE_UNIT,
+                    recalculated_price_unit_mxp=sale_line.NIMAX_PRICE_MXP,
+                    recalculated_cost_nimax_usd=sale_line.COST_NIMAX_USD,
+                    recalculated_cost_nimax_mxp=sale_line.COST_NIMAX_MXP,
+                    margin_mxp=sale_line.MARGIN_MXP,
+                    margin_usd=sale_line.MARGIN_USD,
+                    total_usd=sale_line.TOTAL_USD,
+                    total_mxp=sale_line.TOTAL_MXP,
+                    sale_order_line=sale_line.id.origin,
+                    salesman_id=sale_line.order_id.user_id.id,
 
-                        sale_id=sale_id.id,
-                    ))
-                sale_line.as_log_price=True
+                    sale_id=sale_id.id,
+                ))
+            sale_line.as_log_price=True
             if sale_line.as_product_comisionable:
                 if moneda_mxn == sale_line.currency_id:
                     sale_line.RECALCULATED_PRICE_UNIT = moneda_mxn._convert_nimax(sale_line.price_unit, moneda_usd,self.env.user.company_id, fields.Date.today(),sale_line.id)
