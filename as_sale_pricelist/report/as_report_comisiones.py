@@ -143,6 +143,8 @@ class CalculoComisiones(models.AbstractModel):
                         pagar = history_table[0][2]
                     total_margen += float(history[1])
                     total_pagar += pagar
+                else:
+                    total_margen += float(history[1])
                 sheet.write(filas, 4,  str(round(porcentaje*100,2))+str('%'),number_right_col1)
                 sheet.write(filas, 5,  pagar,number_right_col1)
                 sheet.write(filas, 6,  history[2],number_right_col1)

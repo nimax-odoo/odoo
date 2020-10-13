@@ -6,12 +6,83 @@ from odoo.exceptions import UserError
 import base64
 import logging
 _logger = logging.getLogger(__name__)
+
 class as_accountinvoice(models.Model):
     _inherit = "account.move"
 
     def _onchange_terms(self):
         invoice_terms =  self.company_id.invoice_terms
         return invoice_terms
+
+    def action_post(self):
+        sale_order = self.env['sale.order'].search([('name','=',self.invoice_origin)],limit=1)
+        line_sale = False
+        if sale_order and self.type=='out_refund':
+            #recorremos las lineas d ela factura
+            for line in self.invoice_line_ids:
+                for line_sale in sale_order.order_line:
+                    if line.product_id == line_sale.product_id:
+                        line_sale = line_sale
+                tf_partner_id = self.env['tf.res.partner']
+                for x in sale_order.partner_id.tf_vendor_parameter_ids:
+                    if x.category_id.id == line_sale.product_id.categ_id.id:
+                        tf_partner_id = x
+                if not tf_partner_id:
+                    continue
+                #se realizan los calculos 
+                moneda_mxn = self.env['res.currency'].search([('id','=',33)])
+                moneda_usd = self.env['res.currency'].search([('id','=',2)])
+                price_unit = line.price_unit
+                RECALCULATED_PRICE_UNIT = line.move_id.currency_id._convert_nimax(price_unit, moneda_usd, self.env.user.company_id, fields.Date.today(),line_sale.id)
+                monto_mxp=line.move_id.currency_id._convert_nimax(price_unit, moneda_mxn, self.env.user.company_id, fields.Date.today(),line_sale.id)
+                NIMAX_PRICE_MXP = monto_mxp
+                COST_NIMAX_USD = line.move_id.currency_id._convert_nimax(line_sale.COST_NIMAX_USD, moneda_usd, self.env.user.company_id, fields.Date.today(),line_sale.id)
+                COST_NIMAX_MXP = line.move_id.currency_id._convert_nimax(line_sale.COST_NIMAX_USD, moneda_mxn, self.env.user.company_id, fields.Date.today(),line_sale.id)
+                MARGIN_MXP = (NIMAX_PRICE_MXP*line.quantity)-(COST_NIMAX_MXP*line.quantity)
+                MARGIN_USD = (RECALCULATED_PRICE_UNIT*line.quantity)-(COST_NIMAX_USD*line.quantity)
+                TOTAL_USD = RECALCULATED_PRICE_UNIT*line.quantity
+                TOTAL_MXP = NIMAX_PRICE_MXP * line.quantity
+                partner=False
+              
+                #creamos el registro en el historico de promociones 
+                self.env['tf.history.promo'].create(dict(
+                    # promotion_id=,
+                    vendor_id=tf_partner_id.partner_id.id,
+                    product_id=line_sale.product_id.id,
+                    customer_id=line_sale.order_id.partner_id.id,
+                    customer_type=tf_partner_id.partner_type.id,
+                    # as_pricelist_id = self.sh_pricelist_id.id,
+                    category_id=line_sale.product_id.categ_id.id,
+                    qty=line.quantity,
+                    recalculated_price_unit=RECALCULATED_PRICE_UNIT,
+                    recalculated_price_unit_mxp=NIMAX_PRICE_MXP,
+                    recalculated_cost_nimax_usd=COST_NIMAX_USD,
+                    recalculated_cost_nimax_mxp=COST_NIMAX_MXP,
+                    margin_mxp=MARGIN_MXP*-1,
+                    margin_usd=MARGIN_USD*-1,
+                    total_usd=TOTAL_USD*-1,
+                    total_mxp=TOTAL_MXP*-1,
+                    # last_applied_promo=,
+                    salesman_id=line.move_id.user_id.id,
+
+                    sale_id=sale_order.id,
+                    sale_order_line=line_sale.id,
+                ))
+
+                #se marca la utima action desde factura 
+                query_ids = ("""
+                SELECT id FROM tf_history_promo tf 
+                where
+                tf.sale_id = """+str(sale_order.id)+""" and tf.product_id = """+str(line.product_id.id)+""" and sale_order_line= """+str(line_sale.id)+""" 
+                order by tf.create_date desc limit 1
+                """)
+                self.env.cr.execute(query_ids)
+                history_table = [j for j in self.env.cr.fetchall()]
+                tf_history_id = self.env['tf.history.promo'].search([('id', 'in', history_table)])
+                if tf_history_id:
+                    tf_history_id.last_applied_promo = True
+        res = super(as_accountinvoice, self).action_post()
+        return res
 
     @api.model
     def l10n_mx_edi_retrieve_attachments(self):
