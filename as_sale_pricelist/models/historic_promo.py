@@ -64,5 +64,5 @@ class tfResPartner(models.Model):
                     ids.append(invoices.id)
         return ids
 
-    invoice_ids = fields.Many2many("account.move", string='Facturas de Cliente', compute="_get_invoiced_ver",default=_get_invoiced_ver_default)
+    invoice_ids = fields.Many2many("account.move", string='Facturas de Cliente', compute="_get_invoiced_ver",default=_get_invoiced_ver_default,store=True)
     invoice_name = fields.Char(string='Facturas de Cliente', related='invoice_ids.name',store=True)

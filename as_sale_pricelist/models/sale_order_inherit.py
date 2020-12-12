@@ -185,6 +185,7 @@ class SaleOrder(models.Model):
     as_aprobe = fields.Boolean(string='Aporbar Venta',default=False)
     as_zebra_sale = fields.Boolean(string="Es Zebra")
     as_usuario_final = fields.Char(string="Usuario Final")
+    invoice_ids = fields.Many2many("account.move", string='Invoices', compute="_get_invoiced", readonly=True, copy=False,store=True)
 
     @api.depends('order_line.price_unit','order_line.COST_NIMAX_USD')
     def _amount_all_marigin(self):
