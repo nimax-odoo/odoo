@@ -8,12 +8,12 @@ _logger = logging.getLogger(__name__)
 class tfResPartner(models.Model):
     _name = "tf.history.promo"
 
-    @api.depends('sale_id','aty_invoice')
+    # @api.depends('sale_id','aty_invoice')
     def _get_invoiced_ver(self):
         for history in self:
             if history.sale_id:
                 for order in history.sale_id:
-                    invoices = order.order_line.invoice_lines.move_id.filtered(lambda r: r.type in ('out_invoice', 'out_refund'))
+                    invoices = order.order_line.invoice_lines.move_id.filtered(lambda r: r.move_type in ('out_invoice', 'out_refund'))
                     history.invoice_ids = invoices
                     history.fecha_venta = order.date_order
                     history.aty_invoice = len(history.invoice_ids)
@@ -25,7 +25,7 @@ class tfResPartner(models.Model):
                 history.invoice_ids = []
                 history.fecha_venta = datetime.now()
                 history.aty_invoice = len(history.invoice_ids)
-    # promotion_id = fields.Many2one('sale.coupon.program')
+    # promotion_id = fields.Many2one('coupon.program')
 
     vendor_id = fields.Many2one('res.partner', 'Vendor')
     product_id = fields.Many2one('product.product', 'Product')
@@ -48,7 +48,7 @@ class tfResPartner(models.Model):
     sale_id = fields.Many2one('sale.order', 'Sale Order')
     fecha_venta = fields.Datetime(string='Fecha Venta', compute="_get_invoiced_ver",store=True)
     fecha_factura = fields.Date(string='Fecha de Factura', compute="_get_invoiced_ver",store=True)
-    promo_id = fields.Many2one('sale.coupon.program', 'Promotion')
+    promo_id = fields.Many2one('coupon.program', 'Promotion')
     aty_invoice = fields.Integer('cantidad factura',compute='_get_invoiced_ver')
     sale_order_line = fields.Many2one('sale.order.line')
     state_sale = fields.Selection([('draft', 'Quotation'),('sent', 'Quotation Sent'),('sale', 'Sales Order'),('done', 'Locked'),('cancel', 'Cancelled'),], string='Estado venta', related="sale_id.state")
@@ -60,7 +60,7 @@ class tfResPartner(models.Model):
         for history in self:
             if history.sale_id:
                 for order in history.sale_id:
-                    invoices = order.order_line.invoice_lines.move_id.filtered(lambda r: r.type in ('out_invoice', 'out_refund'))
+                    invoices = order.order_line.invoice_lines.move_id.filtered(lambda r: r.move_type in ('out_invoice', 'out_refund'))
                     ids.append(invoices.id)
         return ids
 

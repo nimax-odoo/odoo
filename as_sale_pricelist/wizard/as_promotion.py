@@ -27,11 +27,11 @@ class asSaleOrderPromoWizard(models.Model):
             promo_list = []
 
             # Filtrar por lista de precios
-            # promos = self.env['sale.coupon.program'].sudo().search([('as_price_list','=',int(as_pricelist_id))])
+            # promos = self.env['coupon.program'].sudo().search([('as_price_list','=',int(as_pricelist_id))])
 
             # Usar el domain de la promocion para filtrar promos
             promos_aprobadas = []
-            promos = self.env['sale.coupon.program'].sudo().search([('active', '=', True)])
+            promos = self.env['coupon.program'].sudo().search([('active', '=', True)])
 
             # if 'promo_apply_dis_per' in self._context.keys():
             for promo in promos:
@@ -224,7 +224,7 @@ class as_SaleOrderPromoWizardLine(models.Model):
 
     promo_id = fields.Many2one('as.sale.order.promo.wizard', "Promo Id")
     sh_promo_id = fields.Many2one(
-        'sale.coupon.program', "Promo", required=True)
+        'coupon.program', "Promo", required=True)
     # sh_unit_measure = fields.Many2one('uom.uom','Unit')
     sh_unit_price = fields.Float('Unit Price')
     # sh_unit_cost = fields.Float('Unit Cost')

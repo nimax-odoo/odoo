@@ -15,44 +15,6 @@
             </field>
         </record>
 
-<!--        <record model="ir.ui.view" id="tf_gift_coupon_program_form_view">-->
-<!--            <field name="name">itf.gift.coupon.program Form</field>-->
-<!--            <field name="model">tf.gift.coupon.program</field>-->
-<!--            <field name="arch" type="xml">-->
-<!--                <form string="Gift">-->
-<!--                    <sheet>-->
-<!--                        <group>-->
-<!--                            <group id="header_left_group">-->
-<!--                                <field name="name"/>-->
-<!--                            </group>-->
-<!--                            <group id="header_left_group">-->
-<!--                                <field name="partner_id"/>-->
-<!--                            </group>-->
-<!--                            <group id="header_left_group">-->
-<!--                                <field name="partner_type"/>-->
-<!--                            </group>-->
-<!--                            <group id="header_left_group">-->
-<!--                                <field name="category_id"/>-->
-<!--                            </group>-->
-<!--                            <group id="header_left_group">-->
-<!--                                <field name="purchase_discount"/>-->
-<!--                            </group>-->
-<!--                            <group id="header_left_group">-->
-<!--                                <field name="partner_discount"/>-->
-<!--                            </group>-->
-<!--                            <group id="header_left_group">-->
-<!--                                <field name="cost_deal_import"/>-->
-<!--                            </group>-->
-<!--                            <group id="header_left_group">-->
-<!--                                <field name="fulfillment_rebate"/>-->
-<!--                            </group>-->
-<!--                        </group>-->
-<!--                    </sheet>-->
-
-<!--                </form>-->
-<!--            </field>-->
-<!--        </record>-->
-
         <record model="ir.actions.act_window" id="tf_gift_coupon_program_action_window">
             <field name="name">Gift</field>
             <field name="res_model">tf.gift.coupon.program</field>

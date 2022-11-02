@@ -32,14 +32,25 @@ class ProductProduct(models.Model):
 
     def _get_last_sale(self):
         """ Get last sale price, last sale date and last customer """
-        lines = self.env['sale.order.line'].search(
-            [('product_id', '=', self.id),
+        for line in self:
+            lines = self.env['sale.order.line'].search(
+            [('product_id', '=', line.id),
              ('state', 'in', ['sale', 'done'])]).sorted(
             key=lambda l: l.order_id.date_order, reverse=True)
-        self.last_sale_date = lines[:1].order_id.date_order
-        self.last_sale_price = lines[:1].price_unit
-        self.last_customer_id = lines[:1].order_id.partner_id
+            line.as_last_sale_date = lines[:1].order_id.date_order
+            line.as_last_sale_price = lines[:1].price_unit
+            line.as_last_customer_id = lines[:1].order_id.partner_id
+            line.last_sale_date = lines[:1].order_id.date_order
+            line.last_sale_price = lines[:1].price_unit
+            line.last_customer_id = lines[:1].order_id.partner_id
 
+    as_last_sale_price = fields.Float(
+        string='Last Sale Price', compute='_get_last_sale')
+    as_last_sale_date = fields.Datetime(
+        string='Last Sale Date', compute='_get_last_sale')
+    as_last_customer_id = fields.Many2one(
+        comodel_name='res.partner', string='Last Customer',
+        compute='_get_last_sale')
     last_sale_price = fields.Float(
         string='Last Sale Price', compute='_get_last_sale')
     last_sale_date = fields.Datetime(
@@ -53,13 +64,14 @@ class as_ProductTemplate(models.Model):
 
     def _get_last_sale(self):
         """ Get last sale price, last sale date and last customer """
-        lines = self.env['sale.order.line'].search(
-            [('product_id', '=', self.id),
-             ('state', 'in', ['sale', 'done'])]).sorted(
-            key=lambda l: l.order_id.date_order, reverse=True)
-        self.as_last_sale_date = lines[:1].order_id.date_order
-        self.as_last_sale_price = lines[:1].price_unit
-        self.as_last_customer_id = lines[:1].order_id.partner_id
+        for line in self:
+            lines = self.env['sale.order.line'].search(
+                [('product_id', '=', line.id),
+                ('state', 'in', ['sale', 'done'])]).sorted(
+                key=lambda l: l.order_id.date_order, reverse=True)
+            line.as_last_sale_date = lines[:1].order_id.date_order
+            line.as_last_sale_price = lines[:1].price_unit
+            line.as_last_customer_id = lines[:1].order_id.partner_id
 
     as_last_sale_price = fields.Float(
         string='Last Sale Price', compute='_get_last_sale')

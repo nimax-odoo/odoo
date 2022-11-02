@@ -22,7 +22,7 @@ class SaleOrderLine(models.Model):
     TOTAL_MXP = fields.Float('TOTAL MXP')
     as_margin_porcentaje = fields.Float('Margen Porcentaje',compute='get_margin_porcentaje',store=True)
     as_product_comisionable = fields.Boolean(related="product_id.as_product_comisionable")
-    coupon_ids = fields.Many2many('sale.coupon.program', string='Coupons')
+    coupon_ids = fields.Many2many('coupon.program', string='Coupons')
     RECALCULATED_COST_NIMAX_USD = fields.Float('RECALCULATED COST NIMAX USD')
 
     @api.depends('COST_NIMAX_USD','RECALCULATED_PRICE_UNIT')
@@ -226,7 +226,7 @@ class SaleOrder(models.Model):
             else:
                 raise ValidationError('Debe crear tarifa base para calculo de moneda')
 
-    last_promo_id = fields.Many2one('sale.coupon.program', 'Last Sale Promo')
+    last_promo_id = fields.Many2one('coupon.program', 'Last Sale Promo')
     currency_aux_id = fields.Many2one("res.currency", string="Moneda",default=2, required=True)
     
     def get_promocion(self,line_id):

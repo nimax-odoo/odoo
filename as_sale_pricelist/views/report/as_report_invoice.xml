@@ -3,7 +3,7 @@
     <template id="as_sale_pricelist.header_invoice_nimax">
         <t t-foreach="docs" t-as="o">
             <div class="header">
-                <t t-if="not o.l10n_mx_edi_cfdi_uuid and o.l10n_mx_edi_is_required()">
+                <t t-if="not o.l10n_mx_edi_cfdi_uuid">
                     <!-- due to HTML preview for device responsive -->
                     <button t-attf-class="btn-danger #{'btn' if report_type != 'html' else ''}">
                         <h1>A signature of this invoice is required, but it is not signed.</h1>
@@ -122,7 +122,7 @@
     <template id="as_sale_pricelist.footer_invoice_nimax">
 
         <div class="footer">
-            <t t-if="not o.l10n_mx_edi_cfdi_uuid and o.l10n_mx_edi_is_required()">
+            <t t-if="not o.l10n_mx_edi_cfdi_uuid">
                 <!-- due to HTML preview for device responsive -->
                 <button t-attf-class="btn-danger #{'btn' if report_type != 'html' else ''}">
                     <h1>A signature of this invoice is required, but it is not signed.</h1>

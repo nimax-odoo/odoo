@@ -26,6 +26,7 @@ Lista de precios por linea de producto en ventas.
         ,'report_xlsx',
         "sale",
         "l10n_mx_edi",
+        "stock_account",
         "bi_manual_currency_exchange_rate",
         ],
     "application" : True,

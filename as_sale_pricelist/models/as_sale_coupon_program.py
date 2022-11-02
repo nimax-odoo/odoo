@@ -14,7 +14,7 @@ as_type = ([
     ])
 
 class as_SaleCouponProgram(models.Model):
-    _inherit = 'sale.coupon.program'
+    _inherit = 'coupon.program'
     
     as_price_list = fields.Many2one('product.pricelist', string='Lista de Precios')
     as_type = fields.Selection(as_type, string='Tipo de Promocion',default='Normal')

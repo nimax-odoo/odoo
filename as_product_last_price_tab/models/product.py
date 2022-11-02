@@ -32,19 +32,20 @@ class ProductProductAmore(models.Model):
 
     def _get_last_purchase(self):
         """ Get last purchase price, last purchase date and last supplier """
-        lines = self.env['purchase.order.line'].search(
-            [('product_id', '=', self.id),
-             ('state', 'in', ['purchase', 'done'])]).sorted(
-            key=lambda l: l.order_id.date_order, reverse=True)
-        self.last_purchase_date = lines[:1].order_id.date_order
-        self.last_purchase_price = lines[:1].price_unit
-        self.last_supplier_id = lines[:1].order_id.partner_id
+        for line in self:
+            lines = self.env['purchase.order.line'].search(
+                [('product_id', '=', line.id),
+                ('state', 'in', ['purchase', 'done'])]).sorted(
+                key=lambda l: l.order_id.date_order, reverse=True)
+            line.as_last_purchase_date = lines[:1].order_id.date_order
+            line.as_last_purchase_price = lines[:1].price_unit
+            line.as_last_supplier_id = lines[:1].order_id.partner_id
 
-    last_purchase_price = fields.Float(
+    as_last_purchase_price = fields.Float(
         string='Last Purchase Price', compute='_get_last_purchase')
-    last_purchase_date = fields.Datetime(
+    as_last_purchase_date = fields.Datetime(
         string='Last Purchase Date', compute='_get_last_purchase')
-    last_supplier_id = fields.Many2one(
+    as_last_supplier_id = fields.Many2one(
         comodel_name='res.partner', string='Last Supplier',
         compute='_get_last_purchase')
 
@@ -53,13 +54,14 @@ class as_ProductTemplatePurchaseOrder(models.Model):
 
     def _get_last_purchase(self):
         """ Get last purchase price, last purchase date and last supplier """
-        lines = self.env['purchase.order.line'].search(
-            [('product_id', '=', self.id),
-             ('state', 'in', ['purchase', 'done'])]).sorted(
-            key=lambda l: l.order_id.date_order, reverse=True)
-        self.as_last_purchase_date = lines[:1].order_id.date_order
-        self.as_last_purchase_price = lines[:1].price_unit
-        self.as_last_supplier_id = lines[:1].order_id.partner_id
+        for line in self:
+            lines = self.env['purchase.order.line'].search(
+                [('product_id', '=', line.id),
+                ('state', 'in', ['purchase', 'done'])]).sorted(
+                key=lambda l: l.order_id.date_order, reverse=True)
+            line.as_last_purchase_date = lines[:1].order_id.date_order
+            line.as_last_purchase_price = lines[:1].price_unit
+            line.as_last_supplier_id = lines[:1].order_id.partner_id
 
     as_last_purchase_price = fields.Float(
         string='Last Purchase Price', compute='_get_last_purchase')

@@ -15,7 +15,7 @@ except ImportError:
 
 class TestReport(common.TransactionCase):
     def setUp(self):
-        super(TestReport, self).setUp()
+        super().setUp()
         report_object = self.env["ir.actions.report"]
         self.xlsx_report = self.env["report.report_xlsx.abstract"].with_context(
             active_model="res.partner"
@@ -27,7 +27,7 @@ class TestReport(common.TransactionCase):
     def test_report(self):
         report = self.report
         self.assertEqual(report.report_type, "xlsx")
-        rep = report.render(self.docs.ids, {})
+        rep = report._render(self.docs.ids, {})
         wb = open_workbook(file_contents=rep[0])
         sheet = wb.sheet_by_index(0)
         self.assertEqual(sheet.cell(0, 0).value, self.docs.name)
@@ -38,20 +38,30 @@ class TestReport(common.TransactionCase):
         objs = self.xlsx_report._get_objs_for_report(
             False, {"context": {"active_ids": self.docs.ids}}
         )
-        self.assertEquals(objs, self.docs)
+        self.assertEqual(objs, self.docs)
 
         # Typical call from within code not to report_action
         objs = self.xlsx_report.with_context(
             active_ids=self.docs.ids
         )._get_objs_for_report(False, False)
-        self.assertEquals(objs, self.docs)
+        self.assertEqual(objs, self.docs)
 
         # Typical call from WebUI
         objs = self.xlsx_report._get_objs_for_report(
             self.docs.ids, {"data": [self.report_name, self.report.report_type]}
         )
-        self.assertEquals(objs, self.docs)
+        self.assertEqual(objs, self.docs)
 
         # Typical call from render
         objs = self.xlsx_report._get_objs_for_report(self.docs.ids, {})
-        self.assertEquals(objs, self.docs)
+        self.assertEqual(objs, self.docs)
+
+    def test_currency_format(self):
+        usd = self.env.ref("base.USD")
+        self.assertEqual(
+            self.xlsx_report._report_xlsx_currency_format(usd), "$#,##0.00"
+        )
+        eur = self.env.ref("base.EUR")
+        self.assertEqual(
+            self.xlsx_report._report_xlsx_currency_format(eur), "#,##0.00 €"
+        )
