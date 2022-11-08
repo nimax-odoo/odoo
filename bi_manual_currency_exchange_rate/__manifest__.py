@@ -125,8 +125,6 @@
     if you are using Odoo multi-currency working to provide invoices, sale order, purchase order to customers from different countries along with currency rates according to their country? For Odoo This module is designed to provide currency rate exchange in real time can be really useful Currency Exchange Rates in Odoo. 
 
     """,
-    "price": 89,
-    "currency": "EUR",
     'category': 'Accounting',
     "website" : "www.browseinfo.in",
     "data" :[

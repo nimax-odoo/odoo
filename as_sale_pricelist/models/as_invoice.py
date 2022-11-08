@@ -14,6 +14,28 @@ _logger = logging.getLogger(__name__)
 class as_accountinvoice(models.Model):
     _inherit = "account.move"
 
+    def button_process_edi_web_services(self):
+        res = super().button_process_edi_web_services()
+
+        for invoice in self:
+            # == Create the attachment ==
+            cfdi_filename = ('%s-%s-MX-Invoice-3.3.xml' % (invoice.journal_id.code, invoice.payment_reference)).replace('/', '')
+
+
+            if cfdi_filename:
+                name = str(cfdi_filename).split('.')[0]
+                invoices = self.env['ir.attachment'].search([('name', '=', name and _("%s.pdf") % name)])
+                if not invoices:
+                    modelo = 'account.move'
+                    content = self.env.ref('as_sale_pricelist.as_account_invoices_new_mx')._render_qweb_pdf(invoice.id)[0]
+                    cfdi_attachment = self.env['ir.attachment'].create({
+                        'name': name and _("%s.pdf") % name or _("Factura_.pdf"),
+                        'type': 'binary',
+                        'datas': base64.b64encode(content),
+                        'res_model': modelo,
+                        'res_id': invoice.id,
+                    })
+        return res
 
     def _get_invoiced_lot_values1(self,product_id):
         """ Get and prepare data to show a table of invoiced lot on the invoice's report. """
@@ -204,12 +226,13 @@ class as_accountinvoice(models.Model):
             message loaded by default
         """
         self.ensure_one()
-        if self.l10n_mx_edi_cfdi_name:
-            name = str(self.l10n_mx_edi_cfdi_name).split('.')[0]
+        cfdi_filename = ('%s-%s-MX-Invoice-3.3.pdf' % (self.journal_id.code, self.payment_reference or self.name)).replace('/', '')
+        if cfdi_filename:
+            name = str(cfdi_filename).split('.')[0]
             invoices = self.env['ir.attachment'].search([('name', '=', name and _("%s.pdf") % name)])
             if not invoices:
                 modelo = 'account.move'
-                content = self.env.ref('as_sale_pricelist.as_account_invoices_new_mx').render_qweb_pdf(self.id)[0]
+                content = self.env.ref('as_sale_pricelist.as_account_invoices_new_mx')._render_qweb_pdf(self.id)[0]
                 self.env['ir.attachment'].create({
                     'name': name and _("%s.pdf") % name or _("Factura_.pdf"),
                     'type': 'binary',
@@ -218,6 +241,8 @@ class as_accountinvoice(models.Model):
                     'res_id': self.id,
                 })
               
+
+
         template = self.env.ref('account.email_template_edi_invoice', raise_if_not_found=False)
         compose_form = self.env.ref('account.account_invoice_send_wizard_form', raise_if_not_found=False)
         ctx = dict(
@@ -267,20 +292,21 @@ class as_accountinvoice(models.Model):
         impuestos = []
         bandera = False
         if xml is not None:
-            conceptos = xml['cfdi_node'].Conceptos.Concepto
-            for product in conceptos:
-                if product.get('NoIdentificacion')== product_id:
-                    for translado in product.Impuestos.Traslados.Traslado:
-                        if bandera == False:
-                            if translado.attrib != {}:
-                                vals={
-                                    'Tasa': translado.attrib['TasaOCuota'],
-                                    'Base': round(float(translado.attrib['Base']),2),
-                                    'Impuesto': translado.attrib['Impuesto'],
-                                    'Importe': round(float(translado.attrib['Importe']),2),
-                                }
-                                bandera = True
-                                impuestos.append(vals)
+            if 'cfdi_node' in xml:
+                conceptos = xml['cfdi_node'].Conceptos.Concepto
+                for product in conceptos:
+                    if product.get('NoIdentificacion')== product_id:
+                        for translado in product.Impuestos.Traslados.Traslado:
+                            if bandera == False:
+                                if translado.attrib != {}:
+                                    vals={
+                                        'Tasa': translado.attrib['TasaOCuota'],
+                                        'Base': round(float(translado.attrib['Base']),2),
+                                        'Impuesto': translado.attrib['Impuesto'],
+                                        'Importe': round(float(translado.attrib['Importe']),2),
+                                    }
+                                    bandera = True
+                                    impuestos.append(vals)
 
         return impuestos
 
@@ -308,7 +334,7 @@ class as_accountinvoice(models.Model):
         if any(not move.is_invoice(include_receipts=True) for move in self):
             raise UserError(_("Only invoices could be printed."))
 
-        self.filtered(lambda inv: not inv.invoice_sent).write({'invoice_sent': True})
+        self.filtered(lambda inv: not inv.is_move_sent).write({'is_move_sent': True})
         if self.user_has_groups('account.group_account_invoice'):
             return self.env.ref('as_sale_pricelist.as_account_invoices_new_mx').report_action(self)
         else:

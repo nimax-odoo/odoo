@@ -91,7 +91,7 @@
                                 </div>
                                 <span t-esc="o.company_id.vat" class="letra" /><br />
                                 <span t-esc="o.company_id.street" class="letra" />, <span
-                                    t-esc="o.company_id.l10n_mx_edi_locality" class="letra" /> <span
+                                    t-esc="o.company_id.l10n_mx_edi_colony" class="letra" /> <span
                                     t-esc="o.company_id.state_id.name" class="letra" />, C.P. <span
                                     t-esc="o.company_id.zip" class="letra" /><br />
                                 <span t-esc="o.company_id.email" />
@@ -124,16 +124,16 @@
                                     <p class="letrafont"><b>Folio Fiscal</b></p>
                                     <p class="letrafont"><span t-esc="o.l10n_mx_edi_cfdi_uuid" /></p>
                                     <p class="letrafont"><b>No. de Serie del CSD del SAT</b></p>
-                                    <p class="letrafont"><span t-esc="xml['certificate_number']" /></p>
+                                    <p class="letrafont"><span t-esc="xml['certificate_sat_number']" /></p>
                                     <p class="letrafont"><b>Fecha y Hora de Certificación</b></p>
                                     <p class="letrafont"><span t-esc="xml['stamp_date'].replace('T', ' ')" />
                                     </p>
                                     <p class="letrafont"><b>No. de Serie del CSD del Emisor</b></p>
-                                    <p class="letrafont"><span t-esc="xml.get('NoCertificado')" />
+                                    <p class="letrafont"><span t-esc="xml['certificate_number']" />
                                     </p>
                                     <p class="letrafont"><b>Fecha y Hora de Emisión</b></p>
                                     <p class="letrafont"><span
-                                            t-esc="xml.get('fecha', xml.get('Fecha', '')).replace('T', ' ')" />
+                                            t-esc="xml['emission_date_str']" />
                                     </p>
                                 </t>
 
@@ -187,7 +187,7 @@
                         </div> -->
 
                     </div>
-                    <t t-call="web.basic_layout">
+                    <!-- <t t-call="web.basic_layout"> -->
                         <t t-if="o.l10n_mx_edi_cfdi_uuid">
 
                             <t t-set="xml" t-value="o._l10n_mx_edi_decode_cfdi()" />
@@ -514,11 +514,14 @@
                                                         </tr>
                                                         <t t-set="tax_totals" t-value="json.loads(o.tax_totals_json)" />
                                                         <!-- <t t-set="subtotal" t-value="json.loads(self.tax_totals_json)['subtotals'][0]['name']"/> -->
-                                                        <t t-foreach="tax_totals['groups_by_subtotal']['Untaxed Amount']"
+                                                        <t t-foreach="tax_totals['groups_by_subtotal'].values()"
+                                                            t-as="amount_by_group_list">
+                                                        <t t-foreach="amount_by_group_list"
                                                             t-as="amount_by_group">
                                                             <tr>
                                                                 <t
-                                                                    t-if="len(tax_totals['groups_by_subtotal']['Untaxed Amount']) > 1">
+                                                                    t-if="len(tax_totals['groups_by_subtotal']['Importe sin impuestos']) > 1">
+                                                                    
                                                                     <td>
                                                                         <span
                                                                             t-esc="amount_by_group['tax_group_name']" />
@@ -542,6 +545,7 @@
                                                                     </td>
                                                                 </t>
                                                             </tr>
+                                                        </t>
                                                         </t>
                                                         <tr class="border-black o_total">
                                                             <td><strong class='letrafont'>Total</strong></td>
@@ -620,7 +624,7 @@
 
                         </div>
 
-                    </t>
+                    <!-- </t> -->
                     <t t-call="web.basic_layout">
 
                         <div class="footer" style="font-family: Helvetica Neue !important">
@@ -685,7 +689,7 @@
                                         <t t-esc="o.company_id.vat" /> | <img width="18px" height="18px"
                                             src="/as_sale_pricelist/static/ubica.png" />
                                         <t t-esc="o.company_id.street" />,
-                                        <t t-esc="o.company_id.l10n_mx_edi_locality" />
+                                        <t t-esc="o.company_id.l10n_mx_edi_colony" />
                                         <t t-esc="o.company_id.state_id.name" />| <img width="18px" height="18px"
                                             src="/as_sale_pricelist/static/phone.png" />
                                         <t icon="fa-phone" t-esc="o.company_id.phone" />
@@ -705,8 +709,7 @@
             <t t-call="web.html_container">
 
                 <t t-foreach="docs" t-as="o">
-                    <t t-set="lang"
-                        t-value="o.invoice_user_id.lang if o.move_type in ('in_invoice', 'in_refund') else o.partner_id.lang" />
+                    <t t-set="lang" t-value="o.partner_id.lang"/>
 
                     <t t-call="as_sale_pricelist.as_pdf_report_invoice" t-lang="lang" />
 
