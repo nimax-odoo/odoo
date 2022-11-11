@@ -14,17 +14,68 @@ _logger = logging.getLogger(__name__)
 class as_accountinvoice(models.Model):
     _inherit = "account.move"
 
+    def _reverse_moves(self, default_values_list=None, cancel=False):
+        if not default_values_list:
+            default_values_list = [{} for move in self]
+
+        if cancel:
+            lines = self.mapped('line_ids')
+            # Avoid maximum recursion depth.
+            if lines:
+                lines.remove_move_reconcile()
+
+        reverse_type_map = {
+            'entry': 'entry',
+            'out_invoice': 'out_refund',
+            'out_refund': 'entry',
+            'in_invoice': 'in_refund',
+            'in_refund': 'entry',
+            'out_receipt': 'entry',
+            'in_receipt': 'entry',
+        }
+
+        move_vals_list = []
+        for move, default_values in zip(self, default_values_list):
+            default_values.update({
+                'move_type': reverse_type_map[move.move_type],
+                'reversed_entry_id': move.id,
+            })
+            move_vals_list.append(move.with_context(move_reverse_cancel=cancel)._reverse_move_vals(default_values, cancel=cancel))
+
+        reverse_moves = self.env['account.move'].create(move_vals_list)
+        # for move, reverse_move in zip(self, reverse_moves.with_context(check_move_validity=False, move_reverse_cancel=cancel)):
+        #     # Update amount_currency if the date has changed.
+        #     if move.date != reverse_move.date:
+        #         for line in reverse_move.line_ids:
+        #             if line.currency_id:
+        #                 line._onchange_currency()
+        #     reverse_move._recompute_dynamic_lines(recompute_all_taxes=False)
+        reverse_moves._check_balanced()
+
+        # Reconcile moves together to cancel the previous one.
+        if cancel:
+            reverse_moves.with_context(move_reverse_cancel=cancel)._post(soft=False)
+            for move, reverse_move in zip(self, reverse_moves):
+                group = defaultdict(list)
+                for line in (move.line_ids + reverse_move.line_ids).filtered(lambda l: not l.reconciled):
+                    group[(line.account_id, line.currency_id)].append(line.id)
+                for (account, dummy), line_ids in group.items():
+                    if account.reconcile or account.internal_type == 'liquidity':
+                        self.env['account.move.line'].browse(line_ids).with_context(move_reverse_cancel=cancel).reconcile()
+
+        return reverse_moves
+
     def button_process_edi_web_services(self):
         res = super().button_process_edi_web_services()
 
         for invoice in self:
             # == Create the attachment ==
-            cfdi_filename = ('%s-%s-MX-Invoice-3.3.xml' % (invoice.journal_id.code, invoice.payment_reference)).replace('/', '')
+            cfdi_filename = ('%s-%s-MX-Invoice-3.3.xml' % (invoice.journal_id.code, invoice.payment_reference or invoice.name)).replace('/', '')
 
 
             if cfdi_filename:
                 name = str(cfdi_filename).split('.')[0]
-                invoices = self.env['ir.attachment'].search([('name', '=', name and _("%s.pdf") % name)])
+                invoices = self.env['ir.attachment'].search([('name', '=', name and _("%s.pdf") % name),('res_id','=',self.id)])
                 if not invoices:
                     modelo = 'account.move'
                     content = self.env.ref('as_sale_pricelist.as_account_invoices_new_mx')._render_qweb_pdf(invoice.id)[0]
@@ -296,17 +347,18 @@ class as_accountinvoice(models.Model):
                 conceptos = xml['cfdi_node'].Conceptos.Concepto
                 for product in conceptos:
                     if product.get('NoIdentificacion')== product_id:
-                        for translado in product.Impuestos.Traslados.Traslado:
-                            if bandera == False:
-                                if translado.attrib != {}:
-                                    vals={
-                                        'Tasa': translado.attrib['TasaOCuota'],
-                                        'Base': round(float(translado.attrib['Base']),2),
-                                        'Impuesto': translado.attrib['Impuesto'],
-                                        'Importe': round(float(translado.attrib['Importe']),2),
-                                    }
-                                    bandera = True
-                                    impuestos.append(vals)
+                        if 'Impuestos' in product:
+                            for translado in product.Impuestos.Traslados.Traslado:
+                                if bandera == False:
+                                    if translado.attrib != {}:
+                                        vals={
+                                            'Tasa': translado.attrib['TasaOCuota'],
+                                            'Base': round(float(translado.attrib['Base']),2),
+                                            'Impuesto': translado.attrib['Impuesto'],
+                                            'Importe': round(float(translado.attrib['Importe']),2),
+                                        }
+                                        bandera = True
+                                        impuestos.append(vals)
 
         return impuestos
 
