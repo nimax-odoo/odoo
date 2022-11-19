@@ -14,6 +14,11 @@ _logger = logging.getLogger(__name__)
 class as_accountinvoice(models.Model):
     _inherit = "account.move"
 
+    @api.model
+    def _get_invoice_in_payment_state(self):
+        # OVERRIDE to enable the 'in_payment' state on invoices.
+        return 'paid'
+
     def _reverse_moves(self, default_values_list=None, cancel=False):
         if not default_values_list:
             default_values_list = [{} for move in self]
