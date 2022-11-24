@@ -12,7 +12,7 @@ import json
 _logger = logging.getLogger(__name__)
 
 class as_accountinvoice(models.Model):
-    _inherit = "account.move"
+    _inherit = "account.move"  
 
     @api.model
     def _get_invoice_in_payment_state(self):
