@@ -2,7 +2,7 @@
 # Part of BrowseInfo. See LICENSE file for full copyright and licensing details.
 {
     "name" : "Currency Exchange Rate on Invoice/Payment/Sale/Purchase in Odoo",
-    "version" : "1.0.0",
+    "version" : "1.0.2",
     "depends" : ['base','account','purchase','sale_management','stock'],
     "author": "BrowseInfo",
     "summary": "This module helps to apply manual currency rate on invoice, payment, sales and purchase order ",

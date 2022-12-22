@@ -206,4 +206,51 @@ class account_payment(models.Model):
             })
         return line_vals_list
 
+class account_payment_register(models.TransientModel):
+    _inherit ='account.payment.register'
+
+    manual_currency_rate_active = fields.Boolean('Apply Manual Exchange')
+    manual_currency_rate = fields.Float('Rate', digits=(12, 6))
+
+    def _create_payment_vals_from_wizard(self):
+        payment_vals = super(account_payment_register, self)._create_payment_vals_from_wizard()
+        payment_vals['manual_currency_rate_active'] = self.manual_currency_rate_active
+        payment_vals['manual_currency_rate'] = self.manual_currency_rate
+        return payment_vals
+      
+    @api.depends('source_amount', 'source_amount_currency', 'source_currency_id', 'company_id', 'currency_id', 'payment_date')
+    def _compute_amount(self):
+        for wizard in self:
+            if wizard.source_currency_id == wizard.currency_id:
+                # Same currency.
+                wizard.amount = wizard.source_amount_currency
+            elif wizard.currency_id == wizard.company_id.currency_id:
+                # Payment expressed on the company's currency.
+                wizard.amount = wizard.source_amount
+            else:
+                # Foreign currency on payment different than the one set on the journal entries.
+                if wizard.manual_currency_rate_active:
+                    amount_payment_currency = wizard.source_amount * wizard.manual_currency_rate
+                else:
+                    amount_payment_currency = wizard.company_id.currency_id._convert(wizard.source_amount, wizard.currency_id, wizard.company_id, wizard.payment_date)
+                wizard.amount = amount_payment_currency
+
+    @api.depends('amount')
+    def _compute_payment_difference(self):
+        for wizard in self:
+            if wizard.source_currency_id == wizard.currency_id:
+                # Same currency.
+                wizard.payment_difference = wizard.source_amount_currency - wizard.amount
+            elif wizard.currency_id == wizard.company_id.currency_id:
+                # Payment expressed on the company's currency.
+                wizard.payment_difference = wizard.source_amount - wizard.amount
+            else:
+                # Foreign currency on payment different than the one set on the journal entries.
+                if wizard.manual_currency_rate_active:
+                    amount_payment_currency = wizard.source_amount * wizard.manual_currency_rate
+                else:
+                    amount_payment_currency = wizard.company_id.currency_id._convert(wizard.source_amount, wizard.currency_id, wizard.company_id, wizard.payment_date)
+                wizard.payment_difference = amount_payment_currency - wizard.amount
+
+
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

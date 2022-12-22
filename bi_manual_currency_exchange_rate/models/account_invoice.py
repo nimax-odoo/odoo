@@ -7,6 +7,7 @@ from odoo.exceptions import UserError
 class account_invoice_line(models.Model):
     _inherit ='account.move.line'
     
+    #revisado y actualizado
     @api.model
     def _get_fields_onchange_subtotal_model(self, price_subtotal, move_type, currency, company, date):
         ''' This method is used to recompute the values of 'amount_currency', 'debit', 'credit' due to a change made
@@ -51,7 +52,6 @@ class account_invoice_line(models.Model):
                 'credit': price_subtotal < 0.0 and -price_subtotal or 0.0,
             }    
 
-
     @api.onchange('product_id')
     def _onchange_product_id(self):
         for line in self:
@@ -60,16 +60,34 @@ class account_invoice_line(models.Model):
 
             line.name = line._get_computed_name()
             line.account_id = line._get_computed_account()
-            line.tax_ids = line._get_computed_taxes()
+            taxes = line._get_computed_taxes()
+            if taxes and line.move_id.fiscal_position_id:
+                taxes = line.move_id.fiscal_position_id.map_tax(taxes)
+            line.tax_ids = taxes
             line.product_uom_id = line._get_computed_uom()
             line.price_unit = line._get_computed_price_unit()
             if line.move_id.manual_currency_rate_active:
                 manual_currency_rate = line.price_unit * line.move_id.manual_currency_rate
                 line.price_unit = manual_currency_rate
 
+    # @api.onchange('product_id')
+    # def _onchange_product_id(self):
+    #     for line in self:
+    #         if not line.product_id or line.display_type in ('line_section', 'line_note'):
+    #             continue
 
-        if len(self) == 1:
-            return {'domain': {'product_uom_id': [('category_id', '=', self.product_uom_id.category_id.id)]}}        
+    #         line.name = line._get_computed_name()
+    #         line.account_id = line._get_computed_account()
+    #         line.tax_ids = line._get_computed_taxes()
+    #         line.product_uom_id = line._get_computed_uom()
+    #         line.price_unit = line._get_computed_price_unit()
+    #         if line.move_id.manual_currency_rate_active:
+    #             manual_currency_rate = line.price_unit * line.move_id.manual_currency_rate
+    #             line.price_unit = manual_currency_rate
+
+
+    #     if len(self) == 1:
+    #         return {'domain': {'product_uom_id': [('category_id', '=', self.product_uom_id.category_id.id)]}}        
         
         
 class account_invoice(models.Model):
