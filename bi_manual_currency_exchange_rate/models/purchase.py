@@ -30,7 +30,7 @@ class PurchaseOrderLine(models.Model):
         if order.currency_id != order.company_id.currency_id:
             price_unit = order.currency_id._convert(
                 price_unit, order.company_id.currency_id, self.company_id, self.date_order or fields.Date.today(), round=False)
-        if self.order_id.purchase_manual_currency_rate_active:
+        if self.order_id.purchase_manual_currency_rate_active and self.order_id.purchase_manual_currency_rate > 0:
             price_unit = self.order_id.currency_id.round((self.price_unit)/self.order_id.purchase_manual_currency_rate)
         
         return price_unit
