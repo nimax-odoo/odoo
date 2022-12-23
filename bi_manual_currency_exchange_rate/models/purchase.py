@@ -3,6 +3,7 @@
 
 from odoo import fields, models,api
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
+from odoo.tools.float_utils import float_round
 
 class PurchaseOrder(models.Model):
     _inherit ='purchase.order'
