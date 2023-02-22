@@ -8,6 +8,45 @@
             <xpath expr="//field[@name='move_ids_without_package']/tree/field[@name='product_id']" position="after">
                 <field name='as_product_stock' />
             </xpath>
+           
         </field>
     </record>
+       <record model="ir.ui.view" id="as_stock_picking_form_view_1">
+            <field name="name">as.stock.picking.form.2</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_move_line_tree" />
+            <field name="arch" type="xml">
+
+              
+                <xpath expr="//field[@name='product_id']" position="after">
+                <field name='as_product_stock' />
+            </xpath>
+                
+            </field>
+        </record>   <record model="ir.ui.view" id="as_stock_picking_form_view_3">
+            <field name="name">as.stock.picking.form.2</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_stock_move_line_detailed_operation_tree" />
+            <field name="arch" type="xml">
+
+              
+                <xpath expr="//field[@name='product_id']" position="after">
+                <field name='as_product_stock' />
+            </xpath>
+                
+            </field>
+        </record>
+          <record model="ir.ui.view" id="as_stock_picking_form_view_2">
+            <field name="name">as.stock.picking.form.2</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_move_line_tree_detailed" />
+            <field name="arch" type="xml">
+
+              
+                <xpath expr="//field[@name='product_id']" position="after">
+                <field name='as_product_stock' />
+            </xpath>
+                
+            </field>
+        </record>
 </odoo>

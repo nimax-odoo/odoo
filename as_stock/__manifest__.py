@@ -2,7 +2,7 @@
 # © 2019 Piotr Cierkosz <info@cier.tech>
 {
     "name": "Ahorasoft Inventario",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "category": "Stock",
     "author": "Piotr Cierkosz",
     "depends": [

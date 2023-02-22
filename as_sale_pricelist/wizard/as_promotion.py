@@ -3,6 +3,7 @@
 from odoo import fields, models, api
 from datetime import date, time
 from odoo.tools.safe_eval import safe_eval
+from datetime import date, datetime, time
 import logging
 from odoo.exceptions import ValidationError
 from odoo.exceptions import UserError, ValidationError
@@ -31,7 +32,8 @@ class asSaleOrderPromoWizard(models.Model):
 
             # Usar el domain de la promocion para filtrar promos
             promos_aprobadas = []
-            promos = self.env['coupon.program'].sudo().search([('active', '=', True)])
+            hoy = str(datetime.now())
+            promos = self.env['coupon.program'].sudo().search([('active', '=', True),('rule_date_to', '>', hoy)])
 
             # if 'promo_apply_dis_per' in self._context.keys():
             for promo in promos:
@@ -42,9 +44,8 @@ class asSaleOrderPromoWizard(models.Model):
                 _logger.debug('\n\n\n\n domain %s ', domain)
                 productos = self.env['product.product'].sudo().search(domain)
                 # productos = self.env['product.template'].sudo().search([("name","ilike","a")])
-                for producto in productos:
-                    if so_line_obj.product_id.id == producto.id:
-                        promos_aprobadas.append(promo)
+                if so_line_obj.product_id in productos:
+                    promos_aprobadas.append(promo)
             tf_partner_id = self.env['tf.res.partner']
             for x in so_line_obj.order_id.partner_id.tf_vendor_parameter_ids:
                 if x.category_id.id == so_line_obj.product_id.categ_id.id:
