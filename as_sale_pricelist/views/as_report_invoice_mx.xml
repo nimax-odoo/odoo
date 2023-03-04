@@ -383,12 +383,11 @@
                                                         t-field="line.product_id.unspsc_code_id.code" /></td>
                                                 <td class='border' name="account_invoice_line_name" style="width:400px">
                                                     <span t-field="line.product_id.name" /> <br />
-                                                    <!-- <t t-set="lot_values" t-value="o._get_invoiced_lot_values1(line.product_id)"/>
-                                                    <t t-if="lot_values">
-                                                        <t t-foreach="lot_values" t-as="pedimento">
-                                                            <b>PED: <span t-esc="pedimento['lot_name']" /></b>
-                                                        </t>
-                                                    </t> -->
+                                                    <!-- <t t-set="lot_values" t-value="o._get_invoiced_lot_values1(line.product_id)"/>-->
+                                                    <t t-if="line.l10n_mx_edi_customs_number">
+                                                            PED: <span t-esc="line.l10n_mx_edi_customs_number" />
+                                                    </t> 
+                                                    <br/>
                                                     <t t-if="o.get_product_lot(line.product_id.id)">
                                                         <span t-esc="o.get_product_lot(line.product_id.id)" />
 

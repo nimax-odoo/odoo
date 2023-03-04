@@ -11,7 +11,7 @@
     "description": """
 Lista de precios por linea de producto en ventas.
 """,    
-    "version":"1.0.4",
+    "version":"1.0.5",
     "depends" : [
         "base",
         "sale_management",
