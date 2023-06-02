@@ -28,6 +28,7 @@ Lista de precios por linea de producto en ventas.
         "l10n_mx_edi",
         "stock_account",
         "bi_manual_currency_exchange_rate",
+        "l10n_mx_edi_40",
         ],
     "application" : True,
     "data" : [
