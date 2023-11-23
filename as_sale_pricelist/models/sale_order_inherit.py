@@ -297,9 +297,9 @@ class SaleOrder(models.Model):
                 # tf_history_id1 = self.env['tf.history.promo'].search([('id', 'in', history_table1)])
                 # if tf_history_id1:
                 #     tf_history_id1.last_applied_promo = True
-            for line in rec.order_line:
-                if not line.as_pricelist_id and not line.as_product_comisionable:
-                    product.append(line.product_id.name)
+            # for line in rec.order_line:
+            #     if not line.as_pricelist_id and not line.as_product_comisionable:
+            #         product.append(line.product_id.name)
         if product != []:
             raise ValidationError('EXISTEN LINEAS PRODUCTO SIN PRECIO BASE : %s' % str(product))
                 

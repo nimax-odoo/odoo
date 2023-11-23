@@ -15,14 +15,44 @@ class Picking(models.Model):
         if self.picking_type_id.code in ('outgoing','internal'):
             for line_move in self.move_ids_without_package:
                 if line_move.as_product_stock <= 0.0:
-                    raise UserError(_("No se puede confirmar el producto %s código %s no tiene stock en la ubicación %s.")%(line_move.product_id.name,line_move.product_id.default_code,line_move.location_id.complete_name))
+                    raise UserError(_("No se puede confirmar el producto %s código %s no tiene stock en la ubicación de origen %s.")%(line_move.product_id.name,line_move.product_id.default_code,line_move.location_id.complete_name))
             for line_move_line in self.move_line_ids_without_package:
                 if line_move_line.as_product_stock <= 0.0:
-                    raise UserError(_("No se puede confirmar el producto %s código %s no tiene stock en la ubicación %s.")%(line_move_line.product_id.name,line_move_line.product_id.default_code,line_move_line.location_id.complete_name))
+                    raise UserError(_("No se puede confirmar el producto %s código %s no tiene stock en la ubicación de origen %s.")%(line_move_line.product_id.name,line_move_line.product_id.default_code,line_move_line.location_id.complete_name))
 
         res = super().button_validate()
         return res
 
+    @api.model
+    def filter_on_product(self, barcode):
+        """ Search for ready pickings for the scanned product. If at least one
+        picking is found, returns the picking kanban view filtered on this product.
+        """
+        
+        product = self.env['product.product'].search_read([('barcode', '=', barcode)], ['id'], limit=1)
+        if product:
+            product_id = product[0]['id']
+            picking_type = self.env['stock.picking.type'].search_read(
+                [('id', '=', self.env.context.get('active_id'))],
+                ['name'],
+            )[0]
+            if not self.search_count([
+                ('product_id', '=', product_id),
+                ('picking_type_id', '=', picking_type['id']),
+                ('state', 'not in', ['cancel', 'done', 'draft']),
+            ]):
+                return {'warning': {
+                    'title': _("No %s ready for this product", picking_type['name']),
+                }}
+            action = self.env['ir.actions.actions']._for_xml_id('stock_barcode.stock_picking_action_kanban')
+            action['context'] = dict(self.env.context)
+            action['context']['search_default_product_id'] = product_id
+            return {'action': action}
+        return {'warning': {
+            'title': _("No product found for barcode %s", barcode),
+            'message': _("Scan a product to filter the transfers."),
+        }}
+        
 class Asstockpicking_lines(models.Model):
     _inherit = "stock.move"
     
@@ -129,3 +159,13 @@ class Asstockpicking_lines(models.Model):
                 record.as_product_stock = cantidad
             else:
                 record.as_product_stock = 0.0
+
+class AsStockBarcodeLot(models.TransientModel):
+    _inherit = "stock_barcode.lot"
+    
+    def get_lot_or_create(self, barcode):
+        company = self.env.user.company_id
+        lot = self.env['stock.production.lot'].search([('name', '=', barcode), ('product_id', '=', self.product_id.id), ('company_id', '=', company)])
+        if not lot:
+            lot = self.env['stock.production.lot'].create({'name': barcode, 'product_id': self.product_id.id, 'company_id':company})
+        return lot

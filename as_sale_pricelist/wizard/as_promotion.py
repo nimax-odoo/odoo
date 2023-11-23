@@ -91,6 +91,7 @@ class asSaleOrderPromoWizard(models.Model):
                                 'line_id': so_line,
                                 'tf_partner_id': tf_partner_id.id,
                                 # 'as_precio_proveedor':so_line_obj.product_id.as_last_purchase_price,
+                                'line_id':so_line_obj.id,
                                 'as_descuento': discount_percentage,
                                 'RECALCULATED_PRICE_UNIT': C47-(C48*G46/100),
                                 'RECALCULATED_COST_NIMAX_USD': C49-(C48*G46/100),
@@ -119,6 +120,7 @@ class asSaleOrderPromoWizard(models.Model):
                                 'tf_partner_id': tf_partner_id.id,
                                 # 'as_precio_proveedor':so_line_obj.product_id.as_last_purchase_price,
                                 'as_descuento': discount,
+                                'line_id':so_line_obj.id,
                                 'RECALCULATED_PRICE_UNIT': (C57-(C57*G55/100)),
                                 'RECALCULATED_COST_NIMAX_USD': (C57-(C57*H55/100)),
                             })
@@ -138,6 +140,7 @@ class asSaleOrderPromoWizard(models.Model):
                             'tf_partner_id': tf_partner_id.id,
                             # 'as_precio_proveedor':so_line_obj.product_id.as_last_purchase_price,
                             'as_descuento': discount,
+                            'line_id':so_line_obj.id,
                             'RECALCULATED_PRICE_UNIT': promo.PRICE_UNIT_USD,
                             'RECALCULATED_COST_NIMAX_USD': promo.COST_NIMAX_USD,
                         })
@@ -156,6 +159,7 @@ class asSaleOrderPromoWizard(models.Model):
                             'line_id': so_line,
                             'tf_partner_id': tf_partner_id.id,
                             # 'as_precio_proveedor':so_line_obj.product_id.as_last_purchase_price,
+                            'line_id':so_line_obj.id,
                             'as_descuento': discount,
                             'RECALCULATED_PRICE_UNIT': price_unitt - promo.DISCOUNT_AMOUNT_USD,
                             'RECALCULATED_COST_NIMAX_USD': so_line_obj.COST_NIMAX_USD - promo.DISCOUNT_AMOUNT_USD,

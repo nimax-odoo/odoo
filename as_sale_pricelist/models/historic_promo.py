@@ -49,8 +49,9 @@ class tfResPartner(models.Model):
     fecha_venta = fields.Datetime(string='Fecha Venta', compute="_get_invoiced_ver",store=True)
     fecha_factura = fields.Date(string='Fecha de Factura', compute="_get_invoiced_ver",store=True)
     promo_id = fields.Many2one('coupon.program', 'Promotion')
+    promo_ids = fields.Many2many('coupon.program', string='Promociones', related = "sale_order_line.coupon_ids")
     aty_invoice = fields.Integer('cantidad factura',compute='_get_invoiced_ver')
-    sale_order_line = fields.Many2one('sale.order.line')
+    sale_order_line = fields.Many2one('sale.order.line',string = 'Linea de Venta')
     state_sale = fields.Selection([('draft', 'Quotation'),('sent', 'Quotation Sent'),('sale', 'Sales Order'),('done', 'Locked'),('cancel', 'Cancelled'),], string='Estado venta', related="sale_id.state")
     
 

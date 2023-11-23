@@ -8,7 +8,9 @@
             <field name="arch" type="xml">
                 <tree string="History Promo" >
                    <field name="create_date" optional="show"/>
+                    <field name="promo_ids" optional="show" widget="many2many_tags"/>
                     <field name="promo_id" optional="show"/>
+                    <field name="sale_order_line" optional="hide"/>
                     <field name="as_pricelist_id" optional="show"/>
                     <field name="fecha_venta" optional="show"/>
                     <field name="sale_id" optional="show"/>

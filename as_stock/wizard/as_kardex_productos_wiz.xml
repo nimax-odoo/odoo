@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="view_kardex_productos_wiz" model="ir.ui.view">
+        <field name="name">Kardex de productos</field>
+        <field name="model">as.kardex.productos.wiz</field>
+        <field name="arch" type="xml">
+            <form string="Kardex de productos">
+                <group>
+                <group>
+                    <field name="start_date"/>
+                    <field name="as_almacen" widget="many2many_tags" options="{&quot;always_reload&quot;: True, 'no_open': True,'no_create': 1, 'no_create_edit': 1}"/>
+                    <field name="as_productos" widget="many2many_tags" options="{&quot;always_reload&quot;: True, 'no_open': True,'no_create': 1, 'no_create_edit': 1}"/>
+                    <field name="as_categ_levels"/>
+                    <field name="as_consolidado"/>
+                    <!-- <field name="as_reporte_existencias"/> -->
+                    </group>
+                <group>
+                    <field name="end_date"/>
+                    <!-- <field name="as_reporte_diferencias"/> -->
+                    <!-- <field name="as_UFV"/> -->
+                    <field name="as_include_qty"/>
+                    <field name="as_saldo_inicial"/>
+                    <!-- <field name="as_brand_id" widget="many2many_tags" options="{&quot;always_reload&quot;: True, 'no_open': True,'no_create': 1, 'no_create_edit': 1}"/> -->
+
+                    
+                </group>
+                </group>
+                <footer>
+                    <!-- <button name="imprimir_kardex_productos_pdf" string="Exportar a PDF" type="object" class="btn-primary"/> -->
+                    <button name="export_xls" 
+                        default_focus="1"
+                        string="Exportar a Excel" 
+                        type="object" 
+                        class="oe_highlight"
+                        context="{'xls_export':1}" 
+                        icon="fa-download"/>
+                    <!-- <button name="kardex_productos_txt" string="Formato Facilito" type="object" class="btn-primary"/>     -->
+                    <button string="Cancel" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_kardex_productos_qweb" model="ir.actions.act_window">
+        <field name="name">Kardex de productos</field>
+        <field name="res_model">as.kardex.productos.wiz</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_kardex_productos_wiz"/>
+        <field name="target">new</field>
+    </record>
+
+    <report
+        id="kardex_productos_xlsx"
+        model="as.kardex.productos.wiz"
+        string="Kardex de Productos"
+        report_type="xlsx"
+        name="as_stock.kardex_productos_report_xls.xlsx"
+        file="as_stock.kardex_productos_report_xls.xlsx"
+        attachment_use="False" />
+
+    <menuitem
+        id="as_kardex_productos"
+        name="Kardex de productos"
+        action="action_kardex_productos_qweb"
+        parent="stock.menu_warehouse_report"            
+        sequence="50"
+        groups="stock.group_stock_manager" />
+
+    
+</data>
+</odoo>
