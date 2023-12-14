@@ -24,6 +24,9 @@
                         </group>
                         <group>
                             <group>
+                                <field name="amount_total_currency" readonly="True" />
+                                <field name="amount_residual_payment" />
+                                <field name="currency_payment" />
                                 <field name="amount_to_pay" />
                             </group>
                             <group>

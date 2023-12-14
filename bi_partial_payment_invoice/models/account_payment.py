@@ -86,7 +86,14 @@ class AccontPayment(models.Model):
                 counterpart_amount = 0.0
                 write_off_amount = 0.0
 
-            balance = self.currency_id._convert(counterpart_amount, self.company_id.currency_id, self.company_id, self.date)
+            if self.manual_currency_rate_active:
+                balance = self.currency_id._convert_custom(counterpart_amount, self.company_id.currency_id, self.company_id, self.date,rate= self.manual_currency_rate)
+
+            else:
+                balance = self.currency_id._convert(counterpart_amount, self.company_id.currency_id, self.company_id, self.date)
+
+            
+            
             counterpart_amount_currency = counterpart_amount
             write_off_balance = self.currency_id._convert(write_off_amount, self.company_id.currency_id, self.company_id, self.date)
             write_off_amount_currency = write_off_amount

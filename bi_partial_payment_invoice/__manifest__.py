@@ -6,7 +6,7 @@
     'version' : '1.0.1',
     'category' : 'Sales',
     'depends' : ['base', 
-        'account', 'sale', 'sale_management', 
+        'account', 'sale', 'sale_management','bi_manual_currency_exchange_rate'
     ],
     'author': 'BrowseInfo',
     'summary': 'Partial Invoice payment invoice reconciliation payment invoice register payment with reconciliation invoice partial reconciliation payment reconciliation add outstanding with write off invoice write off invoice residual payment partial invoice payment',

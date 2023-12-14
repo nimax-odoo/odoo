@@ -45,6 +45,7 @@ class AccontMultiPaymentWizard(models.Model):
 
             move_line_id = payment.move_line_id
             transfer_currency_id = payment.currency_id
+            pago = move_line_id.payment_id
 
             if move_line_id:
                 amount_residual = abs(move_line_id.amount_residual)
@@ -59,8 +60,19 @@ class AccontMultiPaymentWizard(models.Model):
                         amount_residual = currency_id.round(amount_residual)
                         company_currency_id = payment.company_currency_id
                         if line.is_comapany:
-                            converted_amount = currency_id._convert(
+                            if pago.manual_currency_rate_active:
+                                converted_amount = currency_id._convert_custom(
+                                line.curr_amount_to_pay, company_currency_id, payment.company_id, fields.Date.context_today(self),round=True,rate= pago.manual_currency_rate)
+                            else:
+                                converted_amount = currency_id._convert(
                                 line.curr_amount_to_pay, company_currency_id, payment.company_id, fields.Date.context_today(self),round=True)
+                            # converted_amount = currency_id._convert(
+                            #     line.curr_amount_to_pay, company_currency_id, payment.company_id, fields.Date.context_today(self),round=True)
+                            
+                            
+                            
+                            
+                            
                             remain_amount += converted_amount
                             remain_amount_currency += line.curr_amount_to_pay
                     else:
@@ -110,6 +122,8 @@ class AccontMultiPaymentWizard(models.Model):
     move_lines_ids = fields.One2many(
         'multi.move.line', 'multi_payment_id', string='Multiple Payments',)
     procesado = fields.Boolean(string='Procesado',default=False)
+    manual_currency_rate_active = fields.Boolean('Aplicar Cambio Manual',related="move_line_id.payment_id.manual_currency_rate_active")
+    manual_currency_rate = fields.Float('Tasa', digits=(12, 6),related="move_line_id.payment_id.manual_currency_rate")
 
     def multi_partial_pay(self):
         for payment in self:
@@ -118,6 +132,7 @@ class AccontMultiPaymentWizard(models.Model):
             remaining_payment = 0.00
 
             payment_line_id = payment.move_line_id
+            pago = payment_line_id.payment_id
             payment_move_id = payment.move_line_id.move_id
 
             current_balance = payment_line_id.debit - payment_line_id.credit
@@ -179,8 +194,12 @@ class AccontMultiPaymentWizard(models.Model):
                     if currency == line_currency_id:
                         amount_to_pay = line.curr_amount_to_pay
                     else:
-                        amount_to_pay = line_currency_id._convert(
-                            line.amount_to_pay, currency, company, date)
+                        if pago.manual_currency_rate_active:
+                            amount_to_pay = line_currency_id._convert_custom(
+                                line.amount_to_pay, currency, company, date ,rate= pago.manual_currency_rate)
+                        else:
+                            amount_to_pay = line_currency_id._convert(
+                                line.amount_to_pay, currency, company, date)
                 else:
                     amount_to_pay = line.amount_to_pay
 
@@ -201,8 +220,17 @@ class AccontMultiPaymentWizard(models.Model):
 
                 if not payment_id:
                     if currency and currency != company_currency:
-                        amount_to_pay = currency._convert(
+                        if payment_line_id.payment_id.manual_currency_rate_active:
+                            amount_to_pay = currency._convert_custom(
+                            amount_to_pay, company_currency, company, date,rate= payment_line_id.payment_id.manual_currency_rate)
+                            
+                        else:
+                            amount_to_pay = currency._convert(
                             amount_to_pay, company_currency, company, date)
+                        
+                        
+                        
+                        
                         amount_currency = amount_to_pay
                         currency_id = currency.id
                     else:
@@ -259,8 +287,17 @@ class AccontMultiPaymentWizard(models.Model):
 
                 if not payment_id:
                     if currency and currency != company_currency:
-                        amount_remain = currency._convert(
+                        if payment_line_id.payment_id.manual_currency_rate_active:
+                            amount_remain = currency._convert_custom(
+                            remaining_payment, company_currency, company, date,rate= payment_line_id.payment_id.manual_currency_rate)
+                            
+                        else:
+                            amount_remain = currency._convert(
                             remaining_payment, company_currency, company, date)
+                        
+                        
+                        
+                        
                         amount_currency = remaining_payment
                         currency_id = currency.id
                     else:
@@ -329,7 +366,11 @@ class MultiMoveLine(models.Model):
             amount_residual = amount_residual_currency = 0.0
             if sale.move_id:
                 amount_residual = sale.move_id.amount_residual
-                amount_residual_currency = sale.move_id.currency_id._convert(
+                if sale.multi_payment_id.move_line_id.payment_id.manual_currency_rate_active:               
+                    amount_residual_currency = sale.move_id.currency_id._convert_custom(
+                            sale.move_id.amount_residual,payment_curr_id, sale.move_id.company_id, fields.Date.context_today(self),rate= sale.multi_payment_id.move_line_id.payment_id.manual_currency_rate)
+                else:
+                    amount_residual_currency = sale.move_id.currency_id._convert(
                             sale.move_id.amount_residual,payment_curr_id, sale.move_id.company_id, fields.Date.context_today(self))
                 
             sale.amount_residual = amount_residual
@@ -360,6 +401,10 @@ class MultiMoveLine(models.Model):
             company_id = sale.company_id
             if sale.is_comapany:
                 if company_id and company_currency_id:
-                    converted_amount = payment_curr_id._convert(
+                    if sale.multi_payment_id.move_line_id.payment_id.manual_currency_rate_active:               
+                        converted_amount = payment_curr_id._convert_custom(
+                        sale.curr_amount_to_pay, company_currency_id, company_id, fields.Date.context_today(self),rate= sale.multi_payment_id.move_line_id.payment_id.manual_currency_rate)
+                    else:
+                        converted_amount = payment_curr_id._convert(
                         sale.curr_amount_to_pay, company_currency_id, company_id, fields.Date.context_today(self))
                     sale.amount_to_pay = converted_amount

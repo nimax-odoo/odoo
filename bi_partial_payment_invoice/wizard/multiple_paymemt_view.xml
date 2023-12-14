@@ -30,6 +30,8 @@
                                     options="{'no_open': True, 'no_create': True}"
                                     attrs="{'readonly' : [('partner_id','=',False)],'required' : [('partner_id','!=',False)]}" force_save="1"/>
                                 <field name="currency_id" />
+                                <field name="manual_currency_rate_active" />
+                                <field name="manual_currency_rate" />
                             </group>
                             <group>
                                 <field name="company_id" readonly="1" invisible="1" />
