@@ -31,6 +31,7 @@ class AccontPaymentWizard(models.Model):
                     amount = line.get('amount')
                     name = line.get('journal_name')
                     move_line = self.env['account.move.line'].search([('id','=',move_line_id)])
+                    move = self.env['account.move'].search([('id','=',move_id)])
                     result.update({
                         'move_id': int(move_id),
                         'move_line_id': int(move_line_id),
@@ -39,6 +40,11 @@ class AccontPaymentWizard(models.Model):
                         'amount_residual_payment': abs(move_line.amount_residual) or 0.00,
                         'name': name
                     })
+                    if move.move_type in ('in_refund', 'out_refund', 'in_receipt', 'out_receipt'):
+                        result.update({
+                        'amount_to_pay': move.amount_total,
+                        })
+                    
                     return result
         return result
 
@@ -187,121 +193,138 @@ class AccontPaymentWizard(models.Model):
                     partner_id=partner_id)._prepare_move_line_default_vals()
 
             do_last_number = last_line_number
+            if payment.move_id.move_type not in ('in_refund', 'out_refund', 'in_receipt', 'out_receipt'):
+                
+                if payment.amount_remain:
+                    last_line_number += 1
+                    self.env.user.company_id.write(
+                        {'last_line_number': last_line_number})
+                    if payment.payment_id:
+                        if payment.currency_id:
+                            if payment.payment_id.manual_currency_rate_active:
+                                
+                                amount_remain = payment.payment_id.currency_id._convert_custom(
+                                    payment.amount_remain, payment.currency_id, payment.company_id, date,rate= payment.payment_id.manual_currency_rate)
+                            else:
+                                amount_remain = payment.payment_id.currency_id._convert(
+                                    payment.amount_remain, payment.currency_id, payment.company_id, date)
+                                
+                                
+                                # amount_remain = payment.currency_id._convert(
+                                #     payment.amount_remain, payment.company_currency_id, payment.company_id, date)
+                        else:
+                            amount_remain = payment.amount_remain
 
-            if payment.amount_remain:
-                last_line_number += 1
-                self.env.user.company_id.write(
-                    {'last_line_number': last_line_number})
-                if payment.payment_id:
-                    if payment.currency_id:
-                        if payment.payment_id.manual_currency_rate_active:
-                            
-                            amount_remain = payment.payment_id.currency_id._convert_custom(
+                        remain_payment_move_vals = payment.payment_id.with_context(
+                            amount_remain=payment.amount_remain,
+                            last_line_number=last_line_number,
+                            currency_id=payment.payment_id.currency_id,
+                            partner_id=partner_id)._prepare_move_line_default_vals()
+
+                    if not payment.payment_id:
+                        if payment.currency_id != payment.company_currency_id:
+                            if payment.payment_id.manual_currency_rate_active:
+                                
+                                amount_remain = payment.payment_id.currency_id._convert_custom(
                                 payment.amount_remain, payment.currency_id, payment.company_id, date,rate= payment.payment_id.manual_currency_rate)
+                            else:
+                                amount_remain = payment.payment_id.currency_id._convert(
+                                    payment.amount_remain, payment.currency_id, payment.company_id, date)
+                            
+                            
+                                # amount_remain = payment.currency_id._convert(
+                                #     payment.amount_remain, payment.company_currency_id, payment.company_id, date)
+                                
+                            
+                            
+                            
+                            
+                            
+                            amount_currency = payment.amount_remain
+                            currency_id = payment.payment_id.currency_id.id
                         else:
-                            amount_remain = payment.payment_id.currency_id._convert(
-                                payment.amount_remain, payment.currency_id, payment.company_id, date)
-                            
-                            
-                            # amount_remain = payment.currency_id._convert(
-                            #     payment.amount_remain, payment.company_currency_id, payment.company_id, date)
-                    else:
-                        amount_remain = payment.amount_remain
+                            amount_remain = payment.amount_remain
+                            amount_currency = 0.0
+                            currency_id = False
 
-                    remain_payment_move_vals = payment.payment_id.with_context(
-                        amount_remain=payment.amount_remain,
-                        last_line_number=last_line_number,
-                        currency_id=payment.payment_id.currency_id,
-                        partner_id=partner_id)._prepare_move_line_default_vals()
+                        remain_payment_move_vals = payment.with_context(
+                            amount_remain=amount_remain,
+                            amount_currency=amount_currency,
+                            currency_id=currency_id,
+                            last_line_number=last_line_number,
+                            partner_id=partner_id)._prepare_move_line_default_vals()
 
-                if not payment.payment_id:
-                    if payment.currency_id != payment.company_currency_id:
-                        if payment.payment_id.manual_currency_rate_active:
-                            
-                            amount_remain = payment.payment_id.currency_id._convert_custom(
-                            payment.amount_remain, payment.currency_id, payment.company_id, date,rate= payment.payment_id.manual_currency_rate)
-                        else:
-                            amount_remain = payment.payment_id.currency_id._convert(
-                                payment.amount_remain, payment.currency_id, payment.company_id, date)
-                        
-                        
-                            # amount_remain = payment.currency_id._convert(
-                            #     payment.amount_remain, payment.company_currency_id, payment.company_id, date)
-                            
-                        
-                        
-                        
-                        
-                        
-                        amount_currency = payment.amount_remain
-                        currency_id = payment.payment_id.currency_id.id
-                    else:
-                        amount_remain = payment.amount_remain
-                        amount_currency = 0.0
-                        currency_id = False
+                else:
+                    self.env.user.company_id.write(
+                        {'last_line_number': last_line_number})
 
-                    remain_payment_move_vals = payment.with_context(
-                        amount_remain=amount_remain,
-                        amount_currency=amount_currency,
-                        currency_id=currency_id,
-                        last_line_number=last_line_number,
-                        partner_id=partner_id)._prepare_move_line_default_vals()
+                line_ids = []
 
-            else:
-                self.env.user.company_id.write(
-                    {'last_line_number': last_line_number})
-
-            line_ids = []
-
-            payment_line_ids = payment_move_id.line_ids.filtered(
-                lambda x: not x.in_payment and (x.partner_id == partner_id))
-            if payment.move_id.is_inbound():
-                payment_line_ids = payment_line_ids.filtered(lambda x: (
-                    x.credit > 0 and x.debit == 0) and not x.reconciled)
-            else:
-                payment_line_ids = payment_line_ids.filtered(lambda x: (
-                    x.credit == 0 and x.debit > 0) and not x.reconciled)
-
-            for line in payment_line_ids:
-                if line == payment.move_line_id:
-                    line_ids.append(line.id)
-            if line_ids:
-                payment_move_id.with_context(force_delete=True, check_move_validity=False, skip_account_move_synchronization=True).write(
-                    {'line_ids': [(2, line) for line in line_ids]})
-            new_do_payment_move_vals = []
-            for payment_line in do_payment_move_vals:
-                name = payment_line.get('name')
-                payment_line.update(
-                    {'name': name + " for " + str(self.move_id.name)})
-                new_do_payment_move_vals.append(payment_line)
-
-            if len(new_do_payment_move_vals) >= 1:
-                pay_mv_id = payment_move_id.with_context(
-                    check_move_validity=False, skip_account_move_synchronization=True)
-                for vals in new_do_payment_move_vals:
-                    vals.update({'move_id': payment_move_id.id})
-                    pay_mv_id.line_ids.create(vals)
+                payment_line_ids = payment_move_id.line_ids.filtered(
+                    lambda x: not x.in_payment and (x.partner_id == partner_id))
                 if payment.move_id.is_inbound():
-                    lines = pay_mv_id.line_ids.filtered(lambda x: (x.credit > 0 and x.debit == 0) and (
-                        x.partner_id == partner_id) and not x.reconciled and x.last_line_number == do_last_number)
+                    payment_line_ids = payment_line_ids.filtered(lambda x: (
+                        x.credit > 0 and x.debit == 0) and not x.reconciled)
                 else:
-                    lines = pay_mv_id.line_ids.filtered(lambda x: (x.credit == 0 and x.debit > 0) and (
-                        x.partner_id == partner_id) and not x.reconciled and x.last_line_number == do_last_number)
+                    payment_line_ids = payment_line_ids.filtered(lambda x: (
+                        x.credit == 0 and x.debit > 0) and not x.reconciled)
 
-                if lines:
-                    lines += payment.move_id.line_ids.filtered(
-                        lambda line: line.account_id == lines[0].account_id and not line.reconciled)
-                    if payment.amount_remain:
-                        if len(remain_payment_move_vals) >= 1:
-                            for vals in remain_payment_move_vals:
-                                vals.update({'move_id': payment_move_id.id})
-                                pay_mv_id.line_ids.create(vals)
-                    lines.with_context(
-                        orignal_amount=payment.amount_to_pay).reconcile()
+                for line in payment_line_ids:
+                    if line == payment.move_line_id:
+                        line_ids.append(line.id)
+                if line_ids:
+                    payment_move_id.with_context(force_delete=True, check_move_validity=False, skip_account_move_synchronization=True).write(
+                        {'line_ids': [(2, line) for line in line_ids]})
+                new_do_payment_move_vals = []
+                for payment_line in do_payment_move_vals:
+                    name = payment_line.get('name')
+                    payment_line.update(
+                        {'name': name + " for " + str(self.move_id.name)})
+                    new_do_payment_move_vals.append(payment_line)
 
-                else:
+                if len(new_do_payment_move_vals) >= 1:
+                    pay_mv_id = payment_move_id.with_context(
+                        check_move_validity=False, skip_account_move_synchronization=True)
+                    for vals in new_do_payment_move_vals:
+                        vals.update({'move_id': payment_move_id.id})
+                        pay_mv_id.line_ids.create(vals)
+                    if payment.move_id.is_inbound():
+                        lines = pay_mv_id.line_ids.filtered(lambda x: (x.credit > 0 and x.debit == 0) and (
+                            x.partner_id == partner_id) and not x.reconciled and x.last_line_number == do_last_number)
+                    else:
+                        lines = pay_mv_id.line_ids.filtered(lambda x: (x.credit == 0 and x.debit > 0) and (
+                            x.partner_id == partner_id) and not x.reconciled and x.last_line_number == do_last_number)
+
+                    if lines:
+                        lines += payment.move_id.line_ids.filtered(
+                            lambda line: line.account_id == lines[0].account_id and not line.reconciled)
+                        if payment.amount_remain:
+                            if len(remain_payment_move_vals) >= 1:
+                                for vals in remain_payment_move_vals:
+                                    vals.update({'move_id': payment_move_id.id})
+                                    pay_mv_id.line_ids.create(vals)
+                        lines.with_context(
+                            orignal_amount=payment.amount_to_pay).reconcile()
+
+                    else:
+                        raise UserError(
+                            _('Something Went Wrong. Reset Payment and Try again.'))
+            else:
+                if payment_move_id.amount_total != payment.amount_to_pay:
                     raise UserError(
-                        _('Something Went Wrong. Reset Payment and Try again.'))
+                        _('Se se pueden emitir pagos parciales en notas de debito credito ni recibos.'))
+                if payment.move_id.is_inbound():
+                    lines = payment_move_id.line_ids.filtered(lambda x: (x.credit > 0 and x.debit == 0) and (x.account_id == partner_id.property_account_payable_id))
+                else:
+                    lines = payment_move_id.line_ids.filtered(lambda x: (x.credit == 0 and x.debit > 0) and (x.account_id == partner_id.property_account_receivable_id))
+                lines+= payment.move_id.line_ids.filtered(
+                        lambda line: line.account_id == lines[0].account_id and not line.reconciled)
+                
+                lines.with_context(
+                        orignal_amount=payment.amount_to_pay).reconcile()
+                
+                
+                    
         return {'type': 'ir.actions.client', 'tag': 'reload'}
 
     def _prepare_move_line_default_vals(self):

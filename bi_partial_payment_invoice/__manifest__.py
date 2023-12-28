@@ -3,7 +3,7 @@
 
 {
     'name' : 'Invoice Partial Payment Reconciliation',
-    'version' : '1.0.1',
+    'version' : '1.0.2',
     'category' : 'Sales',
     'depends' : ['base', 
         'account', 'sale', 'sale_management','bi_manual_currency_exchange_rate'
