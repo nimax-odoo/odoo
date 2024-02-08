@@ -193,7 +193,7 @@ class AccontPaymentWizard(models.Model):
                     partner_id=partner_id)._prepare_move_line_default_vals()
 
             do_last_number = last_line_number
-            if payment.move_id.move_type not in ('in_refund', 'out_refund', 'in_receipt', 'out_receipt'):
+            if payment.move_id.move_type not in ('in_refund', 'out_refund', 'in_receipt', 'out_receipt') and payment_move_id.move_type not in ('in_refund', 'out_refund', 'in_receipt', 'out_receipt'):
                 
                 if payment.amount_remain:
                     last_line_number += 1
@@ -314,9 +314,15 @@ class AccontPaymentWizard(models.Model):
                     raise UserError(
                         _('Se se pueden emitir pagos parciales en notas de debito credito ni recibos.'))
                 if payment.move_id.is_inbound():
-                    lines = payment_move_id.line_ids.filtered(lambda x: (x.credit > 0 and x.debit == 0) and (x.account_id == partner_id.property_account_payable_id))
+                    if payment_move_id.move_type == 'out_refund':
+                        lines = payment_move_id.line_ids.filtered(lambda x: (x.credit > 0 and x.debit == 0) and (x.account_id == partner_id.property_account_receivable_id))
+                    else:
+                        lines = payment_move_id.line_ids.filtered(lambda x: (x.credit > 0 and x.debit == 0) and (x.account_id == partner_id.property_account_payable_id))
                 else:
-                    lines = payment_move_id.line_ids.filtered(lambda x: (x.credit == 0 and x.debit > 0) and (x.account_id == partner_id.property_account_receivable_id))
+                    if payment_move_id.move_type == 'in_refund':
+                        lines = payment_move_id.line_ids.filtered(lambda x: (x.credit == 0 and x.debit > 0) and (x.account_id == partner_id.property_account_payable_id))
+                    else:
+                        lines = payment_move_id.line_ids.filtered(lambda x: (x.credit == 0 and x.debit > 0) and (x.account_id == partner_id.property_account_receivable_id))
                 lines+= payment.move_id.line_ids.filtered(
                         lambda line: line.account_id == lines[0].account_id and not line.reconciled)
                 
