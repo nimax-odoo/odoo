@@ -345,6 +345,7 @@ class AccountMoveLineInherit(models.Model):
         # ==== Create partials ====
 
         partials = self.env['account.partial.reconcile'].create(sorted_lines._prepare_reconciliation_partials())
+        
 
         # Track newly created partials.
         results['partials'] = partials
@@ -387,11 +388,10 @@ class AccountMoveLineInherit(models.Model):
                     exchange_move._post(soft=False)
 
             # ==== Create the full reconcile ====
-
             results['full_reconcile'] = self.env['account.full.reconcile'].create({
                 'exchange_move_id': exchange_move and exchange_move.id,
                 'partial_reconcile_ids': [(6, 0, involved_partials.ids)],
-                'reconciled_line_ids': [(6, 0, involved_lines.ids)],
+                'reconciled_line_ids': [(6, 0, involved_lines.filtered(lambda l: not l.payment_id).ids)],
             })
 
         # Trigger action for paid invoices
