@@ -310,7 +310,8 @@ class AccontPaymentWizard(models.Model):
                         raise UserError(
                             _('Something Went Wrong. Reset Payment and Try again.'))
             else:
-                if payment_move_id.amount_total != payment.amount_to_pay:
+
+                if not payment.move_id.move_type == 'out_refund' and payment_move_id.amount_total != payment.amount_to_pay:
                     raise UserError(
                         _('Se se pueden emitir pagos parciales en notas de debito credito ni recibos.'))
                 if payment.move_id.is_inbound():
@@ -325,7 +326,7 @@ class AccontPaymentWizard(models.Model):
                         lines = payment_move_id.line_ids.filtered(lambda x: (x.credit == 0 and x.debit > 0) and (x.account_id == partner_id.property_account_receivable_id))
                 lines+= payment.move_id.line_ids.filtered(
                         lambda line: line.account_id == lines[0].account_id and not line.reconciled)
-                
+            
                 lines.with_context(
                         orignal_amount=payment.amount_to_pay).reconcile()
                 
