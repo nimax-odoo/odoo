@@ -11,3 +11,4 @@ access.as.tabla.comisiones,access.as.tabla.comisiones,model_as_tabla_comisiones,
 access.as.comisiones,access.as.comisiones,model_as_comisiones,sales_team.group_sale_salesman,1,1,1,1
 access.as.marca,access.as.marca,model_as_marca,sales_team.group_sale_salesman,1,1,1,1
 access.as.aprobe.sale,access.as.aprobe.sale,model_as_aprobe_sale,sales_team.group_sale_salesman,1,1,1,1
+access_account_move_line_report_manager,account_move_line_report_manager,model_account_move_line_report,,1,1,1,1

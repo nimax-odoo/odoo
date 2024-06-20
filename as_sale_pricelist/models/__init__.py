@@ -17,3 +17,4 @@ from . import as_invoice
 from . import as_tabla_comisiones
 from . import as_res_config
 from . import as_account_edi_format
+from . import account_move_line_report

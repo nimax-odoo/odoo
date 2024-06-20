@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- View account.move.line.report View Tree -->
+    <record id="view_account_move_line_report_tree" model="ir.ui.view">
+        <field name="name">view.account.move.line.report.tree</field>
+        <field name="model">account.move.line.report</field>
+        <field name="arch" type="xml">
+            <tree>
+                <!-- <header>
+                    <button string="Actualizar datos" name="fetch_report_data" type="object" class="oe_highlight"/>
+                </header> -->
+                <field name="numero_factura"/>
+                <field name="partner"/>
+                <field name="fecha_factura"/>
+                <field name="fecha_vencimiento"/>
+                <field name="nombre_producto"/>
+                <field name="empresa"/>
+                <field name="total_sin_impuesto"/>
+                <field name="estado_de_pago"/>
+                <field name="last_applied_promo"/>
+                <field name="recalculated_cost_nimax_usd"/>
+                <field name="x_studio_margen"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_account_move_line_report_form" model="ir.ui.view">
+        <field name="name">model_name.view.form</field>
+        <field name="model">account.move.line.report</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="numero_factura"/>
+                            <field name="partner"/>
+                            <field name="fecha_factura"/>
+                            <field name="fecha_vencimiento"/>
+                            <field name="nombre_producto"/>
+                            <field name="empresa"/>
+                        </group>
+                        <group>
+                            <field name="total_sin_impuesto"/>
+                            <field name="estado_de_pago"/>
+                            <field name="last_applied_promo"/>
+                            <field name="recalculated_cost_nimax_usd"/>
+                            <field name="x_studio_margen"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- Action account.move.line.report -->
+    <record id="action_account_move_line_report" model="ir.actions.act_window">
+        <field name="name">Account Move Line Report</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">account.move.line.report</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                There is no examples click here to add new Account Move Line Report.
+            </p>
+        </field>
+    </record>
+    <menuitem 
+        id="menu_account_move_line_report" 
+        name="Reporte de comisiones" 
+        parent="account_reports.account_reports_audit_reports_menu" 
+        sequence="10"
+        action="action_account_move_line_report"
+    />
+
+
+</odoo>

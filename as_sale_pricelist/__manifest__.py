@@ -56,6 +56,7 @@ Lista de precios por linea de producto en ventas.
               'wizard/as_aprobe_utility.xml',
               'views/as_report_format.xml',
               'data/mail_template_data.xml',
+              "views/account_move_line_report_views.xml",
             ],            
     "images": ["static/description/background.png",],              
     "auto_install":False,
