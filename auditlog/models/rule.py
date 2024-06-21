@@ -20,7 +20,7 @@ FIELDS_BLACKLIST = [
 EMPTY_DICT = {}
 
 
-class DictDiffer:
+class DictDiffer(object):
     """Calculate the difference between two dictionaries as:
     (1) items added
     (2) items removed
@@ -51,11 +51,12 @@ class AuditlogRule(models.Model):
     _name = "auditlog.rule"
     _description = "Auditlog - Rule"
 
-    name = fields.Char(required=True)
+    name = fields.Char(required=True, states={"subscribed": [("readonly", True)]})
     model_id = fields.Many2one(
         "ir.model",
         "Model",
         help="Select model for which you want to generate log.",
+        states={"subscribed": [("readonly", True)]},
         ondelete="set null",
         index=True,
     )
@@ -67,7 +68,8 @@ class AuditlogRule(models.Model):
         "user_id",
         "rule_id",
         string="Users",
-        help="if no user is added then it will applicable for all users",
+        help="if  User is not added then it will applicable for all users",
+        states={"subscribed": [("readonly", True)]},
     )
     log_read = fields.Boolean(
         "Log Reads",
@@ -75,6 +77,7 @@ class AuditlogRule(models.Model):
             "Select this if you want to keep track of read/open on any "
             "record of the model of this rule"
         ),
+        states={"subscribed": [("readonly", True)]},
     )
     log_write = fields.Boolean(
         "Log Writes",
@@ -83,6 +86,7 @@ class AuditlogRule(models.Model):
             "Select this if you want to keep track of modification on any "
             "record of the model of this rule"
         ),
+        states={"subscribed": [("readonly", True)]},
     )
     log_unlink = fields.Boolean(
         "Log Deletes",
@@ -91,6 +95,7 @@ class AuditlogRule(models.Model):
             "Select this if you want to keep track of deletion on any "
             "record of the model of this rule"
         ),
+        states={"subscribed": [("readonly", True)]},
     )
     log_create = fields.Boolean(
         "Log Creates",
@@ -99,6 +104,7 @@ class AuditlogRule(models.Model):
             "Select this if you want to keep track of creation on any "
             "record of the model of this rule"
         ),
+        states={"subscribed": [("readonly", True)]},
     )
     log_type = fields.Selection(
         [("full", "Full log"), ("fast", "Fast log")],
@@ -112,6 +118,7 @@ class AuditlogRule(models.Model):
             "Fast log: only log the changes made through the create and "
             "write operations (less information, but it is faster)"
         ),
+        states={"subscribed": [("readonly", True)]},
     )
 
     state = fields.Selection(
@@ -122,6 +129,7 @@ class AuditlogRule(models.Model):
     action_id = fields.Many2one(
         "ir.actions.act_window",
         string="Action",
+        states={"subscribed": [("readonly", True)]},
     )
     capture_record = fields.Boolean(
         help="Select this if you want to keep track of Unlink Record",
@@ -130,12 +138,14 @@ class AuditlogRule(models.Model):
         "res.users",
         string="Users to Exclude",
         context={"active_test": False},
+        states={"subscribed": [("readonly", True)]},
     )
 
     fields_to_exclude_ids = fields.Many2many(
         "ir.model.fields",
         domain="[('model_id', '=', model_id)]",
         string="Fields to Exclude",
+        states={"subscribed": [("readonly", True)]},
     )
 
     _sql_constraints = [
@@ -151,7 +161,7 @@ class AuditlogRule(models.Model):
 
     def _register_hook(self):
         """Get all rules and apply them to log method calls."""
-        super()._register_hook()
+        super(AuditlogRule, self)._register_hook()
         if not hasattr(self.pool, "_auditlog_field_cache"):
             self.pool._auditlog_field_cache = {}
         if not hasattr(self.pool, "_auditlog_model_cache"):
@@ -159,24 +169,6 @@ class AuditlogRule(models.Model):
         if not self:
             self = self.search([("state", "=", "subscribed")])
         return self._patch_methods()
-
-    def _patch_method(self, model, method_name, check_attr):
-        result = new_method = False
-        model_class = type(model)
-        if method_name == "create":
-            new_method = self._make_create()
-        elif method_name == "read":
-            new_method = self._make_read()
-        elif method_name == "write":
-            new_method = self._make_write()
-        elif method_name == "unlink":
-            new_method = self._make_unlink()
-        if new_method:
-            new_method.origin = getattr(model_class, method_name)
-            setattr(model_class, method_name, new_method)
-            setattr(type(model), check_attr, True)
-            result = True
-        return result
 
     def _patch_methods(self):
         """Patch ORM methods of models defined in rules to log their calls."""
@@ -193,19 +185,27 @@ class AuditlogRule(models.Model):
             #   -> create
             check_attr = "auditlog_ruled_create"
             if rule.log_create and not hasattr(model_model, check_attr):
-                updated = rule._patch_method(model_model, "create", check_attr)
+                model_model._patch_method("create", rule._make_create())
+                setattr(type(model_model), check_attr, True)
+                updated = True
             #   -> read
             check_attr = "auditlog_ruled_read"
             if rule.log_read and not hasattr(model_model, check_attr):
-                updated = rule._patch_method(model_model, "read", check_attr)
+                model_model._patch_method("read", rule._make_read())
+                setattr(type(model_model), check_attr, True)
+                updated = True
             #   -> write
             check_attr = "auditlog_ruled_write"
             if rule.log_write and not hasattr(model_model, check_attr):
-                updated = rule._patch_method(model_model, "write", check_attr)
+                model_model._patch_method("write", rule._make_write())
+                setattr(type(model_model), check_attr, True)
+                updated = True
             #   -> unlink
             check_attr = "auditlog_ruled_unlink"
             if rule.log_unlink and not hasattr(model_model, check_attr):
-                updated = rule._patch_method(model_model, "unlink", check_attr)
+                model_model._patch_method("unlink", rule._make_unlink())
+                setattr(type(model_model), check_attr, True)
+                updated = True
         return updated
 
     def _revert_methods(self):
@@ -217,27 +217,23 @@ class AuditlogRule(models.Model):
                 if getattr(rule, "log_%s" % method) and hasattr(
                     getattr(model_model, method), "origin"
                 ):
-                    setattr(
-                        type(model_model), method, getattr(model_model, method).origin
-                    )
+                    model_model._revert_method(method)
                     delattr(type(model_model), "auditlog_ruled_%s" % method)
                     updated = True
         if updated:
             modules.registry.Registry(self.env.cr.dbname).signal_changes()
 
-    @api.model_create_multi
-    def create(self, vals_list):
+    @api.model
+    def create(self, vals):
         """Update the registry when a new rule is created."""
-        for vals in vals_list:
-            if "model_id" not in vals or not vals["model_id"]:
-                raise UserError(_("No model defined to create line."))
-            model = self.env["ir.model"].sudo().browse(vals["model_id"])
-            vals.update({"model_name": model.name, "model_model": model.model})
-        new_records = super().create(vals_list)
-        updated = [record._register_hook() for record in new_records]
-        if any(updated):
+        if "model_id" not in vals or not vals["model_id"]:
+            raise UserError(_("No model defined to create line."))
+        model = self.env["ir.model"].sudo().browse(vals["model_id"])
+        vals.update({"model_name": model.name, "model_model": model.model})
+        new_record = super().create(vals)
+        if new_record._register_hook():
             modules.registry.Registry(self.env.cr.dbname).signal_changes()
-        return new_records
+        return new_record
 
     def write(self, vals):
         """Update the registry when existing rules are updated."""
@@ -254,7 +250,7 @@ class AuditlogRule(models.Model):
     def unlink(self):
         """Unsubscribe rules before removing them."""
         self.unsubscribe()
-        return super().unlink()
+        return super(AuditlogRule, self).unlink()
 
     @api.model
     def get_auditlog_fields(self, model):
@@ -317,7 +313,7 @@ class AuditlogRule(models.Model):
             vals_list2 = copy.deepcopy(vals_list)
             new_records = create_fast.origin(self, vals_list, **kwargs)
             new_values = {}
-            for vals, new_record in zip(vals_list2, new_records, strict=True):
+            for vals, new_record in zip(vals_list2, new_records):
                 new_values.setdefault(new_record.id, vals)
             if self.env.user in users_to_exclude:
                 return new_records
@@ -389,12 +385,6 @@ class AuditlogRule(models.Model):
                 .with_context(prefetch_fields=False)
                 .read(fields_list)
             }
-            # invalidate_recordset method must be called with existing fields
-            if self._name == "res.users":
-                vals = self._remove_reified_groups(vals)
-            # Prevent the cache of modified fields from being poisoned by
-            # x2many items inaccessible to the current user.
-            self.invalidate_recordset(vals.keys())
             result = write_full.origin(self, vals, **kwargs)
             new_values = {
                 d["id"]: d
@@ -513,9 +503,10 @@ class AuditlogRule(models.Model):
         auditlog_rule = self.env["auditlog.rule"].search([("model_id", "=", model_id)])
         fields_to_exclude = auditlog_rule.fields_to_exclude_ids.mapped("name")
         for res_id in res_ids:
-            res = model_model.browse(res_id)
+            name = model_model.browse(res_id).name_get()
+            res_name = name and name[0] and name[0][1]
             vals = {
-                "name": res.display_name,
+                "name": res_name,
                 "model_id": model_id,
                 "res_id": res_id,
                 "method": method,
@@ -601,10 +592,10 @@ class AuditlogRule(models.Model):
             "new_value_text": False,
         }
         if field["relation"] and "2many" in field["ttype"]:
-            vals["old_value_text"] = [
-                (x.id, x.display_name)
-                for x in self.env[field["relation"]].browse(vals["old_value"])
-            ]
+            old_value_text = (
+                self.env[field["relation"]].browse(vals["old_value"]).name_get()
+            )
+            vals["old_value_text"] = old_value_text
         return vals
 
     def _create_log_line_on_write(
@@ -636,27 +627,27 @@ class AuditlogRule(models.Model):
             "new_value": new_values[log.res_id][field["name"]],
             "new_value_text": new_values[log.res_id][field["name"]],
         }
-        # for *2many fields, log the display_name
+        # for *2many fields, log the name_get
         if log.log_type == "full" and field["relation"] and "2many" in field["ttype"]:
-            # Filter IDs to prevent a 'display_name' call on deleted resources
+            # Filter IDs to prevent a 'name_get()' call on deleted resources
             existing_ids = self.env[field["relation"]]._search(
                 [("id", "in", vals["old_value"])]
             )
             old_value_text = []
             if existing_ids:
-                old_value_text = [
-                    (x.id, x.display_name)
-                    for x in self.env[field["relation"]].browse(existing_ids)
-                ]
+                existing_values = (
+                    self.env[field["relation"]].browse(existing_ids).name_get()
+                )
+                old_value_text.extend(existing_values)
             # Deleted resources will have a 'DELETED' text representation
             deleted_ids = set(vals["old_value"]) - set(existing_ids)
             for deleted_id in deleted_ids:
                 old_value_text.append((deleted_id, "DELETED"))
             vals["old_value_text"] = old_value_text
-            vals["new_value_text"] = [
-                (x.id, x.display_name)
-                for x in self.env[field["relation"]].browse(vals["new_value"])
-            ]
+            new_value_text = (
+                self.env[field["relation"]].browse(vals["new_value"]).name_get()
+            )
+            vals["new_value_text"] = new_value_text
         return vals
 
     def _create_log_line_on_create(
@@ -687,10 +678,10 @@ class AuditlogRule(models.Model):
             "new_value_text": new_values[log.res_id][field["name"]],
         }
         if log.log_type == "full" and field["relation"] and "2many" in field["ttype"]:
-            vals["new_value_text"] = [
-                (x.id, x.display_name)
-                for x in self.env[field["relation"]].browse(vals["new_value"])
-            ]
+            new_value_text = (
+                self.env[field["relation"]].browse(vals["new_value"]).name_get()
+            )
+            vals["new_value_text"] = new_value_text
         return vals
 
     def subscribe(self):

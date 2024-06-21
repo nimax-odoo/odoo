@@ -9,15 +9,14 @@ msgstr ""
 "Project-Id-Version: Odoo Server 9.0c\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-11-26 01:45+0000\n"
-"PO-Revision-Date: 2024-06-12 11:45+0000\n"
-"Last-Translator: jakobkrabbe <jakob@syscare.se>\n"
+"PO-Revision-Date: 2016-11-26 01:45+0000\n"
+"Last-Translator: OCA Transbot <transbot@odoo-community.org>, 2016\n"
 "Language-Team: Swedish (https://www.transifex.com/oca/teams/23907/sv/)\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.17\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__action_id
@@ -32,58 +31,60 @@ msgstr "Revision"
 #. module: auditlog
 #: model:ir.model,name:auditlog.model_auditlog_autovacuum
 msgid "Auditlog - Delete old logs"
-msgstr "Auditlog - Ta bort gamla loggar"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model,name:auditlog.model_auditlog_http_session
 msgid "Auditlog - HTTP User session log"
-msgstr "Auditlog - HTTP-sessionslogg för användare"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model,name:auditlog.model_auditlog_http_request
 msgid "Auditlog - HTTP request log"
-msgstr "Auditlog - Logg över HTTP-förfrågningar"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model,name:auditlog.model_auditlog_log
 msgid "Auditlog - Log"
-msgstr "Auditlog - Logg"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model,name:auditlog.model_auditlog_log_line
 #: model:ir.model,name:auditlog.model_auditlog_log_line_view
 msgid "Auditlog - Log details (fields updated)"
-msgstr "Auditlog - Loggdetaljer (fält uppdaterade)"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model,name:auditlog.model_auditlog_rule
 msgid "Auditlog - Rule"
-msgstr "Auditlog - Regel"
+msgstr ""
 
 #. module: auditlog
 #: model:res.groups,name:auditlog.group_auditlog_manager
 msgid "Auditlog Manager"
-msgstr "Auditlog Manager"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.module.category,name:auditlog.security_auditlog_groups
 msgid "Auditlog Rights"
-msgstr "Rättigheter för Auditlog"
+msgstr ""
 
 #. module: auditlog
 #: model:res.groups,name:auditlog.group_auditlog_user
 msgid "Auditlog User"
-msgstr "Auditlog Användare"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.actions.server,name:auditlog.ir_cron_auditlog_autovacuum_ir_actions_server
+#: model:ir.cron,cron_name:auditlog.ir_cron_auditlog_autovacuum
+#: model:ir.cron,name:auditlog.ir_cron_auditlog_autovacuum
 msgid "Auto-vacuum audit logs"
-msgstr "Granskningsloggar för automatisk vakuumering"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__capture_record
 msgid "Capture Record"
-msgstr "Upptagningsrekord"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_http_request__user_context
@@ -145,38 +146,37 @@ msgstr "Preliminär"
 #: model:ir.model.fields.selection,name:auditlog.selection__auditlog_log__log_type__fast
 #: model:ir.model.fields.selection,name:auditlog.selection__auditlog_rule__log_type__fast
 msgid "Fast log"
-msgstr "Snabb logg"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line__field_id
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__field_id
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_line_search
 msgid "Field"
-msgstr "Fält"
+msgstr ""
 
 #. module: auditlog
-#. odoo-python
 #: code:addons/auditlog/models/rule.py:0
 #, python-format
 msgid "Field 'model_id' cannot be empty."
-msgstr "Fältet \"model_id\" får inte vara tomt."
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__fields_to_exclude_ids
 msgid "Fields to Exclude"
-msgstr "Fält att utesluta"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log__line_ids
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_log_form
 msgid "Fields updated"
-msgstr "Fält uppdaterade"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields.selection,name:auditlog.selection__auditlog_log__log_type__full
 #: model:ir.model.fields.selection,name:auditlog.selection__auditlog_rule__log_type__full
 msgid "Full log"
-msgstr "Full logg"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,help:auditlog.field_auditlog_rule__log_type
@@ -186,11 +186,6 @@ msgid ""
 "Fast log: only log the changes made through the create and write operations "
 "(less information, but it is faster)"
 msgstr ""
-"Full log: gör en skillnad mellan data före och efter operationen (loggar mer "
-"information, t.ex. beräknade fält som uppdaterades, men det går långsammare)"
-"\n"
-"Snabb loggning: loggar endast de ändringar som gjorts genom skapande- och "
-"skrivoperationerna (mindre information, men det går snabbare)"
 
 #. module: auditlog
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_http_request_search
@@ -204,7 +199,7 @@ msgstr "Gruppera efter..."
 #. module: auditlog
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_log_form
 msgid "HTTP Context"
-msgstr "HTTP-kontext"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log__http_request_id
@@ -213,7 +208,7 @@ msgstr "HTTP-kontext"
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_line_search
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_log_search
 msgid "HTTP Request"
-msgstr "HTTP-förfrågan"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.actions.act_window,name:auditlog.action_auditlog_http_request_tree
@@ -222,7 +217,7 @@ msgstr "HTTP-förfrågan"
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_http_request_search
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_http_session_form
 msgid "HTTP Requests"
-msgstr "HTTP-förfrågningar"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_autovacuum__id
@@ -234,6 +229,17 @@ msgstr "HTTP-förfrågningar"
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__id
 msgid "ID"
 msgstr "ID"
+
+#. module: auditlog
+#: model:ir.model.fields,field_description:auditlog.field_auditlog_autovacuum____last_update
+#: model:ir.model.fields,field_description:auditlog.field_auditlog_http_request____last_update
+#: model:ir.model.fields,field_description:auditlog.field_auditlog_http_session____last_update
+#: model:ir.model.fields,field_description:auditlog.field_auditlog_log____last_update
+#: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line____last_update
+#: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view____last_update
+#: model:ir.model.fields,field_description:auditlog.field_auditlog_rule____last_update
+msgid "Last Modified on"
+msgstr "Senast redigerad"
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_autovacuum__write_uid
@@ -262,39 +268,39 @@ msgstr "Senast uppdaterad"
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__log_id
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_log_form
 msgid "Log"
-msgstr "Logg"
+msgstr ""
 
 #. module: auditlog
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_log_form
 msgid "Log - Field updated"
-msgstr "Logg - Fältet uppdaterat"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__log_create
 msgid "Log Creates"
-msgstr "Logg skapar"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__log_unlink
 msgid "Log Deletes"
-msgstr "Loggen raderas"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.actions.act_window,name:auditlog.action_auditlog_line
 #: model:ir.ui.menu,name:auditlog.menu_auditlog_line
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_line_search
 msgid "Log Lines"
-msgstr "Logglinjer"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__log_read
 msgid "Log Reads"
-msgstr "Loggläsningar"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__log_write
 msgid "Log Writes"
-msgstr "Logg skrivningar"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.actions.act_window,name:auditlog.action_auditlog_log_tree
@@ -303,13 +309,13 @@ msgstr "Logg skrivningar"
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_http_request_form
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_log_search
 msgid "Logs"
-msgstr "Loggar"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log__method
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__method
 msgid "Method"
-msgstr "Metod"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log__model_id
@@ -318,19 +324,19 @@ msgstr "Metod"
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_line_search
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_log_search
 msgid "Model"
-msgstr "Modell"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__model_model
 msgid "Model Model"
-msgstr "Modell Modell"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log__model_name
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__model_name
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__model_name
 msgid "Model Name"
-msgstr "Modellnamn"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_http_request__display_name
@@ -344,97 +350,94 @@ msgstr "Namn"
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line__new_value
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__new_value
 msgid "New Value"
-msgstr "Nytt värde"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line__new_value_text
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__new_value_text
 msgid "New value Text"
-msgstr "Nytt värde Text"
+msgstr ""
 
 #. module: auditlog
-#. odoo-python
 #: code:addons/auditlog/models/log.py:0
 #, python-format
 msgid "No field defined to create line."
-msgstr "Inget fält definierat för att skapa linje."
+msgstr ""
 
 #. module: auditlog
-#. odoo-python
 #: code:addons/auditlog/models/rule.py:0
 #, python-format
 msgid "No model defined to create line."
-msgstr "Ingen modell definierad för att skapa linjen."
+msgstr ""
 
 #. module: auditlog
-#. odoo-python
 #: code:addons/auditlog/models/log.py:0
 #, python-format
 msgid "No model defined to create log."
-msgstr "Ingen modell definierad för att skapa logg."
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line__old_value
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__old_value
 msgid "Old Value"
-msgstr "Gammalt värde"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line__old_value_text
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__old_value_text
 msgid "Old value Text"
-msgstr "Gammalt värde Text"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_http_request__name
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_http_request_search
 msgid "Path"
-msgstr "Väg"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__res_id
 msgid "Res"
-msgstr "Res"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log__res_id
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_line_search
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_log_search
 msgid "Resource ID"
-msgstr "Resurs-ID"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log__name
 msgid "Resource Name"
-msgstr "Namn på resurs"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_http_request__root_url
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_http_request_search
 msgid "Root URL"
-msgstr "URL för rot"
+msgstr ""
 
 #. module: auditlog
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_rule_form
 msgid "Rule"
-msgstr "Regel"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.actions.act_window,name:auditlog.action_auditlog_rule_tree
 #: model:ir.ui.menu,name:auditlog.menu_action_auditlog_rule_tree
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_rule_search
 msgid "Rules"
-msgstr "Regler"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,help:auditlog.field_auditlog_rule__model_id
 msgid "Select model for which you want to generate log."
-msgstr "Välj den modell som du vill generera loggen för."
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,help:auditlog.field_auditlog_rule__capture_record
 msgid "Select this if you want to keep track of Unlink Record"
-msgstr "Välj detta om du vill hålla reda på Unlink Record"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,help:auditlog.field_auditlog_rule__log_create
@@ -442,8 +445,6 @@ msgid ""
 "Select this if you want to keep track of creation on any record of the model "
 "of this rule"
 msgstr ""
-"Välj detta om du vill hålla reda på skapandet på alla poster av modellen för "
-"denna regel"
 
 #. module: auditlog
 #: model:ir.model.fields,help:auditlog.field_auditlog_rule__log_unlink
@@ -451,8 +452,6 @@ msgid ""
 "Select this if you want to keep track of deletion on any record of the model "
 "of this rule"
 msgstr ""
-"Välj detta om du vill hålla reda på borttagning på alla poster av modellen "
-"för denna regel"
 
 #. module: auditlog
 #: model:ir.model.fields,help:auditlog.field_auditlog_rule__log_write
@@ -460,8 +459,6 @@ msgid ""
 "Select this if you want to keep track of modification on any record of the "
 "model of this rule"
 msgstr ""
-"Välj detta om du vill hålla reda på ändringar på alla poster av modellen för "
-"denna regel"
 
 #. module: auditlog
 #: model:ir.model.fields,help:auditlog.field_auditlog_rule__log_read
@@ -469,20 +466,18 @@ msgid ""
 "Select this if you want to keep track of read/open on any record of the "
 "model of this rule"
 msgstr ""
-"Välj detta om du vill hålla reda på läst/öppen på alla poster av modellen "
-"för denna regel"
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_http_request__http_session_id
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log__http_session_id
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__http_session_id
 msgid "Session"
-msgstr "Session"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_http_session__name
 msgid "Session ID"
-msgstr "Session ID"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__state
@@ -493,39 +488,37 @@ msgstr "Status"
 #. module: auditlog
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_rule_form
 msgid "Subscribe"
-msgstr "Prenumerera"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields.selection,name:auditlog.selection__auditlog_rule__state__subscribed
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_rule_search
 msgid "Subscribed"
-msgstr "Prenumeration"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log__model_model
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__model_model
 msgid "Technical Model Name"
-msgstr "Teknisk modell Namn"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line__field_name
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log_line_view__field_name
 msgid "Technical name"
-msgstr "Tekniskt namn"
+msgstr ""
 
 #. module: auditlog
-#. odoo-python
 #: code:addons/auditlog/models/log.py:0
 #, python-format
 msgid "The field 'field_id' cannot be empty."
-msgstr "Fältet 'field_id' får inte vara tomt."
+msgstr ""
 
 #. module: auditlog
-#. odoo-python
 #: code:addons/auditlog/models/log.py:0
 #, python-format
 msgid "The field 'model_id' cannot be empty."
-msgstr "Fältet 'model_id' får inte vara tomt."
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.constraint,message:auditlog.constraint_auditlog_rule_model_uniq
@@ -533,8 +526,6 @@ msgid ""
 "There is already a rule defined on this model\n"
 "You cannot define another: please edit the existing one."
 msgstr ""
-"Det finns redan en regel definierad för den här modellen\n"
-"Du kan inte definiera en ny: redigera den befintliga."
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_log__log_type
@@ -546,7 +537,7 @@ msgstr "Typ"
 #. module: auditlog
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_rule_form
 msgid "Unsubscribe"
-msgstr "Avsluta prenumeration"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_http_request__user_id
@@ -566,41 +557,37 @@ msgstr "Användare"
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_line_search
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_log_search
 msgid "User session"
-msgstr "Användarsession"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.actions.act_window,name:auditlog.action_auditlog_http_session_tree
 #: model:ir.ui.menu,name:auditlog.menu_action_auditlog_http_session_tree
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_http_session_search
 msgid "User sessions"
-msgstr "Användarsessioner"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__user_ids
 msgid "Users"
-msgstr "Användare"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,field_description:auditlog.field_auditlog_rule__users_to_exclude_ids
 msgid "Users to Exclude"
-msgstr "Användare att utesluta"
+msgstr ""
 
 #. module: auditlog
 #: model_terms:ir.ui.view,arch_db:auditlog.view_auditlog_log_form
 msgid "Values"
-msgstr "Värden"
+msgstr ""
 
 #. module: auditlog
-#. odoo-python
 #: code:addons/auditlog/models/rule.py:0
 #, python-format
 msgid "View logs"
-msgstr "Visa loggar"
+msgstr ""
 
 #. module: auditlog
 #: model:ir.model.fields,help:auditlog.field_auditlog_rule__user_ids
-msgid "if no user is added then it will applicable for all users"
-msgstr "om ingen användare läggs till kommer det att gälla för alla användare"
-
-#~ msgid "Last Modified on"
-#~ msgstr "Senast redigerad"
+msgid "if  User is not added then it will applicable for all users"
+msgstr ""

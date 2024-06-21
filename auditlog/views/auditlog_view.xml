@@ -18,48 +18,46 @@
                         string="Subscribe"
                         name="subscribe"
                         type="object"
-                        invisible="state != 'draft'"
+                        states="draft"
                         class="oe_highlight"
                     />
                     <button
                         string="Unsubscribe"
                         name="unsubscribe"
                         type="object"
-                        invisible="state != 'subscribed'"
+                        states="subscribed"
                     />
                     <field name="state" widget="statusbar" />
                 </header>
                 <sheet>
                     <group string="Rule">
                         <group colspan="1">
-                            <field name="name" readonly="state == 'subscribed'" />
-                            <field name="model_id" readonly="state == 'subscribed'" />
-                            <field name="log_type" readonly="state == 'subscribed'" />
+                            <field name="name" required="1" />
+                            <field name="model_id" />
+                            <field name="log_type" />
                             <field
                                 name="action_id"
-                                readonly="state == 'subscribed'"
+                                readonly="1"
                                 groups="base.group_no_one"
                             />
                             <field
                                 name="capture_record"
-                                invisible="log_type != 'full' or log_unlink != True"
+                                attrs="{'invisible':['|' ,('log_type','!=', 'full'), ('log_unlink','!=', True)]}"
                             />
                             <field
                                 name="users_to_exclude_ids"
                                 widget="many2many_tags"
-                                readonly="state == 'subscribed'"
                             />
                             <field
                                 name="fields_to_exclude_ids"
                                 widget="many2many_tags"
-                                readonly="state == 'subscribed'"
                             />
                         </group>
                         <group colspan="1">
-                            <field name="log_read" readonly="state == 'subscribed'" />
-                            <field name="log_write" readonly="state == 'subscribed'" />
-                            <field name="log_unlink" readonly="state == 'subscribed'" />
-                            <field name="log_create" readonly="state == 'subscribed'" />
+                            <field name="log_read" />
+                            <field name="log_write" />
+                            <field name="log_unlink" />
+                            <field name="log_create" />
                         </group>
                     </group>
                 </sheet>
@@ -144,12 +142,12 @@
                             <field name="model_id" readonly="1" />
                             <field
                                 name="model_name"
-                                invisible="model_id != False"
+                                attrs="{'invisible': [('model_id', '!=', False)]}"
                                 readonly="1"
                             />
                             <field
                                 name="model_model"
-                                invisible="model_id != False"
+                                attrs="{'invisible': [('model_id', '!=', False)]}"
                                 readonly="1"
                             />
                             <field name="res_id" readonly="1" />
@@ -161,13 +159,13 @@
                         <field name="http_request_id" />
                     </group>
                     <group string="Fields updated">
-                        <field name="line_ids" readonly="1" nolabel="1" colspan="2">
+                        <field name="line_ids" readonly="1" nolabel="1">
                             <form string="Log - Field updated">
                                 <group>
                                     <field name="field_id" readonly="1" />
                                     <field
                                         name="field_name"
-                                        invisible="field_id != False"
+                                        attrs="{'invisible': [('field_id', '!=', False)]}"
                                         readonly="1"
                                     />
                                 </group>

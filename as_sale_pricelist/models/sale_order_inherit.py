@@ -263,6 +263,7 @@ class SaleOrder(models.Model):
             elif no_access:
                 raise ValidationError('No se puede confirmar la venta, modifique sus precios')
         product=[]
+        self.validate_price_list_in_products()
         res = super(SaleOrder, self).action_confirm()
         for rec in self:
             for line in rec.order_line:
@@ -305,6 +306,12 @@ class SaleOrder(models.Model):
                 
 
         return res
+
+    def validate_price_list_in_products(self):
+        for line in self.order_line:
+            if not line.as_pricelist_id:
+                raise UserError('No puedes confirmar una orden de venta si establecer las listas de precios a cada linea de productos.')
+
 
     def action_cancel(self):
         res = super(SaleOrder, self).action_cancel()
