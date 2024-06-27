@@ -46,8 +46,15 @@ class WebsiteSale(WebsiteSale):
         if search:
             for srch in search.split(" "):
                 domain += [
-                    '|', '|', '|', ('name', 'ilike', srch), ('description', 'ilike', srch),
-                    ('description_sale', 'ilike', srch), ('product_variant_ids.default_code', 'ilike', srch)]
+                    '|', '|', '|','|',
+
+                    ('name', 'ilike', srch), 
+                    ('description', 'ilike', srch),
+                    ('description_sale', 'ilike', srch), 
+                    ('product_variant_ids.default_code', 'ilike', srch)
+                    ('x_studio_sku_no_de_parte', 'ilike', srch)
+
+                    ]
 
         if category:
             domain += [('public_categ_ids', 'child_of', int(category))]
@@ -209,6 +216,7 @@ class WebsiteSale(WebsiteSale):
 
             # This is ~4 times more efficient than a search for the cheapest and most expensive products
             from_clause, where_clause, where_params = Product._where_calc(domain).get_sql()
+           
             query = f"""
                 SELECT COALESCE(MIN(list_price), 0) * {conversion_rate}, COALESCE(MAX(list_price), 0) * {conversion_rate}
                   FROM {from_clause}
@@ -324,3 +332,32 @@ class WebsiteSale(WebsiteSale):
             values['main_object'] = category
         values.update(self._get_additional_shop_values(values))
         return request.render("website_sale.products", values)
+
+class WebsiteInherit(Website):
+    @http.route('/website/snippet/autocomplete', type='json', auth='public', website=True)
+    def autocomplete(self, search_type=None, term=None, order=None, limit=5, max_nb_chars=999, options=None):
+        """
+        Returns list of results according to the term and options
+
+        :param str search_type: indicates what to search within, 'all' matches all available types
+        :param str term: search term written by the user
+        :param str order:
+        :param int limit: number of results to consider, defaults to 5
+        :param int max_nb_chars: max number of characters for text fields
+        :param dict options: options map containing
+            allowFuzzy: enables the fuzzy matching when truthy
+            fuzzy (boolean): True when called after finding a name through fuzzy matching
+
+        :returns: dict (or False if no result) containing
+            - 'results' (list): results (only their needed field values)
+                    note: the monetary fields will be strings properly formatted and
+                    already containing the currency
+            - 'results_count' (int): the number of results in the database
+                    that matched the search query
+            - 'parts' (dict): presence of fields across all results
+            - 'fuzzy_search': search term used instead of requested search
+        """
+       
+        res = super(WebsiteInherit, self).autocomplete(search_type, term, order, limit, max_nb_chars, options)
+    
+        return res

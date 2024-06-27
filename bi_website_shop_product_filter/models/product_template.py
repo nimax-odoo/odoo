@@ -27,6 +27,16 @@ class FilterProductTemplate(models.Model):
 	_inherit = 'product.template'
 
 	filter_ids = fields.One2many('filter.product.line','product_tmpl_id','Product Filter')
+	
+	@api.model
+	def _search_get_detail(self, website, order, options):
+		options['displaySku'] = True
+		res = super(FilterProductTemplate, self)._search_get_detail(website, order, options)
+
+		res['search_fields'] = res['search_fields'][:1] + ['x_studio_sku_no_de_parte'] + res['search_fields'][1:]
+		res['mapping']['x_studio_sku_no_de_parte'] = {'name': 'x_studio_sku_no_de_parte', 'type': 'text', 'match': True}
+
+		return res 
 
 
 class ProductFilters(models.Model):
