@@ -76,6 +76,7 @@
         'data/data_view.xml',
         'views/product_template_views.xml',
         'views/product_template_website_views.xml',
+        'views/templates.xml',
     ],
     'auto_install': False,
     'installable': True,

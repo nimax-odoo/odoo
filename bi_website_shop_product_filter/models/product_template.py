@@ -22,6 +22,28 @@ class website(models.Model):
 			fltr.sudo().write({
 				'dynamic_count' : count,
 			})
+	def _get_pricelist_available(self, req, show_visible=False):
+		""" Return the list of pricelists that can be used on website for the current user.
+        Country restrictions will be detected with GeoIP (if installed).
+        :param bool show_visible: if True, we don't display pricelist where selectable is False (Eg: Code promo)
+        :returns: pricelist recordset
+        """
+        # Llama al método super para obtener las listas de precios disponibles
+		available_pricelists = super(website, self)._get_pricelist_available(req, show_visible)
+		
+		# Obtener el socio (partner) del usuario actual
+		partner = self.env.user.partner_id
+		
+		# Obtener la lista de precios del socio (partner)
+		partner_pricelist = partner.property_product_pricelist
+		
+		# Filtra las listas de precios para devolver solo la lista de precios asociada al socio
+		if partner_pricelist and partner_pricelist in available_pricelists:
+			return partner_pricelist
+		else:
+			# Si no hay una lista de precios asociada al socio, devolver una lista vacía
+			return self.env['product.pricelist'].browse([])
+
 
 class FilterProductTemplate(models.Model):
 	_inherit = 'product.template'

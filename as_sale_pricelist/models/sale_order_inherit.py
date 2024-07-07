@@ -240,6 +240,10 @@ class SaleOrder(models.Model):
         return name
         
     def action_confirm(self):
+        for order in self:
+            partner = order.partner_id
+            partner.check_credit_limit(order.amount_total)
+
         margin_minimo = self.env['ir.config_parameter'].sudo().get_param('as_sale_pricelist.as_margin_minimo')
         margin_global = self.env['ir.config_parameter'].sudo().get_param('as_sale_pricelist.as_margin_global')
         if self.as_aprobe == False:
@@ -307,10 +311,13 @@ class SaleOrder(models.Model):
 
         return res
 
+ 
+
+    
     def validate_price_list_in_products(self):
         for line in self.order_line:
             if not line.as_pricelist_id:
-                raise UserError('No puedes confirmar una orden de venta si establecer las listas de precios a cada linea de productos.')
+                raise UserError('No se puede confirmar la orden de venta sin establecer la lista de precios a cada linea de producto.')
 
 
     def action_cancel(self):
