@@ -42,7 +42,6 @@ class SaleOrderLine(models.Model):
             else:
                 sale_line.as_margin_porcentaje = 0
 
-        
     # apply pricelist
     def pricelist_apply(self):
         pricelists = self.env['product.pricelist'].sudo().search([('currency_id','=',self.order_id.currency_id.id)])
@@ -187,6 +186,34 @@ class SaleOrder(models.Model):
     as_usuario_final = fields.Char(string="Usuario Final")
     invoice_ids = fields.Many2many("account.move", string='Invoices', compute="_get_invoiced", readonly=True, copy=False,store=True)
 
+
+    @api.onchange('x_studio_ordenando_a_fabricante')
+    def _onchange_x_studio_ordenando_a_fabricante(self):
+        """
+        Método onchange para el campo x_studio_ordenando_a_fabricante. 
+        Publica el cambio del valor en el chatter si la orden es válida.
+        """
+        if self._origin and self._origin.id:  # Ensure the record is saved and valid
+            message = _(
+                "El campo 'Ordenando a Fabricante' ha cambiado a: %s",
+                self.x_studio_ordenando_a_fabricante
+            )
+            self._origin.message_post(body=message)
+
+    @api.onchange('x_studio_marca')
+    def _onchange_x_studio_marca(self):
+        """
+        Método onchange para el campo x_studio_marca. 
+        Publica el cambio del valor en el chatter si la orden es válida.
+        """
+        if self._origin and self._origin.id:  # Ensure the record is saved and valid
+            message = _(
+                "El campo 'Marca' ha cambiado a: %s",
+                self.x_studio_marca
+            )
+            self._origin.message_post(body=message)
+            
+            
     @api.depends('order_line.price_unit','order_line.COST_NIMAX_USD')
     def _amount_all_marigin(self):
         total_price = 0.0
@@ -240,6 +267,10 @@ class SaleOrder(models.Model):
         return name
         
     def action_confirm(self):
+        for order in self:
+            partner = order.partner_id
+            partner.check_credit_limit(order.amount_total)
+
         margin_minimo = self.env['ir.config_parameter'].sudo().get_param('as_sale_pricelist.as_margin_minimo')
         margin_global = self.env['ir.config_parameter'].sudo().get_param('as_sale_pricelist.as_margin_global')
         if self.as_aprobe == False:
@@ -263,6 +294,7 @@ class SaleOrder(models.Model):
             elif no_access:
                 raise ValidationError('No se puede confirmar la venta, modifique sus precios')
         product=[]
+        self.validate_price_list_in_products()
         res = super(SaleOrder, self).action_confirm()
         for rec in self:
             for line in rec.order_line:
@@ -306,6 +338,15 @@ class SaleOrder(models.Model):
 
         return res
 
+ 
+
+    
+    def validate_price_list_in_products(self):
+        for line in self.order_line:
+            if not line.as_pricelist_id:
+                raise UserError('No se puede confirmar la orden de venta sin establecer la lista de precios a cada linea de producto.')
+
+
     def action_cancel(self):
         res = super(SaleOrder, self).action_cancel()
 
@@ -317,3 +358,41 @@ class SaleOrder(models.Model):
                     promo.tf_gifted_qty -= line.product_uom_qty
         return res
 
+class SaleAdvancePaymentInv(models.TransientModel):
+    _inherit = "sale.advance.payment.inv"
+
+
+    def create_invoices(self):
+        sale_orders = self.env['sale.order'].browse(self._context.get('active_ids', []))
+
+        if self.advance_payment_method == 'delivered':
+            sale_orders.partner_id.validate_customer_blocked() #add custom method
+            sale_orders._create_invoices(final=self.deduct_down_payments)
+        else:
+            # Create deposit product if necessary
+            sale_orders.partner_id.validate_customer_blocked()  #add custom method
+            if not self.product_id:
+                vals = self._prepare_deposit_product()
+                self.product_id = self.env['product.product'].create(vals)
+                self.env['ir.config_parameter'].sudo().set_param('sale.default_deposit_product_id', self.product_id.id)
+
+            sale_line_obj = self.env['sale.order.line']
+            for order in sale_orders:
+                amount, name = self._get_advance_details(order)
+
+                if self.product_id.invoice_policy != 'order':
+                    raise UserError(_('The product used to invoice a down payment should have an invoice policy set to "Ordered quantities". Please update your deposit product to be able to create a deposit invoice.'))
+                if self.product_id.type != 'service':
+                    raise UserError(_("The product used to invoice a down payment should be of type 'Service'. Please use another product or update this product."))
+                taxes = self.product_id.taxes_id.filtered(lambda r: not order.company_id or r.company_id == order.company_id)
+                tax_ids = order.fiscal_position_id.map_tax(taxes).ids
+                analytic_tag_ids = []
+                for line in order.order_line:
+                    analytic_tag_ids = [(4, analytic_tag.id, None) for analytic_tag in line.analytic_tag_ids]
+
+                so_line_values = self._prepare_so_line(order, analytic_tag_ids, tax_ids, amount)
+                so_line = sale_line_obj.create(so_line_values)
+                self._create_invoice(order, so_line, amount)
+        if self._context.get('open_invoices', False):
+            return sale_orders.action_view_invoice()
+        return {'type': 'ir.actions.act_window_close'}

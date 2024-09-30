@@ -1,0 +1,29 @@
+<odoo>
+<template id="products_item_inherit" inherit_id="website_sale.products_item" name="Inherit Products Item to Add Stock">
+    <!-- Target the second occurrence of div with class card-body -->
+    <xpath expr="(//div[contains(@class, 'card-body')])[2]" position="after">
+        <!-- Add Stock Information -->
+        <style>
+            .product_stock {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+            }
+        </style>
+        <div class="product_stock mb-1">
+            <t t-if="product.qty_available > 0">
+                <span class="text-success">Stock: </span>
+                <span class="text-bold" t-esc="product.qty_available"/> Unidad(es)
+            </t>
+            <t t-if="product.qty_available == 0">
+                <span class="text-danger">Sin Stock</span>
+            </t>
+        </div>
+    </xpath>
+</template>
+
+
+
+
+</odoo>

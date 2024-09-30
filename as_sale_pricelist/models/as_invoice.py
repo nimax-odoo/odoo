@@ -426,3 +426,4 @@ class as_accountinvoice(models.Model):
         invoice_words = '%(words)s %(amount_d)02d/100 %(curr_t)s' % dict(
             words=words, amount_d=amount_d, curr_t=currency_type)
         return invoice_words
+    

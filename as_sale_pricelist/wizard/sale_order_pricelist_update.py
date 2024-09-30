@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from odoo import fields,models,api
+from odoo import fields, models, api, _
 from datetime import date
-
 #from odoo.exceptions import UserError
 
 
@@ -113,6 +112,38 @@ class SaleOrderPricelistWizardLine(models.Model):
     COST_NIMAX_MXP = fields.Float('COST NIMAX MXP')
 
     def update_sale_line_unit_price(self):
+        """
+        Método que se ejecuta al hacer clic en el botón 'Aplicar'.
+        Actualiza el precio unitario de la línea de venta y publica el nombre de la lista de precios seleccionada en el chatter.
+        """
+        """
+        Método que se ejecuta al hacer clic en el botón 'Aplicar'.
+        Actualiza el precio unitario de la línea de venta y publica el nombre de la lista de precios seleccionada en el chatter.
+        """
+        # Obtén el ID de la orden de venta desde el contexto
+        sale_order_id = self.line_id.order_id.id
+        
+        # Verificar que existe un ID válido de orden de venta
+        if not sale_order_id:
+            raise ValueError(_("No se encontró una orden de venta activa en el contexto."))
+
+        # Buscar la orden de venta con el ID obtenido
+        sale_order = self.env['sale.order'].browse(sale_order_id)
+
+        # Verificar si la orden de venta aún existe en la base de datos
+        if not sale_order.exists():
+            raise ValueError(_("La orden de venta no existe o ha sido eliminada."))
+
+        # Publicar en el chatter la lista de precios seleccionada
+        if self.sh_pricelist_id:
+            message = _("Lista de precios aplicada: %s") % (self.sh_pricelist_id.display_name)
+            sale_order.message_post(body=message)
+            
+            
+            
+            
+            
+
         if self.line_id:
             #se convierte de dolares a pesos mexicanos
             moneda_mxn = self.env['res.currency'].search([('id','=',33)])
