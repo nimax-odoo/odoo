@@ -399,6 +399,13 @@ class as_SaleOrderPromoWizardLine(models.Model):
             })
 
             self.line_id.order_id.last_promo_id = self.sh_promo_id.id
+            
+            # Log the selected promotion in the sale order chatter
+            sale_order = self.line_id.order_id
+            sale_order.message_post(
+                body=f"Promotion applied: {self.sh_promo_id.name}",
+                message_type='comment'
+            )
 
     def get_sentinel_qty_promotion(self,promo,qty):
         balance = promo.tf_balance
