@@ -17,6 +17,11 @@
             <t t-if="product.qty_available > 0">
                 <span class="text-success">Stock: </span>
                 <span class="text-bold" t-esc="product.qty_available"/> Unidad(es)
+                <t t-if="product.outgoing_qty > 0">
+                    <br/>
+                    <span class="text-warning">Reservado: </span>
+                    <span class="text-bold" t-esc="product.outgoing_qty"/> Unidad(es)
+                </t>
             </t>
             <t t-if="product.qty_available == 0">
                 <span class="text-danger">Sin Stock</span>
