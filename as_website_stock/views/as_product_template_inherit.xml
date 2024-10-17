@@ -5,9 +5,9 @@
         <!-- Add Stock Information -->
         <style>
             .product_stock {
-                display: flex;
+                
                 justify-content: center;
-                flex-direction: column;
+                
                 align-items: center;
                 text-align: center;
                 font-size: 14px;
@@ -17,13 +17,13 @@
         <div class="product_stock mb-1">
             <t t-if="product.qty_available > 0">
                 <span class="text-success">Stock: </span>
-                <br/>
-                <span class="text-bold" t-esc="product.qty_available"/>
+                
+                <span class="text-bold" t-esc="int(product.qty_available)"/>
                 <t t-if="product.outgoing_qty > 0">
                     <br/>
                     <span class="text-warning">Reservado: </span>
                     
-                    <span class="text-bold" t-esc="product.outgoing_qty"/> 
+                    <span class="text-bold" t-esc="int(product.outgoing_qty)"/> 
                 </t>
             </t>
             <t t-if="product.qty_available == 0">
