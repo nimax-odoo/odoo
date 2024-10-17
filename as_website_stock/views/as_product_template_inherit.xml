@@ -9,6 +9,8 @@
                 justify-content: center;
                 align-items: center;
                 text-align: center;
+                font-size: 15px;
+                font-weight: bold;
             }
         </style>
         <div class="product_stock mb-1">
