@@ -1,0 +1,284 @@
+{
+	"info": {
+		"_postman_id": "a5e3f7c8-6d9b-4f8a-9c1e-d8f2e3b1a0c9",
+		"name": "Odoo 15 - API de Stock",
+		"description": "Colección para probar la API de Stock de Odoo 15 desarrollada por Ahorasoft.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Consultar Stock",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"api_key\": \"{{api_key}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock"
+					]
+				},
+				"description": "Consulta el stock disponible de todos los productos en todas las ubicaciones internas."
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar Stock por Código de Producto",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"api_key\": \"{{api_key}}\",\n  \"default_code\": \"{{default_code}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock"
+					]
+				},
+				"description": "Consulta el stock disponible de un producto específico (por su código) en todas las ubicaciones internas."
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar Stock por Ubicación",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"api_key\": \"{{api_key}}\",\n  \"location_id\": {{location_id}}\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock"
+					]
+				},
+				"description": "Consulta el stock disponible de todos los productos en una ubicación específica."
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar Stock por Código de Producto y Ubicación",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"api_key\": \"{{api_key}}\",\n  \"default_code\": \"{{default_code}}\",\n  \"location_id\": {{location_id}}\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock"
+					]
+				},
+				"description": "Consulta el stock disponible de un producto específico (por su código) en una ubicación específica."
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar Stock sin API Key",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock"
+					]
+				},
+				"description": "Intenta consultar el stock sin proporcionar una API key. Debería devolver un error 401."
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar Stock con API Key Inválida",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"api_key\": \"invalid_key\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock"
+					]
+				},
+				"description": "Intenta consultar el stock con una API key inválida. Debería devolver un error 403."
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar Stock por ID de Producto (Obsoleto)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"api_key\": \"{{api_key}}\",\n  \"product_id\": {{product_id}}\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock"
+					]
+				},
+				"description": "Consulta el stock usando product_id (obsoleto). Se mantiene por compatibilidad pero se recomienda usar default_code."
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar Stock (GET - Obsoleto)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/nimax/stock?api_key={{api_key}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock"
+					],
+					"query": [
+						{
+							"key": "api_key",
+							"value": "{{api_key}}",
+							"description": "Clave API del usuario"
+						}
+					]
+				},
+				"description": "Consulta el stock usando el método GET (obsoleto). Se mantiene por compatibilidad pero se recomienda usar POST."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8069",
+			"type": "string",
+			"description": "URL base de la instancia de Odoo"
+		},
+		{
+			"key": "api_key",
+			"value": "your_api_key_here",
+			"type": "string",
+			"description": "Clave API generada para el usuario"
+		},
+		{
+			"key": "default_code",
+			"value": "PROD001",
+			"type": "string",
+			"description": "Código del producto a consultar"
+		},
+		{
+			"key": "product_id",
+			"value": "1",
+			"type": "string",
+			"description": "ID del producto a consultar (obsoleto)"
+		},
+		{
+			"key": "location_id",
+			"value": "8",
+			"type": "string",
+			"description": "ID de la ubicación a consultar"
+		}
+	]
+} 

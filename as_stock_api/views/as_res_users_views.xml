@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extensión de la vista de formulario de res.users -->
+    <record id="as_view_users_form" model="ir.ui.view">
+        <field name="name">as.res.users.form</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="API de Stock" groups="base.group_system">
+                    <group>
+                        <field name="as_api_enabled"/>
+                        <field name="as_api_key" password="True" attrs="{'invisible': [('as_api_enabled', '=', False)]}"/>
+                    </group>
+                    <group attrs="{'invisible': [('as_api_enabled', '=', False)]}">
+                        <field name="as_stock_percentaje" attrs="{'required': [('as_api_enabled', '=', True)]}" widget="percentage"/>
+                        <div class="text-muted">
+                            Porcentaje del stock real que se mostrará en la API. Por ejemplo, 80% mostrará el 80% del stock real.
+                        </div>
+                    </group>
+                    <group attrs="{'invisible': [('as_api_enabled', '=', False)]}">
+                        <button name="as_generate_api_key" 
+                                string="Generar Nueva Clave" 
+                                type="object" 
+                                class="btn-primary"/>
+                        <button name="as_clear_api_key" 
+                                string="Eliminar Clave" 
+                                type="object" 
+                                class="btn-secondary ml-2"/>
+                    </group>
+                    
+                    <!-- Campo para mostrar y copiar la clave API -->
+                    <group attrs="{'invisible': ['|', ('as_api_enabled', '=', False), ('as_api_key', '=', False)]}">
+                        <field name="as_api_key_display" readonly="1" widget="CopyClipboardChar" 
+                               string="Clave API (para copiar)" class="text-break"/>
+                        <button name="as_copy_api_key" 
+                                string="Copiar al Portapapeles" 
+                                type="object" 
+                                class="btn-info"/>
+                    </group>
+                    
+                    <!-- Enlace para descargar la colección de Postman -->
+                    <div class="alert alert-success" role="alert" attrs="{'invisible': ['|', ('as_api_enabled', '=', False), ('as_api_key', '=', False)]}">
+                        <p>
+                            <strong>Colección de Postman:</strong>
+                        </p>
+                        <p>
+                            Descargue la colección de Postman preconfigurada con su clave API para probar la API de Stock.
+                        </p>
+                        <p>
+                            <a href="/nimax/stock/postman_collection" class="btn btn-success" target="_blank">
+                                <i class="fa fa-download"/> Descargar Colección de Postman
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-info" role="alert" attrs="{'invisible': [('as_api_enabled', '=', False)]}">
+                        <p>
+                            <strong>Instrucciones:</strong>
+                        </p>
+                        <p>
+                            Para usar la API de Stock, envíe una solicitud POST a <code>/nimax/stock</code> con la clave API en el cuerpo JSON:
+                        </p>
+                        <pre class="bg-light p-2 rounded">
+{
+  "api_key": "SU_CLAVE_API",
+  "default_code": "PROD001",  // Opcional
+  "location_id": 8  // Opcional
+}
+                        </pre>
+                        <p>
+                            <strong>Respuesta:</strong>
+                        </p>
+                        <pre class="bg-light p-2 rounded">
+[
+  {
+    "location": "Stock",
+    "product_code": "PROD001",
+    "product_name": "Producto A",
+    "stock": 10.0
+  },
+  ...
+]
+                        </pre>
+                        <p class="text-muted mt-2">
+                            <i class="fa fa-info-circle"/> Nota: El método GET y el parámetro product_id siguen disponibles por compatibilidad, pero se recomienda usar POST con default_code para mayor seguridad.
+                        </p>
+                        <p class="text-success">
+                            <i class="fa fa-check-circle"/> Nuevo: La API ahora agrupa automáticamente los resultados duplicados por ubicación y código de producto, sumando las cantidades para proporcionar una respuesta más limpia.
+                        </p>
+                    </div>
+                </page>
+            </notebook>
+        </field>
+    </record>
+</odoo>
