@@ -9,6 +9,7 @@
 6. [Pruebas con Postman](#pruebas-con-postman)
 7. [Solución de problemas](#solución-de-problemas)
 8. [Preguntas frecuentes](#preguntas-frecuentes)
+9. [Lista de precios personalizada](#lista-de-precios-personalizada)
 
 ## Introducción
 
@@ -264,6 +265,120 @@ El valor se configura usando el widget de porcentaje de Odoo, donde puede selecc
 ### ¿Puedo limitar el número de resultados devueltos?
 
 Actualmente, la API devuelve todos los resultados que coinciden con los criterios de filtrado. Si necesita limitar los resultados, debe implementar esta lógica en su aplicación cliente.
+
+## Lista de precios personalizada
+
+Cada usuario API puede tener configurada su propia lista de precios por defecto desde la sección "API de Stock" en la configuración del usuario. Si se configura una lista de precios, esta tendrá prioridad sobre la lista de precios del cliente al usar el endpoint `/nimax/stock_with_price`.
+
+### Orden de prioridad para listas de precios:
+
+1. Lista de precios configurada en el usuario API (campo `as_pricelist`)
+2. Lista de precios del cliente (propiedad `property_product_pricelist`)
+3. Primera lista de precios activa en el sistema (como fallback)
+
+### Endpoint `/nimax/stock_with_price`
+
+Devuelve información de stock con precios NIMAX calculados. Requiere autenticación mediante API key.
+
+**Método:** POST  
+**URL:** `/nimax/stock_with_price`
+**Tipo de respuesta:** JSON
+
+#### Parámetros del cuerpo de la solicitud
+
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| api_key | string | Sí | Clave API para autenticación |
+| partner_id | integer | Sí | ID del cliente para determinar la lista de precios (a menos que el usuario API tenga configurada una lista predeterminada) |
+| default_code | string | No | Código del producto a filtrar |
+| location_id | integer | No | ID de la ubicación a filtrar |
+
+**Nota sobre la lista de precios**: El sistema intentará primero usar la lista de precios configurada en el usuario API. Si no está configurada, usará la lista del cliente especificado en `partner_id`.
+
+#### Estructura de la respuesta
+
+```json
+[
+  {
+    "location": "FREF/Stock",
+    "product_code": "AD09-00018A-AS",
+    "product_name": "[AD09-00018A-AS] Bixolon ASSY-MECHANISM-III-R 20",
+    "stock": 33,
+    "nimax_price_usd": 42.36,
+    "pricelist_name": "Public Pricelist USD",
+    "pricelist_id": 1,
+    "pricelist_currency": "USD",
+    "partner_id": 123,
+    "partner_name": "Nombre del Cliente"
+  }
+]
+```
+
+#### Cálculo del precio NIMAX
+
+El valor `nimax_price_usd` se calcula utilizando la siguiente fórmula:
+
+```
+precio_base_usd = (product.list_price - (product.list_price * descuento_proveedor/100)) * 
+                 costo_importacion/100 * 
+                 (impuesto_importacion/100)
+
+nimax_price_usd = precio_base_usd / (1 - beneficio_esperado/100)
+```
+
+Donde:
+- `product.list_price`: Precio de lista del producto
+- `descuento_proveedor`: Porcentaje de descuento del proveedor (del parámetro `tf_vendor_parameter_ids` asociado a la categoría del producto)
+- `costo_importacion`: Porcentaje de costo de importación (campo `cost_deal_import`)
+- `impuesto_importacion`: Porcentaje de impuesto de importación (campo `tf_import_tax` de la plantilla del producto)
+- `beneficio_esperado`: Porcentaje de beneficio esperado (de la lista de precios, campo `expected_earning`)
+
+Si el valor `expected_earning` de la lista de precios es igual o mayor a 100%, el precio NIMAX se establece en 0.
+
+#### Ejemplo de cálculo
+
+Para un producto con:
+- Precio de lista (`list_price`): $100.00
+- Descuento del proveedor: 20%
+- Costo de importación: 50%
+- Impuesto de importación: 30%
+- Beneficio esperado: 25%
+
+El cálculo sería:
+```
+precio_base_usd = (100 - (100 * 20/100)) * 50/100 * 30/100
+                = 80 * 0.5 * 0.3
+                = 12.00
+
+nimax_price_usd = 12.00 / (1 - 25/100)
+                = 12.00 / 0.75
+                = 16.00
+```
+
+El precio NIMAX resultante sería $16.00.
+
+#### Posibles errores específicos
+
+| Código | Descripción | Solución |
+|--------|-------------|----------|
+| 400 | ID de cliente inválido | Verifique que el parámetro `partner_id` sea un ID válido de cliente existente |
+| 400 | No se encontró una lista de precios válida | Asegúrese de que el usuario API tenga una lista de precios configurada o que el cliente tenga una lista de precios asignada |
+| 404 | Cliente con ID X no encontrado | Verifique que el cliente existe en el sistema |
+
+Si el cálculo del precio falla por alguna razón (por ejemplo, datos incompletos o incoherentes), el campo `nimax_price_usd` se establecerá en 0, pero la consulta seguirá devolviendo el resto de la información del producto.
+
+#### Ejemplo de llamada con curl
+
+```bash
+curl -X POST \
+  https://su-servidor-odoo.com/nimax/stock_with_price \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "api_key": "SU_CLAVE_API",
+    "partner_id": 123,
+    "default_code": "AD09-00018A-AS"
+  }'
+```
 
 ---
 
