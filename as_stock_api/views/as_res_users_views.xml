@@ -17,6 +17,10 @@
                         <div class="text-muted">
                             Porcentaje del stock real que se mostrará en la API. Por ejemplo, 80% mostrará el 80% del stock real.
                         </div>
+                        <field name="as_pricelist" attrs="{'invisible': [('as_api_enabled', '=', False)]}"/>
+                        <div class="text-muted">
+                            Lista de precios que se utilizará por defecto en la API de Stock con precios. Si se deja vacío, se usará la lista de precios del cliente.
+                        </div>
                     </group>
                     <group attrs="{'invisible': [('as_api_enabled', '=', False)]}">
                         <button name="as_generate_api_key" 

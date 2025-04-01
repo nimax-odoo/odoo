@@ -92,4 +92,18 @@
 - Configuración de clave API en Inventario > Configuración > API de Stock
 
 ## 1.0.3 (Versión anterior)
-- Versión inicial del módulo 
+- Versión inicial del módulo
+
+## 1.0.21 (2023-03-10)
+- Modificación de la API para mostrar únicamente productos con stock disponible (cantidad > 0)
+- Actualización de la documentación para reflejar el cambio en el comportamiento de la API 
+
+## 1.0.22 (2023-03-10)
+- Corrección del filtrado de productos con stock cero en la respuesta final
+- Filtrado adicional para eliminar productos con stock cero después de aplicar el porcentaje configurado
+- Optimización de respuesta para incluir únicamente productos con stock positivo 
+
+## 1.0.23 (2023-03-10)
+- Modificación de la respuesta para mostrar el stock como número entero sin decimales
+- Actualización de la documentación para reflejar el formato entero del stock
+- Optimización adicional de la respuesta para simplificar procesamiento en clientes 

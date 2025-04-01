@@ -4,7 +4,13 @@
 Este módulo proporciona una API REST para consultar la disponibilidad de stock en Odoo 15. La API es de solo lectura y permite filtrar por producto y ubicación.
 
 ## Características
-- Endpoint REST para consultar stock disponible
+- Endpoint REST para consulta de stock
+- Autenticación mediante clave API
+- Respuestas JSON simplificadas
+- Filtrado por producto y ubicación
+- Solo devuelve productos con stock disponible (cantidad > 0), incluso después de aplicar porcentajes
+- Compatible con versiones anteriores (GET)
+- Log detallado de interacciones
 - Filtrado por código de producto (default_code) y ubicación
 - Autenticación mediante clave API por usuario
 - Respuestas en formato JSON simplificadas y enfocadas
@@ -52,11 +58,13 @@ POST /nimax/stock
     "location": "Stock",
     "product_code": "PROD001",
     "product_name": "Producto A",
-    "stock": 10.0
+    "stock": 10
   },
   ...
 ]
 ```
+
+> Nota: El valor de "stock" siempre es un número entero sin decimales.
 
 ### Códigos de estado
 - `200`: Solicitud exitosa
@@ -117,4 +125,4 @@ Las claves API se ocultan en los logs por seguridad.
 Ahorasoft (http://www.ahorasoft.com)
 
 ## Versión
-1.0.20 
+1.0.23 

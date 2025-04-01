@@ -227,6 +227,90 @@
 				"description": "Consulta el stock usando el método GET (obsoleto). Se mantiene por compatibilidad pero se recomienda usar POST."
 			},
 			"response": []
+		},
+		{
+			"name": "Consultar Stock con Precios",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"api_key\": \"{{api_key}}\",\n  \"partner_id\": {{partner_id}}\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock_with_price",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock_with_price"
+					]
+				},
+				"description": "Consulta el stock disponible de todos los productos con los precios NIMAX calculados según la lista de precios asociada al cliente. La respuesta incluye los campos partner_id y partner_name del cliente consultado."
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar Stock con Precios por Código de Producto",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"api_key\": \"{{api_key}}\",\n  \"partner_id\": {{partner_id}},\n  \"default_code\": \"{{default_code}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock_with_price",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock_with_price"
+					]
+				},
+				"description": "Consulta el stock disponible de un producto específico (por su código) con los precios NIMAX calculados según la lista de precios asociada al cliente. La respuesta incluye los campos partner_id y partner_name del cliente consultado."
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar Stock con Precios por Ubicación",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"api_key\": \"{{api_key}}\",\n  \"partner_id\": {{partner_id}},\n  \"location_id\": {{location_id}}\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock_with_price",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock_with_price"
+					]
+				},
+				"description": "Consulta el stock disponible de todos los productos en una ubicación específica con los precios NIMAX calculados según la lista de precios asociada al cliente. La respuesta incluye los campos partner_id y partner_name del cliente consultado."
+			},
+			"response": []
 		}
 	],
 	"event": [
@@ -279,6 +363,12 @@
 			"value": "8",
 			"type": "string",
 			"description": "ID de la ubicación a consultar"
+		},
+		{
+			"key": "partner_id",
+			"value": "1",
+			"type": "string",
+			"description": "ID del cliente para obtener su lista de precios"
 		}
 	]
 } 

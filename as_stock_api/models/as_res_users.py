@@ -39,6 +39,12 @@ class AsResUsers(models.Model):
         help='Porcentaje del stock real que se mostrará en la API. Si es 0.8, se mostrará el 80% del stock real. Si está vacío o es 1, se mostrará el 100%.'
     )
     
+    as_pricelist = fields.Many2one(
+        'product.pricelist',
+        string='Lista de Precios API',
+        help='Lista de precios que se utilizará por defecto en la API de Stock con precios. Si se deja vacío, se usará la lista de precios del cliente.'
+    )
+    
     def _as_compute_api_key_display(self):
         """
         Calcula el valor del campo as_api_key_display.
