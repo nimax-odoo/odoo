@@ -47,10 +47,25 @@ Cada usuario que necesite acceder a la API debe tener su propia clave API config
 3. Vaya a la pestaña **API de Stock**
 4. Active la casilla **API de Stock Habilitada**
 5. Configure el **Porcentaje de Stock a Mostrar** (por defecto 100%)
-6. Haga clic en el botón **Generar Nueva Clave**
-7. Se mostrará un mensaje con la clave generada
-8. La clave también aparecerá en el campo **Clave API (para copiar)**
-9. Utilice el botón **Copiar al Portapapeles** para copiar la clave fácilmente
+6. Opcionalmente, seleccione los **Almacenes Visibles en API** para restringir los resultados a ubicaciones dentro de los almacenes seleccionados
+7. Haga clic en el botón **Generar Nueva Clave**
+8. Se mostrará un mensaje con la clave generada
+9. La clave también aparecerá en el campo **Clave API (para copiar)**
+10. Utilice el botón **Copiar al Portapapeles** para copiar la clave fácilmente
+
+### Almacenes visibles en API
+
+La configuración **Almacenes Visibles en API** permite:
+
+- Filtrar los resultados para mostrar solamente stock de ubicaciones dentro de los almacenes seleccionados
+- Si no se selecciona ningún almacén, la API mostrará el stock de todos los almacenes
+- Esto afecta a ambos endpoints: `/nimax/stock` y `/nimax/stock_with_price`
+- La estructura de la respuesta JSON se mantiene igual, solo se filtran los datos
+
+Esta configuración es útil para:
+- Restringir los datos a ciertos almacenes específicos para diferentes usuarios de la API
+- Simplificar las respuestas para integraciones que solo necesitan datos de ciertos almacenes
+- Segmentar el acceso a la información de stock por región o ubicación física
 
 ### Permisos necesarios
 
@@ -96,19 +111,8 @@ La API acepta los siguientes parámetros en el cuerpo JSON de la solicitud:
     "reserved_quantity": 2,
     "attribute_line_ids": [
       {
-        "id": 1,
-        "attribute_id": 1,
         "attribute_name": "Color",
-        "values": [
-          {
-            "id": 1,
-            "name": "Rojo"
-          },
-          {
-            "id": 2,
-            "name": "Azul"
-          }
-        ]
+        "values": ["Rojo", "Azul"]
       }
     ]
   }
@@ -121,7 +125,7 @@ La API acepta los siguientes parámetros en el cuerpo JSON de la solicitud:
 - **product_name**: Nombre completo del producto
 - **stock**: Cantidad disponible (después de restar reservas y aplicar porcentaje de visibilidad)
 - **reserved_quantity**: Cantidad del producto que está reservada (no disponible para la venta)
-- **attribute_line_ids**: Lista de líneas de atributo asociadas al producto
+- **attribute_line_ids**: Lista simplificada de atributos asociados al producto y sus valores
 
 Para más detalles sobre la estructura de `attribute_line_ids`, consulte la sección [Estructura de attribute_line_ids](#estructura-de-attribute_line_ids).
 
@@ -364,19 +368,8 @@ Devuelve información de stock con precios NIMAX calculados. Requiere autenticac
     "partner_name": "Nombre del Cliente",
     "attribute_line_ids": [
       {
-        "id": 1,
-        "attribute_id": 1,
         "attribute_name": "Color",
-        "values": [
-          {
-            "id": 1,
-            "name": "Rojo"
-          },
-          {
-            "id": 2,
-            "name": "Azul"
-          }
-        ]
+        "values": ["Rojo", "Azul"]
       }
     ]
   }
@@ -399,23 +392,14 @@ Devuelve información de stock con precios NIMAX calculados. Requiere autenticac
 
 #### Estructura de attribute_line_ids
 
-El campo `attribute_line_ids` contiene un arreglo con los atributos del producto (como color, tamaño, etc.) y sus posibles valores. Cada elemento tiene la siguiente estructura:
+El campo `attribute_line_ids` contiene un arreglo con los atributos del producto (como color, tamaño, etc.) y sus posibles valores. Se ha simplificado para mostrar solo la información esencial:
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| id | integer | ID de la línea de atributo |
-| attribute_id | integer | ID del atributo |
 | attribute_name | string | Nombre del atributo (por ejemplo: "Color", "Tamaño") |
-| values | array | Lista de valores posibles para este atributo |
+| values | array | Lista de valores posibles para este atributo (como "Rojo", "Grande") |
 
-Cada elemento en el arreglo `values` tiene la siguiente estructura:
-
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | integer | ID del valor del atributo |
-| name | string | Nombre del valor (por ejemplo: "Rojo", "Grande") |
-
-Esto permite obtener toda la información de las variantes de producto directamente desde la API.
+Esta estructura simplificada facilita el procesamiento de las variantes de producto en las aplicaciones cliente, enfocándose solo en los datos necesarios para la identificación de atributos.
 
 #### Cálculo del precio NIMAX
 
@@ -496,9 +480,3 @@ curl -X POST \
     "default_code": "AD09-00018A-AS"
   }'
 ```
-
----
-
-Para más información o soporte técnico, contacte con Ahorasoft:
-- Web: [http://www.ahorasoft.com](http://www.ahorasoft.com)
-- Email: soporte@ahorasoft.com

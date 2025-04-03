@@ -25,6 +25,10 @@
                         <div class="text-muted">
                             Cliente que se utilizará por defecto en las consultas de la API de Stock con precios. Si se especifica, no será necesario incluir el parámetro partner_id en las llamadas a la API.
                         </div>
+                        <field name="as_warehouse_ids" attrs="{'invisible': [('as_api_enabled', '=', False)]}" widget="many2many_tags" options="{'no_create': True}"/>
+                        <div class="text-muted">
+                            Almacenes cuyos productos se mostrarán en la API. Si no se selecciona ninguno, se mostrarán todos los almacenes.
+                        </div>
                     </group>
                     <group attrs="{'invisible': [('as_api_enabled', '=', False)]}">
                         <button name="as_generate_api_key" 

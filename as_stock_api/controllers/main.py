@@ -275,6 +275,13 @@ class AsStockAPI(http.Controller):
         # Solo considerar ubicaciones internas (tipo = internal)
         domain.append(('location_id.usage', '=', 'internal'))
         
+        # Filtrar por almacenes si el usuario tiene configurados almacenes específicos
+        if user.as_warehouse_ids:
+            _logger.info("[as_get_stock] Filtrando por almacenes específicos del usuario: %s", 
+                         ", ".join(user.as_warehouse_ids.mapped('name')))
+            warehouse_locations = user.as_warehouse_ids.mapped('view_location_id').ids
+            domain.append(('location_id', 'child_of', warehouse_locations))
+        
         try:
             # Cambiar al entorno del usuario para la consulta
             user_env = request.env(user=user.id)
@@ -316,18 +323,13 @@ class AsStockAPI(http.Controller):
                             values = []
                             try:
                                 for val in attr_line.value_ids:
-                                    values.append({
-                                        'id': val.id,
-                                        'name': val.name
-                                    })
+                                    values.append(val.name)
                             except Exception as e:
                                 _logger.warning("[as_get_stock] Error al procesar los valores de attribute_line_id: %s", str(e))
                                 
                             attribute_lines.append({
-                                'id': attr_line.id,
-                                'attribute_id': attr_line.attribute_id.id,
-                                'attribute_name': attr_line.attribute_id.name,
-                                'values': values
+                                "attribute_name": attr_line.attribute_id.name,
+                                "values": values
                             })
                 except Exception as e:
                     _logger.warning("[as_get_stock] Error al procesar attribute_line_ids para producto %s: %s", product_code, str(e))
@@ -905,6 +907,13 @@ class AsStockAPI(http.Controller):
         # Solo considerar ubicaciones internas (tipo = internal)
         domain.append(('location_id.usage', '=', 'internal'))
         
+        # Filtrar por almacenes si el usuario tiene configurados almacenes específicos
+        if user.as_warehouse_ids:
+            _logger.info("[as_get_stock_with_price] Filtrando por almacenes específicos del usuario: %s", 
+                         ", ".join(user.as_warehouse_ids.mapped('name')))
+            warehouse_locations = user.as_warehouse_ids.mapped('view_location_id').ids
+            domain.append(('location_id', 'child_of', warehouse_locations))
+        
         try:
             # Cambiar al entorno del usuario para la consulta
             user_env = request.env(user=user.id)
@@ -977,18 +986,13 @@ class AsStockAPI(http.Controller):
                             values = []
                             try:
                                 for val in attr_line.value_ids:
-                                    values.append({
-                                        'id': val.id,
-                                        'name': val.name
-                                    })
+                                    values.append(val.name)
                             except Exception as e:
                                 _logger.warning("[as_get_stock_with_price] Error al procesar los valores de attribute_line_id: %s", str(e))
                                 
                             attribute_lines.append({
-                                'id': attr_line.id,
-                                'attribute_id': attr_line.attribute_id.id,
-                                'attribute_name': attr_line.attribute_id.name,
-                                'values': values
+                                "attribute_name": attr_line.attribute_id.name,
+                                "values": values
                             })
                 except Exception as e:
                     _logger.warning("[as_get_stock_with_price] Error al procesar attribute_line_ids para producto %s: %s", product_code, str(e))

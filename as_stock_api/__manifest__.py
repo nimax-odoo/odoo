@@ -2,7 +2,7 @@
 # © 2019 Piotr Cierkosz <info@cier.tech>
 {
     "name": "Ahorasoft Inventario API",
-    "version": "1.0.23",
+    "version": "1.0.25",
     "category": "Stock",
     "author": "Ahorasoft",
     "depends": [

@@ -52,6 +52,12 @@ class AsResUsers(models.Model):
              'Si se especifica, no será necesario incluir el parámetro partner_id en las llamadas a la API.'
     )
     
+    as_warehouse_ids = fields.Many2many(
+        'stock.warehouse',
+        string='Almacenes Visibles en API',
+        help='Almacenes cuyos productos se mostrarán en la API. Si no se selecciona ninguno, se mostrarán todos los almacenes.'
+    )
+    
     def _as_compute_api_key_display(self):
         """
         Calcula el valor del campo as_api_key_display.

@@ -1,3 +1,16 @@
+## 1.0.25 (2023-04-03)
+- Simplificación de la estructura de attribute_line_ids en las respuestas JSON
+- Eliminación de IDs y campos técnicos para mostrar solo nombres de atributos y valores
+- Respuesta más liviana y fácil de procesar por aplicaciones cliente
+- Actualización de la documentación para reflejar el nuevo formato de attribute_line_ids
+
+## 1.0.24 (2023-04-03)
+- Adición de campo as_warehouse_ids (Almacenes Visibles en API) en configuración de usuario
+- Implementación de filtrado por almacenes en consultas de stock
+- Actualización del controlador para considerar los almacenes configurados en el usuario
+- Mejora en la documentación para explicar la nueva funcionalidad de filtrado por almacenes
+- No se modifica la estructura de la respuesta JSON, solo se filtran los datos
+
 ## 1.0.20 (2023-03-10)
 - Corrección del campo de porcentaje de stock para usar valores entre 0 y 1 (compatible con widget percentage)
 - Actualización del controlador para aplicar correctamente el porcentaje configurado
