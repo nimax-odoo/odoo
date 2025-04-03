@@ -1,3 +1,15 @@
+## 1.0.27 (2023-04-03)
+- Eliminación completa del parámetro `partner_id` de los ejemplos en la colección de Postman
+- Simplificación de las solicitudes de ejemplo para usar exclusivamente el cliente predeterminado
+- Actualización de descripciones para reflejar el uso del cliente predeterminado sin mencionar parámetros opcionales
+- Mejora de la experiencia de usuario eliminando referencias innecesarias a configuraciones alternativas
+
+## 1.0.26 (2023-04-03)
+- Actualización de la colección de Postman para clarificar que el parámetro `partner_id` es opcional
+- Modificación de los ejemplos de solicitud para mostrar `partner_id` como comentario opcional
+- Actualización de las descripciones para mencionar explícitamente el uso del cliente predeterminado
+- Mejora en la usabilidad de la colección para evitar confusiones con parámetros opcionales
+
 ## 1.0.25 (2023-04-03)
 - Simplificación de la estructura de attribute_line_ids en las respuestas JSON
 - Eliminación de IDs y campos técnicos para mostrar solo nombres de atributos y valores
