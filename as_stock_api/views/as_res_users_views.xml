@@ -21,6 +21,10 @@
                         <div class="text-muted">
                             Lista de precios que se utilizará por defecto en la API de Stock con precios. Si se deja vacío, se usará la lista de precios del cliente.
                         </div>
+                        <field name="as_partner_id" attrs="{'invisible': [('as_api_enabled', '=', False)]}"/>
+                        <div class="text-muted">
+                            Cliente que se utilizará por defecto en las consultas de la API de Stock con precios. Si se especifica, no será necesario incluir el parámetro partner_id en las llamadas a la API.
+                        </div>
                     </group>
                     <group attrs="{'invisible': [('as_api_enabled', '=', False)]}">
                         <button name="as_generate_api_key" 

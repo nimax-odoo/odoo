@@ -84,6 +84,47 @@ La API acepta los siguientes parámetros en el cuerpo JSON de la solicitud:
 | default_code | string | No | Código del producto a consultar |
 | location_id | integer | No | ID de la ubicación a consultar |
 
+### Estructura de la respuesta
+
+```json
+[
+  {
+    "location": "Stock",
+    "product_code": "PROD001",
+    "product_name": "Producto A",
+    "stock": 10,
+    "reserved_quantity": 2,
+    "attribute_line_ids": [
+      {
+        "id": 1,
+        "attribute_id": 1,
+        "attribute_name": "Color",
+        "values": [
+          {
+            "id": 1,
+            "name": "Rojo"
+          },
+          {
+            "id": 2,
+            "name": "Azul"
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+**Descripción de los campos:**
+- **location**: Nombre de la ubicación donde se encuentra el stock
+- **product_code**: Código del producto (default_code)
+- **product_name**: Nombre completo del producto
+- **stock**: Cantidad disponible (después de restar reservas y aplicar porcentaje de visibilidad)
+- **reserved_quantity**: Cantidad del producto que está reservada (no disponible para la venta)
+- **attribute_line_ids**: Lista de líneas de atributo asociadas al producto
+
+Para más detalles sobre la estructura de `attribute_line_ids`, consulte la sección [Estructura de attribute_line_ids](#estructura-de-attribute_line_ids).
+
 ### Códigos de estado HTTP
 
 | Código | Descripción |
@@ -270,6 +311,16 @@ Actualmente, la API devuelve todos los resultados que coinciden con los criterio
 
 Cada usuario API puede tener configurada su propia lista de precios por defecto desde la sección "API de Stock" en la configuración del usuario. Si se configura una lista de precios, esta tendrá prioridad sobre la lista de precios del cliente al usar el endpoint `/nimax/stock_with_price`.
 
+### Cliente predeterminado por usuario
+
+Además de la lista de precios, cada usuario API puede tener configurado un cliente predeterminado (campo `as_partner_id`). Al configurar un cliente predeterminado:
+
+- No es necesario incluir el parámetro `partner_id` en las llamadas a la API
+- Todas las consultas usarán automáticamente el cliente configurado
+- Se pueden realizar consultas más simples, solo indicando el producto y/o ubicación
+
+Esta configuración es especialmente útil cuando un usuario API siempre consulta información para el mismo cliente, simplificando las integraciones y reduciendo el riesgo de errores.
+
 ### Orden de prioridad para listas de precios:
 
 1. Lista de precios configurada en el usuario API (campo `as_pricelist`)
@@ -289,11 +340,11 @@ Devuelve información de stock con precios NIMAX calculados. Requiere autenticac
 | Parámetro | Tipo | Requerido | Descripción |
 |-----------|------|-----------|-------------|
 | api_key | string | Sí | Clave API para autenticación |
-| partner_id | integer | Sí | ID del cliente para determinar la lista de precios (a menos que el usuario API tenga configurada una lista predeterminada) |
+| partner_id | integer | Condicional | ID del cliente para determinar la lista de precios. No es necesario si el usuario API tiene configurado un cliente predeterminado |
 | default_code | string | No | Código del producto a filtrar |
 | location_id | integer | No | ID de la ubicación a filtrar |
 
-**Nota sobre la lista de precios**: El sistema intentará primero usar la lista de precios configurada en el usuario API. Si no está configurada, usará la lista del cliente especificado en `partner_id`.
+**Nota sobre el cliente y lista de precios**: El sistema intentará primero usar el cliente configurado en el usuario API. Si no está configurado, usará el cliente especificado en `partner_id`. De forma similar, primero se intentará usar la lista de precios del usuario API, luego la del cliente.
 
 #### Estructura de la respuesta
 
@@ -304,15 +355,67 @@ Devuelve información de stock con precios NIMAX calculados. Requiere autenticac
     "product_code": "AD09-00018A-AS",
     "product_name": "[AD09-00018A-AS] Bixolon ASSY-MECHANISM-III-R 20",
     "stock": 33,
+    "reserved_quantity": 5,
     "nimax_price_usd": 42.36,
     "pricelist_name": "Public Pricelist USD",
     "pricelist_id": 1,
     "pricelist_currency": "USD",
     "partner_id": 123,
-    "partner_name": "Nombre del Cliente"
+    "partner_name": "Nombre del Cliente",
+    "attribute_line_ids": [
+      {
+        "id": 1,
+        "attribute_id": 1,
+        "attribute_name": "Color",
+        "values": [
+          {
+            "id": 1,
+            "name": "Rojo"
+          },
+          {
+            "id": 2,
+            "name": "Azul"
+          }
+        ]
+      }
+    ]
   }
 ]
 ```
+
+**Descripción de los campos:**
+- **location**: Nombre de la ubicación donde se encuentra el stock
+- **product_code**: Código del producto (default_code)
+- **product_name**: Nombre completo del producto
+- **stock**: Cantidad disponible (después de restar reservas y aplicar porcentaje de visibilidad)
+- **reserved_quantity**: Cantidad del producto que está reservada (no disponible para la venta)
+- **nimax_price_usd**: Precio calculado según la fórmula NIMAX
+- **pricelist_name**: Nombre de la lista de precios utilizada
+- **pricelist_id**: ID de la lista de precios utilizada
+- **pricelist_currency**: Moneda de la lista de precios
+- **partner_id**: ID del cliente consultado
+- **partner_name**: Nombre del cliente consultado
+- **attribute_line_ids**: Lista de líneas de atributo asociadas al producto
+
+#### Estructura de attribute_line_ids
+
+El campo `attribute_line_ids` contiene un arreglo con los atributos del producto (como color, tamaño, etc.) y sus posibles valores. Cada elemento tiene la siguiente estructura:
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | integer | ID de la línea de atributo |
+| attribute_id | integer | ID del atributo |
+| attribute_name | string | Nombre del atributo (por ejemplo: "Color", "Tamaño") |
+| values | array | Lista de valores posibles para este atributo |
+
+Cada elemento en el arreglo `values` tiene la siguiente estructura:
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | integer | ID del valor del atributo |
+| name | string | Nombre del valor (por ejemplo: "Rojo", "Grande") |
+
+Esto permite obtener toda la información de las variantes de producto directamente desde la API.
 
 #### Cálculo del precio NIMAX
 
@@ -376,6 +479,20 @@ curl -X POST \
   -d '{
     "api_key": "SU_CLAVE_API",
     "partner_id": 123,
+    "default_code": "AD09-00018A-AS"
+  }'
+```
+
+#### Ejemplo con cliente predeterminado configurado
+
+Si el usuario API tiene configurado un cliente predeterminado, la llamada se simplifica:
+
+```bash
+curl -X POST \
+  https://su-servidor-odoo.com/nimax/stock_with_price \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "api_key": "SU_CLAVE_API",
     "default_code": "AD09-00018A-AS"
   }'
 ```

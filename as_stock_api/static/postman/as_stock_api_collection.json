@@ -32,7 +32,45 @@
 				},
 				"description": "Consulta el stock disponible de todos los productos en todas las ubicaciones internas."
 			},
-			"response": []
+			"response": [
+				{
+					"name": "Respuesta exitosa",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"api_key\": \"{{api_key}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/nimax/stock",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"nimax",
+								"stock"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "[\n  {\n    \"location\": \"Stock\",\n    \"product_code\": \"PROD001\",\n    \"product_name\": \"[PROD001] Producto A\",\n    \"stock\": 10,\n    \"reserved_quantity\": 2,\n    \"attribute_line_ids\": [\n      {\n        \"id\": 1,\n        \"attribute_id\": 1,\n        \"attribute_name\": \"Color\",\n        \"values\": [\n          {\n            \"id\": 1,\n            \"name\": \"Rojo\"\n          },\n          {\n            \"id\": 2,\n            \"name\": \"Azul\"\n          }\n        ]\n      }\n    ]\n  },\n  {\n    \"location\": \"Stock\",\n    \"product_code\": \"PROD002\",\n    \"product_name\": \"[PROD002] Producto B\",\n    \"stock\": 5,\n    \"reserved_quantity\": 0,\n    \"attribute_line_ids\": []\n  }\n]"
+				}
+			]
 		},
 		{
 			"name": "Consultar Stock por Código de Producto",
@@ -252,9 +290,47 @@
 						"stock_with_price"
 					]
 				},
-				"description": "Consulta el stock disponible de todos los productos con los precios NIMAX calculados según la lista de precios asociada al cliente. La respuesta incluye los campos partner_id y partner_name del cliente consultado."
+				"description": "Consulta el stock disponible de todos los productos con los precios NIMAX calculados según la lista de precios asociada al cliente. La respuesta incluye los campos partner_id, partner_name y reserved_quantity."
 			},
-			"response": []
+			"response": [
+				{
+					"name": "Respuesta exitosa",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"api_key\": \"{{api_key}}\",\n  \"partner_id\": {{partner_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/nimax/stock_with_price",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"nimax",
+								"stock_with_price"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "[\n  {\n    \"location\": \"FREF/Stock\",\n    \"product_code\": \"AD09-00018A-AS\",\n    \"product_name\": \"[AD09-00018A-AS] Bixolon ASSY-MECHANISM-III-R 20\",\n    \"stock\": 33,\n    \"reserved_quantity\": 5,\n    \"nimax_price_usd\": 42.36,\n    \"pricelist_name\": \"Public Pricelist USD\",\n    \"pricelist_id\": 1,\n    \"pricelist_currency\": \"USD\",\n    \"partner_id\": 123,\n    \"partner_name\": \"Nombre del Cliente\",\n    \"attribute_line_ids\": [\n      {\n        \"id\": 1,\n        \"attribute_id\": 1,\n        \"attribute_name\": \"Color\",\n        \"values\": [\n          {\n            \"id\": 1,\n            \"name\": \"Negro\"\n          }\n        ]\n      }\n    ]\n  }\n]"
+				}
+			]
 		},
 		{
 			"name": "Consultar Stock con Precios por Código de Producto",
@@ -309,6 +385,34 @@
 					]
 				},
 				"description": "Consulta el stock disponible de todos los productos en una ubicación específica con los precios NIMAX calculados según la lista de precios asociada al cliente. La respuesta incluye los campos partner_id y partner_name del cliente consultado."
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar stock con precios de un producto (cliente predeterminado)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"api_key\": \"{{api_key}}\",\n  \"default_code\": \"{{default_code}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/nimax/stock_with_price",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"nimax",
+						"stock_with_price"
+					]
+				},
+				"description": "Consulta el stock disponible de un producto específico (por su código) con los precios NIMAX calculados usando el cliente predeterminado configurado en el usuario API. La respuesta incluye los campos partner_id y partner_name del cliente consultado."
 			},
 			"response": []
 		}

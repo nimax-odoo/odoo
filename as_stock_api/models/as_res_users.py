@@ -45,6 +45,13 @@ class AsResUsers(models.Model):
         help='Lista de precios que se utilizará por defecto en la API de Stock con precios. Si se deja vacío, se usará la lista de precios del cliente.'
     )
     
+    as_partner_id = fields.Many2one(
+        'res.partner',
+        string='Cliente Predeterminado',
+        help='Cliente que se utilizará por defecto en las consultas de la API de Stock con precios. '
+             'Si se especifica, no será necesario incluir el parámetro partner_id en las llamadas a la API.'
+    )
+    
     def _as_compute_api_key_display(self):
         """
         Calcula el valor del campo as_api_key_display.

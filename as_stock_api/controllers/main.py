@@ -308,15 +308,44 @@ class AsStockAPI(http.Controller):
                 product_name = quant['product_id'][1]
                 key = f"{location_name}_{product_code}"
                 
+                # Obtener los attribute_line_ids del producto
+                attribute_lines = []
+                try:
+                    if product.product_tmpl_id and product.product_tmpl_id.attribute_line_ids:
+                        for attr_line in product.product_tmpl_id.attribute_line_ids:
+                            values = []
+                            try:
+                                for val in attr_line.value_ids:
+                                    values.append({
+                                        'id': val.id,
+                                        'name': val.name
+                                    })
+                            except Exception as e:
+                                _logger.warning("[as_get_stock] Error al procesar los valores de attribute_line_id: %s", str(e))
+                                
+                            attribute_lines.append({
+                                'id': attr_line.id,
+                                'attribute_id': attr_line.attribute_id.id,
+                                'attribute_name': attr_line.attribute_id.name,
+                                'values': values
+                            })
+                except Exception as e:
+                    _logger.warning("[as_get_stock] Error al procesar attribute_line_ids para producto %s: %s", product_code, str(e))
+                    attribute_lines = []
+                
                 # Agrupar sumando cantidades
                 if key in grouped_data:
                     grouped_data[key]['stock'] += available_qty
+                    grouped_data[key]['reserved_quantity'] += quant['reserved_quantity']
                 else:
                     grouped_data[key] = {
                         'location': location_name,
                         'product_code': product_code,
                         'product_name': product_name,
                         'stock': available_qty,
+                        'reserved_quantity': quant['reserved_quantity'],
+                        'nimax_price_usd': round(nimax_price_usd, 2),
+                        'attribute_line_ids': attribute_lines
                     }
             
             # Convertir el diccionario agrupado a lista
@@ -327,12 +356,14 @@ class AsStockAPI(http.Controller):
                 stock_factor = user.as_stock_percentaje
                 for item in result:
                     item['stock'] = round(item['stock'] * stock_factor, 2)
+                    # La cantidad reservada no se modifica por el factor de stock
                 _logger.info("[as_get_stock] Aplicando porcentaje de stock %s%% configurado por el usuario %s", 
                              user.as_stock_percentaje * 100, user.name)
             
             # Convertir stock a entero para todas las entradas
             for item in result:
                 item['stock'] = int(item['stock'])
+                item['reserved_quantity'] = int(item['reserved_quantity'])
             
             # Filtrar productos con stock cero después de aplicar porcentaje
             result = [item for item in result if item['stock'] > 0]
@@ -403,6 +434,15 @@ class AsStockAPI(http.Controller):
                 for variable in collection.get('variable', []):
                     if variable.get('key') == 'api_key':
                         variable['value'] = request.env.user.as_api_key
+                
+                # Actualizar descripciones con el campo reserved_quantity
+                for item in collection.get('item', []):
+                    if 'description' in item:
+                        desc = item.get('description', '')
+                        if 'stock' in desc and 'reserved_quantity' not in desc:
+                            item['description'] = f"{desc} La respuesta incluye el campo reserved_quantity que indica la cantidad del producto reservada."
+                        if 'stock' in desc and 'attribute_line_ids' not in desc:
+                            item['description'] = f"{item['description']} También incluye attribute_line_ids con la información de atributos del producto."
                 
                 # Actualizar los métodos de las solicitudes a POST
                 for item in collection.get('item', []):
@@ -693,11 +733,17 @@ class AsStockAPI(http.Controller):
         location_id = params.get('location_id')
         partner_id = params.get('partner_id')
         
+        # Si no se proporciona partner_id, verificar si el usuario tiene un cliente predeterminado
+        if not partner_id and user.as_partner_id:
+            partner_id = user.as_partner_id.id
+            _logger.info("[as_get_stock_with_price] Usando cliente predeterminado del usuario: %s (ID: %s)", 
+                         user.as_partner_id.name, partner_id)
+        
         # Verificar que se proporcione el ID del cliente
         if not partner_id:
-            _logger.warning("[as_get_stock_with_price] Falta el parámetro partner_id")
+            _logger.warning("[as_get_stock_with_price] Falta el parámetro partner_id y el usuario no tiene cliente predeterminado")
             
-            response_data = {'error': 'Se requiere el ID del cliente (partner_id)'}
+            response_data = {'error': 'Se requiere el ID del cliente (partner_id) o configurar un cliente predeterminado en el usuario API'}
             self._as_log_response('/nimax/stock_with_price', 400, response_data, user)
             
             return Response(
@@ -923,16 +969,44 @@ class AsStockAPI(http.Controller):
                                  product_code, str(e))
                     nimax_price_usd = 0
                 
+                # Obtener los attribute_line_ids del producto
+                attribute_lines = []
+                try:
+                    if product.product_tmpl_id and product.product_tmpl_id.attribute_line_ids:
+                        for attr_line in product.product_tmpl_id.attribute_line_ids:
+                            values = []
+                            try:
+                                for val in attr_line.value_ids:
+                                    values.append({
+                                        'id': val.id,
+                                        'name': val.name
+                                    })
+                            except Exception as e:
+                                _logger.warning("[as_get_stock_with_price] Error al procesar los valores de attribute_line_id: %s", str(e))
+                                
+                            attribute_lines.append({
+                                'id': attr_line.id,
+                                'attribute_id': attr_line.attribute_id.id,
+                                'attribute_name': attr_line.attribute_id.name,
+                                'values': values
+                            })
+                except Exception as e:
+                    _logger.warning("[as_get_stock_with_price] Error al procesar attribute_line_ids para producto %s: %s", product_code, str(e))
+                    attribute_lines = []
+                
                 # Agrupar sumando cantidades
                 if key in grouped_data:
                     grouped_data[key]['stock'] += available_qty
+                    grouped_data[key]['reserved_quantity'] += quant['reserved_quantity']
                 else:
                     grouped_data[key] = {
                         'location': location_name,
                         'product_code': product_code,
                         'product_name': product_name,
                         'stock': available_qty,
-                        'nimax_price_usd': round(nimax_price_usd, 2)
+                        'reserved_quantity': quant['reserved_quantity'],
+                        'nimax_price_usd': round(nimax_price_usd, 2),
+                        'attribute_line_ids': attribute_lines
                     }
             
             # Convertir el diccionario agrupado a lista
@@ -943,12 +1017,14 @@ class AsStockAPI(http.Controller):
                 stock_factor = user.as_stock_percentaje
                 for item in result:
                     item['stock'] = round(item['stock'] * stock_factor, 2)
+                    # La cantidad reservada no se modifica por el factor de stock
                 _logger.info("[as_get_stock_with_price] Aplicando porcentaje de stock %s%% configurado por el usuario %s", 
                              user.as_stock_percentaje * 100, user.name)
             
             # Convertir stock a entero para todas las entradas
             for item in result:
                 item['stock'] = int(item['stock'])
+                item['reserved_quantity'] = int(item['reserved_quantity'])
             
             # Filtrar productos con stock cero después de aplicar porcentaje
             result = [item for item in result if item['stock'] > 0]
