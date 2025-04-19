@@ -1,3 +1,9 @@
+## 1.0.28 (2023-04-03)
+- Permitir edición manual del campo `as_api_key` en el formulario de usuario
+- Eliminación del atributo password=True para hacer visible la clave API y permitir su edición
+- Adición de nota explicativa sobre la posibilidad de editar manualmente o generar automáticamente
+- Mejora de la usabilidad para administradores que necesitan configurar claves API específicas
+
 ## 1.0.27 (2023-04-03)
 - Eliminación completa del parámetro `partner_id` de los ejemplos en la colección de Postman
 - Simplificación de las solicitudes de ejemplo para usar exclusivamente el cliente predeterminado

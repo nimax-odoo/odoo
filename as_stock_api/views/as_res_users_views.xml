@@ -10,7 +10,10 @@
                 <page string="API de Stock" groups="base.group_system">
                     <group>
                         <field name="as_api_enabled"/>
-                        <field name="as_api_key" password="True" attrs="{'invisible': [('as_api_enabled', '=', False)]}"/>
+                        <field name="as_api_key" attrs="{'invisible': [('as_api_enabled', '=', False)], 'readonly': [('as_api_enabled', '=', False)]}"/>
+                        <div class="text-muted" attrs="{'invisible': [('as_api_enabled', '=', False)]}">
+                            Puede editar manualmente la clave API o usar los botones para generarla automáticamente.
+                        </div>
                     </group>
                     <group attrs="{'invisible': [('as_api_enabled', '=', False)]}">
                         <field name="as_stock_percentaje" attrs="{'required': [('as_api_enabled', '=', True)]}" widget="percentage"/>
