@@ -827,13 +827,85 @@ class AsStockAPI(http.Controller):
                     content_type='application/json'
                 )
                 
-            try:
-                pricelist_id = pricelist.id
-                _logger.info("[as_get_stock_with_price] Lista de precios seleccionada: %s (ID: %s)", pricelist.name, pricelist_id)
-            except (ValueError, TypeError):
-                _logger.warning("[as_get_stock_with_price] ID de cliente inválido: %s", partner_id)
+            pricelist_id = pricelist.id
+            _logger.info("[as_get_stock_with_price] Lista de precios seleccionada: %s (ID: %s)", pricelist.name, pricelist_id)
+        except (ValueError, TypeError) as e:
+            _logger.warning("[as_get_stock_with_price] Error al procesar cliente o lista de precios: %s", str(e))
+            
+            response_data = {'error': 'Error al procesar cliente o lista de precios'}
+            self._as_log_response('/nimax/stock_with_price', 400, response_data, user)
+            
+            return Response(
+                json.dumps(response_data),
+                status=400,
+                content_type='application/json'
+            )
+
+        try:
+            # Obtener el tipo de cambio MXN más reciente
+            mxn_currency = request.env['res.currency'].sudo().search([('name', '=', 'MXN')], limit=1)
+            usd_currency = request.env['res.currency'].sudo().search([('name', '=', 'USD')], limit=1)
+            
+            if not mxn_currency or not usd_currency:
+                _logger.error("[as_get_stock_with_price] No se encontró la moneda MXN o USD")
+                return Response(
+                    json.dumps({'error': 'Error al obtener las monedas MXN/USD'}),
+                    status=500,
+                    content_type='application/json'
+                )
+            
+            # Obtener la tasa de cambio más reciente
+            today = Date.today()
+            rate = usd_currency._convert(1.0, mxn_currency, user.company_id, today)
+            _logger.info("[as_get_stock_with_price] Tasa de cambio USD/MXN obtenida: %s", rate)
+        except Exception as e:
+            _logger.error("[as_get_stock_with_price] Error al obtener tipo de cambio: %s", str(e))
+            return Response(
+                json.dumps({'error': 'Error al obtener tipo de cambio MXN/USD'}),
+                status=500,
+                content_type='application/json'
+            )
+
+        # Compatibilidad con versiones anteriores
+        product_id = params.get('product_id')
+        if product_id and not default_code:
+            _logger.warning("[as_get_stock_with_price] Uso de parámetro obsoleto product_id: %s", product_id)
+            
+            response_data = {
+                'warning': 'El parámetro product_id está obsoleto. Por favor, use default_code en su lugar.',
+                'migration_guide': 'Cambie el parámetro product_id por default_code en el cuerpo de la solicitud.'
+            }
+            self._as_log_response('/nimax/stock_with_price', 200, response_data, user)
+        
+        # Construir dominio de búsqueda
+        domain = [('quantity', '>', 0)]  # Solo productos con stock positivo
+        
+        # Filtrar por código de producto si se proporciona
+        if default_code:
+            # Buscar el producto por su código
+            product = request.env['product.product'].sudo().search([('default_code', '=', default_code)], limit=1)
+            if not product:
+                _logger.warning("[as_get_stock_with_price] Código de producto no encontrado: %s", default_code)
                 
-                response_data = {'error': 'ID de cliente inválido'}
+                response_data = {'error': f'Producto con código {default_code} no encontrado'}
+                self._as_log_response('/nimax/stock_with_price', 404, response_data, user)
+                
+                return Response(
+                    json.dumps(response_data),
+                    status=404,
+                    content_type='application/json'
+                )
+                
+            domain.append(('product_id', '=', product.id))
+        # Compatibilidad con versiones anteriores
+        elif product_id:
+            try:
+                product_id = int(product_id)
+                domain.append(('product_id', '=', product_id))
+            except (ValueError, TypeError):
+                _logger.warning("[as_get_stock_with_price] Parámetro product_id inválido: %s", product_id)
+                
+                response_data = {'error': 'Parámetro product_id inválido'}
                 self._as_log_response('/nimax/stock_with_price', 400, response_data, user)
                 
                 return Response(
@@ -841,248 +913,175 @@ class AsStockAPI(http.Controller):
                     status=400,
                     content_type='application/json'
                 )
-
+                
+        if location_id:
             try:
-                # Obtener el tipo de cambio MXN más reciente
-                mxn_currency = request.env['res.currency'].sudo().search([('name', '=', 'MXN')], limit=1)
-                usd_currency = request.env['res.currency'].sudo().search([('name', '=', 'USD')], limit=1)
+                location_id = int(location_id)
+                domain.append(('location_id', '=', location_id))
+            except (ValueError, TypeError):
+                _logger.warning("[as_get_stock_with_price] Parámetro location_id inválido: %s", location_id)
                 
-                if not mxn_currency or not usd_currency:
-                    _logger.error("[as_get_stock_with_price] No se encontró la moneda MXN o USD")
-                    return Response(
-                        json.dumps({'error': 'Error al obtener las monedas MXN/USD'}),
-                        status=500,
-                        content_type='application/json'
-                    )
-                
-                # Obtener la tasa de cambio más reciente
-                today = Date.today()
-                rate = usd_currency._convert(1.0, mxn_currency, user.company_id, today)
-                _logger.info("[as_get_stock_with_price] Tasa de cambio USD/MXN obtenida: %s", rate)
-            except Exception as e:
-                _logger.error("[as_get_stock_with_price] Error al obtener tipo de cambio: %s", str(e))
-                return Response(
-                    json.dumps({'error': 'Error al obtener tipo de cambio MXN/USD'}),
-                    status=500,
-                    content_type='application/json'
-                )
-
-            # Compatibilidad con versiones anteriores
-            product_id = params.get('product_id')
-            if product_id and not default_code:
-                _logger.warning("[as_get_stock_with_price] Uso de parámetro obsoleto product_id: %s", product_id)
-                
-                response_data = {
-                    'warning': 'El parámetro product_id está obsoleto. Por favor, use default_code en su lugar.',
-                    'migration_guide': 'Cambie el parámetro product_id por default_code en el cuerpo de la solicitud.'
-                }
-                self._as_log_response('/nimax/stock_with_price', 200, response_data, user)
-            
-            # Construir dominio de búsqueda
-            domain = [('quantity', '>', 0)]  # Solo productos con stock positivo
-            
-            # Filtrar por código de producto si se proporciona
-            if default_code:
-                # Buscar el producto por su código
-                product = request.env['product.product'].sudo().search([('default_code', '=', default_code)], limit=1)
-                if not product:
-                    _logger.warning("[as_get_stock_with_price] Código de producto no encontrado: %s", default_code)
-                    
-                    response_data = {'error': f'Producto con código {default_code} no encontrado'}
-                    self._as_log_response('/nimax/stock_with_price', 404, response_data, user)
-                    
-                    return Response(
-                        json.dumps(response_data),
-                        status=404,
-                        content_type='application/json'
-                    )
-                    
-                domain.append(('product_id', '=', product.id))
-            # Compatibilidad con versiones anteriores
-            elif product_id:
-                try:
-                    product_id = int(product_id)
-                    domain.append(('product_id', '=', product_id))
-                except (ValueError, TypeError):
-                    _logger.warning("[as_get_stock_with_price] Parámetro product_id inválido: %s", product_id)
-                    
-                    response_data = {'error': 'Parámetro product_id inválido'}
-                    self._as_log_response('/nimax/stock_with_price', 400, response_data, user)
-                    
-                    return Response(
-                        json.dumps(response_data),
-                        status=400,
-                        content_type='application/json'
-                    )
-                    
-            if location_id:
-                try:
-                    location_id = int(location_id)
-                    domain.append(('location_id', '=', location_id))
-                except (ValueError, TypeError):
-                    _logger.warning("[as_get_stock_with_price] Parámetro location_id inválido: %s", location_id)
-                    
-                    response_data = {'error': 'Parámetro location_id inválido'}
-                    self._as_log_response('/nimax/stock_with_price', 400, response_data, user)
-                    
-                    return Response(
-                        json.dumps(response_data),
-                        status=400,
-                        content_type='application/json'
-                    )
-            
-            # Solo considerar ubicaciones internas (tipo = internal)
-            domain.append(('location_id.usage', '=', 'internal'))
-            
-            # Filtrar por almacenes si el usuario tiene configurados almacenes específicos
-            if user.as_warehouse_ids:
-                _logger.info("[as_get_stock_with_price] Filtrando por almacenes específicos del usuario: %s", 
-                             ", ".join(user.as_warehouse_ids.mapped('name')))
-                warehouse_locations = user.as_warehouse_ids.mapped('view_location_id').ids
-                domain.append(('location_id', 'child_of', warehouse_locations))
-            
-            try:
-                # Cambiar al entorno del usuario para la consulta
-                user_env = request.env(user=user.id)
-                pricelist = request.env['product.pricelist'].sudo().browse(pricelist_id)
-                
-                # Verificar que podemos acceder a los atributos necesarios para evitar errores
-                expected_earning = 0
-                try:
-                    expected_earning = pricelist.expected_earning or 0
-                except Exception as e:
-                    _logger.warning("[as_get_stock_with_price] Error al acceder a expected_earning: %s", str(e))
-                
-                # Consultar stock.quant con optimización de campos
-                quants = user_env['stock.quant'].search_read(
-                    domain=domain,
-                    fields=[
-                        'product_id', 
-                        'location_id', 
-                        'quantity', 
-                        'reserved_quantity',
-                        'write_date'
-                    ],
-                    order='write_date desc'
-                )
-                
-                # Preparar respuesta simplificada
-                result = []
-                
-                # Diccionario para agrupar por ubicación y código de producto
-                grouped_data = {}
-                
-                for quant in quants:
-                    product = request.env['product.product'].sudo().browse(quant['product_id'][0])
-                    available_qty = quant['quantity'] - quant['reserved_quantity']
-                    
-                    # Crear clave única para agrupar
-                    location_name = quant['location_id'][1]
-                    product_code = product.default_code or ''
-                    product_name = quant['product_id'][1]
-                    key = f"{location_name}_{product_code}"
-                    
-                    # Calcular el precio NIMAX
-                    nimax_price_usd = 0
-                    try:
-                        # Buscar el programa de proveedor (tf_partner_id) para este producto/categoría
-                        tf_partner_id = False
-                        for x in partner.tf_vendor_parameter_ids:
-                            if x.category_id.id == product.categ_id.id:
-                                tf_partner_id = x
-                                break
-                        
-                        if tf_partner_id:
-                            # Calcular el precio base USD según la fórmula
-                            price_based_usd = (product.list_price - (product.list_price * tf_partner_id.partner_discount/100)) * \
-                                             tf_partner_id.cost_deal_import/100 * \
-                                             (product.product_tmpl_id.tf_import_tax/100)
-                            
-                            # Calcular el precio NIMAX
-                            nimax_price_usd = price_based_usd / (1 - expected_earning/100) if expected_earning < 100 else 0
-                    except Exception as e:
-                        _logger.error("[as_get_stock_with_price] Error al calcular precio para producto %s: %s", 
-                                     product_code, str(e))
-                        nimax_price_usd = 0
-                    
-                    # Obtener los attribute_line_ids del producto
-                    attribute_lines = []
-                    try:
-                        if product.product_tmpl_id and product.product_tmpl_id.attribute_line_ids:
-                            for attr_line in product.product_tmpl_id.attribute_line_ids:
-                                values = []
-                                try:
-                                    for val in attr_line.value_ids:
-                                        values.append(val.name)
-                                except Exception as e:
-                                    _logger.warning("[as_get_stock_with_price] Error al procesar los valores de attribute_line_id: %s", str(e))
-                                    
-                                attribute_lines.append({
-                                    "attribute_name": attr_line.attribute_id.name,
-                                    "values": values
-                                })
-                    except Exception as e:
-                        _logger.warning("[as_get_stock_with_price] Error al procesar attribute_line_ids para producto %s: %s", product_code, str(e))
-                        attribute_lines = []
-                    
-                    # Agrupar sumando cantidades
-                    if key in grouped_data:
-                        grouped_data[key]['stock'] += available_qty
-                        grouped_data[key]['reserved_quantity'] += quant['reserved_quantity']
-                    else:
-                        grouped_data[key] = {
-                            'location': location_name,
-                            'product_code': product_code,
-                            'product_name': product_name,
-                            'stock': available_qty,
-                            'reserved_quantity': quant['reserved_quantity'],
-                            'nimax_price_usd': round(nimax_price_usd, 2),
-                            'nimax_price_mxn': round(nimax_price_usd * rate, 2),
-                            'rate_usd': round(rate, 4),
-                            'attribute_line_ids': attribute_lines
-                        }
-                
-                # Convertir el diccionario agrupado a lista
-                result = list(grouped_data.values())
-                
-                # Aplicar el porcentaje de stock configurado por el usuario
-                if user.as_stock_percentaje and user.as_stock_percentaje != 1.0:
-                    stock_factor = user.as_stock_percentaje
-                    for item in result:
-                        item['stock'] = round(item['stock'] * stock_factor, 2)
-                        # La cantidad reservada no se modifica por el factor de stock
-                    _logger.info("[as_get_stock_with_price] Aplicando porcentaje de stock %s%% configurado por el usuario %s", 
-                                 user.as_stock_percentaje * 100, user.name)
-                
-                # Convertir stock a entero para todas las entradas
-                for item in result:
-                    item['stock'] = int(item['stock'])
-                    item['reserved_quantity'] = int(item['reserved_quantity'])
-                
-                # Filtrar productos con stock cero después de aplicar porcentaje
-                result = [item for item in result if item['stock'] > 0]
-                
-                # Agregar información de la lista de precios y del cliente
-                for item in result:
-                    item['pricelist_name'] = pricelist.name
-                    item['pricelist_id'] = pricelist_id
-                    item['pricelist_currency'] = pricelist.currency_id.name
-                    item['partner_id'] = partner.id
-                    item['partner_name'] = partner.name
-                
-                _logger.info("[as_get_stock_with_price] Consulta exitosa por usuario %s, retornando %s registros", user.name, len(result))
-                self._as_log_response('/nimax/stock_with_price', 200, result, user)
-                
-                return result
-                
-            except Exception as e:
-                _logger.error("[as_get_stock_with_price] Error al consultar stock: %s", str(e))
-                
-                response_data = {'error': 'Error interno del servidor'}
-                self._as_log_response('/nimax/stock_with_price', 500, response_data, user)
+                response_data = {'error': 'Parámetro location_id inválido'}
+                self._as_log_response('/nimax/stock_with_price', 400, response_data, user)
                 
                 return Response(
                     json.dumps(response_data),
-                    status=500,
+                    status=400,
                     content_type='application/json'
-                ) 
+                )
+        
+        # Solo considerar ubicaciones internas (tipo = internal)
+        domain.append(('location_id.usage', '=', 'internal'))
+        
+        # Filtrar por almacenes si el usuario tiene configurados almacenes específicos
+        if user.as_warehouse_ids:
+            _logger.info("[as_get_stock_with_price] Filtrando por almacenes específicos del usuario: %s", 
+                         ", ".join(user.as_warehouse_ids.mapped('name')))
+            warehouse_locations = user.as_warehouse_ids.mapped('view_location_id').ids
+            domain.append(('location_id', 'child_of', warehouse_locations))
+        
+        try:
+            # Cambiar al entorno del usuario para la consulta
+            user_env = request.env(user=user.id)
+            pricelist = request.env['product.pricelist'].sudo().browse(pricelist_id)
+            
+            # Verificar que podemos acceder a los atributos necesarios para evitar errores
+            expected_earning = 0
+            try:
+                expected_earning = pricelist.expected_earning or 0
+            except Exception as e:
+                _logger.warning("[as_get_stock_with_price] Error al acceder a expected_earning: %s", str(e))
+            
+            # Consultar stock.quant con optimización de campos
+            quants = user_env['stock.quant'].search_read(
+                domain=domain,
+                fields=[
+                    'product_id', 
+                    'location_id', 
+                    'quantity', 
+                    'reserved_quantity',
+                    'write_date'
+                ],
+                order='write_date desc'
+            )
+            
+            # Preparar respuesta simplificada
+            result = []
+            
+            # Diccionario para agrupar por ubicación y código de producto
+            grouped_data = {}
+            
+            for quant in quants:
+                product = request.env['product.product'].sudo().browse(quant['product_id'][0])
+                available_qty = quant['quantity'] - quant['reserved_quantity']
+                
+                # Crear clave única para agrupar
+                location_name = quant['location_id'][1]
+                product_code = product.default_code or ''
+                product_name = quant['product_id'][1]
+                key = f"{location_name}_{product_code}"
+                
+                # Calcular el precio NIMAX
+                nimax_price_usd = 0
+                try:
+                    # Buscar el programa de proveedor (tf_partner_id) para este producto/categoría
+                    tf_partner_id = False
+                    for x in partner.tf_vendor_parameter_ids:
+                        if x.category_id.id == product.categ_id.id:
+                            tf_partner_id = x
+                            break
+                    
+                    if tf_partner_id:
+                        # Calcular el precio base USD según la fórmula
+                        price_based_usd = (product.list_price - (product.list_price * tf_partner_id.partner_discount/100)) * \
+                                         tf_partner_id.cost_deal_import/100 * \
+                                         (product.product_tmpl_id.tf_import_tax/100)
+                        
+                        # Calcular el precio NIMAX
+                        nimax_price_usd = price_based_usd / (1 - expected_earning/100) if expected_earning < 100 else 0
+                except Exception as e:
+                    _logger.error("[as_get_stock_with_price] Error al calcular precio para producto %s: %s", 
+                                 product_code, str(e))
+                    nimax_price_usd = 0
+                
+                # Obtener los attribute_line_ids del producto
+                attribute_lines = []
+                try:
+                    if product.product_tmpl_id and product.product_tmpl_id.attribute_line_ids:
+                        for attr_line in product.product_tmpl_id.attribute_line_ids:
+                            values = []
+                            try:
+                                for val in attr_line.value_ids:
+                                    values.append(val.name)
+                            except Exception as e:
+                                _logger.warning("[as_get_stock_with_price] Error al procesar los valores de attribute_line_id: %s", str(e))
+                                
+                            attribute_lines.append({
+                                "attribute_name": attr_line.attribute_id.name,
+                                "values": values
+                            })
+                except Exception as e:
+                    _logger.warning("[as_get_stock_with_price] Error al procesar attribute_line_ids para producto %s: %s", product_code, str(e))
+                    attribute_lines = []
+                
+                # Agrupar sumando cantidades
+                if key in grouped_data:
+                    grouped_data[key]['stock'] += available_qty
+                    grouped_data[key]['reserved_quantity'] += quant['reserved_quantity']
+                else:
+                    grouped_data[key] = {
+                        'location': location_name,
+                        'product_code': product_code,
+                        'product_name': product_name,
+                        'stock': available_qty,
+                        'reserved_quantity': quant['reserved_quantity'],
+                        'nimax_price_usd': round(nimax_price_usd, 2),
+                        'nimax_price_mxn': round(nimax_price_usd * rate, 2),
+                        'rate_usd': round(rate, 4),
+                        'attribute_line_ids': attribute_lines
+                    }
+            
+            # Convertir el diccionario agrupado a lista
+            result = list(grouped_data.values())
+            
+            # Aplicar el porcentaje de stock configurado por el usuario
+            if user.as_stock_percentaje and user.as_stock_percentaje != 1.0:
+                stock_factor = user.as_stock_percentaje
+                for item in result:
+                    item['stock'] = round(item['stock'] * stock_factor, 2)
+                    # La cantidad reservada no se modifica por el factor de stock
+                _logger.info("[as_get_stock_with_price] Aplicando porcentaje de stock %s%% configurado por el usuario %s", 
+                             user.as_stock_percentaje * 100, user.name)
+            
+            # Convertir stock a entero para todas las entradas
+            for item in result:
+                item['stock'] = int(item['stock'])
+                item['reserved_quantity'] = int(item['reserved_quantity'])
+            
+            # Filtrar productos con stock cero después de aplicar porcentaje
+            result = [item for item in result if item['stock'] > 0]
+            
+            # Agregar información de la lista de precios y del cliente
+            for item in result:
+                item['pricelist_name'] = pricelist.name
+                item['pricelist_id'] = pricelist_id
+                item['pricelist_currency'] = pricelist.currency_id.name
+                item['partner_id'] = partner.id
+                item['partner_name'] = partner.name
+            
+            _logger.info("[as_get_stock_with_price] Consulta exitosa por usuario %s, retornando %s registros", user.name, len(result))
+            self._as_log_response('/nimax/stock_with_price', 200, result, user)
+            
+            return result
+            
+        except Exception as e:
+            _logger.error("[as_get_stock_with_price] Error al consultar stock: %s", str(e))
+            
+            response_data = {'error': 'Error interno del servidor'}
+            self._as_log_response('/nimax/stock_with_price', 500, response_data, user)
+            
+            return Response(
+                json.dumps(response_data),
+                status=500,
+                content_type='application/json'
+            ) 
