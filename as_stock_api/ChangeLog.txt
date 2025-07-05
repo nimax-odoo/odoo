@@ -1,3 +1,20 @@
+## 18.0.1.0.2 (2024-05-20)
+- Agregado atributo role="button" a los enlaces con clase btn para cumplir con requisitos de accesibilidad
+- Mejora de la compatibilidad con lectores de pantalla y herramientas de asistencia
+- Conformidad con los nuevos estándares de accesibilidad de Odoo 18
+
+## 18.0.1.0.1 (2024-05-20)
+- Actualización de las vistas XML para eliminar el uso de atributos 'attrs' y 'states'
+- Reemplazo por los nuevos atributos directos (invisible, readonly, required) con expresiones de dominio
+- Compatibilidad completa con Odoo 18 Enterprise
+
+## 18.0.1.0.0 (2024-05-17)
+- Migración a Odoo 18 Enterprise
+- Actualización de referencias de __openerp__.py a __manifest__.py
+- Mejora del formato del manifiesto para cumplir con los estándares de Odoo 18
+- Adición del campo de licencia LGPL-3 en el manifiesto
+- Mantenimiento de todas las funcionalidades del módulo
+
 ## 1.0.28 (2023-04-03)
 - Permitir edición manual del campo `as_api_key` en el formulario de usuario
 - Eliminación del atributo password=True para hacer visible la clave API y permitir su edición

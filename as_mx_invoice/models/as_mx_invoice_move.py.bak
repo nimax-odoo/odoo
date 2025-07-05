@@ -1,0 +1,1166 @@
+# -*- coding: utf-8 -*-
+from odoo import models, fields, api, _
+import logging
+import base64
+from collections import defaultdict
+from werkzeug.urls import url_encode
+from markupsafe import escape as html_escape
+import traceback
+import time
+
+_logger = logging.getLogger(__name__)
+
+# Configurar logger más específico para debugging
+_debug_logger = logging.getLogger(__name__ + ".debug")
+_debug_logger.setLevel(logging.DEBUG)
+
+class AsAccountInvoice(models.Model):
+    _inherit = "account.move"
+    
+    def _as_debug_log(self, message):
+        """
+        Propósito: Función de utilidad para loguear mensajes de debug con ID de factura
+        Parámetros: message - mensaje a loguear
+        """
+        trace_id = f"INVOICE-{self.id}-{int(time.time())}"
+        _debug_logger.info(f"[{trace_id}] {message}")
+        try:
+            # También añadir al chatter para mayor visibilidad
+            self.sudo().message_post(
+                body=f"<p><b>DEBUG [{trace_id}]:</b> {message}</p>",
+                subject="DEBUG Log",
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+                body_is_html=True
+            )
+        except Exception as e:
+            _debug_logger.error(f"Error al postear en chatter: {e}")
+    
+    def as_get_name_invoice(self):
+        """
+        Propósito: Método que retorna el nombre formateado de la factura para usar en reportes PDF
+                  y correos electrónicos.
+        Retorno: String con el nombre de la factura.
+        """
+        self.ensure_one()
+        self._as_debug_log(f"Llamada a as_get_name_invoice para factura {self.name} (tipo: {self.move_type}, estado: {self.state})")
+        
+        if self.move_type == 'out_invoice' and self.state == 'posted':
+            result = f"{self.journal_id.code}-{self.payment_reference or self.name}-MX-Invoice.pdf".replace('/', '')
+        else:
+            result = f"INV{self.name or ''}.pdf".replace('/','')
+            
+        self._as_debug_log(f"Nombre generado para la factura: {result}")
+        return result
+
+    def action_invoice_print(self):
+        """
+        Propósito: Imprime la factura usando el reporte estándar de Odoo.
+        Retorno: Acción para imprimir la factura.
+        """
+        self.ensure_one()
+        
+        # Usar directamente el reporte estándar, omitiendo la referencia al reporte personalizado
+        # que está causando errores
+        report = self.env.ref('account.account_invoices')
+            
+        return report.report_action(self)
+
+    def button_process_edi_web_services(self):
+        """
+        Propósito: Procesa los servicios web EDI y genera el PDF de la factura.
+        Retorno: Resultado del procesamiento EDI.
+        """
+        # Llamar al método original primero
+        res = super().button_process_edi_web_services()
+        
+        # Procesar la generación de PDF para cada factura
+        for invoice in self:
+            try:
+                # Generar nombre del archivo
+                cfdi_filename = f"{invoice.journal_id.code}-{invoice.payment_reference or invoice.name}-MX-Invoice-3.3.xml".replace('/', '')
+                
+                if not cfdi_filename:
+                    continue
+                    
+                # Buscar si ya existe un adjunto PDF
+                name = cfdi_filename.split('.')[0]
+                existing_attachments = self.env['ir.attachment'].search([
+                    ('name', '=', name and _("%s.pdf") % name),
+                    ('res_id', '=', invoice.id),
+                    ('res_model', '=', 'account.move')
+                ])
+                
+                # Si no existe, crear el adjunto PDF
+                if not existing_attachments:
+                    try:
+                        # Usar el reporte estándar
+                        report = self.env.ref('account.account_invoices')
+                        
+                        # Renderizar el PDF
+                        content = report._render_qweb_pdf(invoice.id)[0]
+                        
+                        # Crear el adjunto
+                        self.env['ir.attachment'].create({
+                            'name': name and _("%s.pdf") % name or _("Factura_.pdf"),
+                            'type': 'binary',
+                            'datas': base64.b64encode(content),
+                            'res_model': 'account.move',
+                            'res_id': invoice.id,
+                        })
+                        _logger.info("[button_process_edi_web_services] PDF adjunto creado para factura %s", invoice.name)
+                    except Exception as attachment_error:
+                        _logger.error("[button_process_edi_web_services] Error al crear adjunto de factura %s: %s", 
+                                     invoice.name, attachment_error)
+            except Exception as invoice_error:
+                _logger.error("[button_process_edi_web_services] Error procesando factura %s: %s", 
+                             invoice.name if hasattr(invoice, 'name') else 'desconocido', invoice_error)
+                
+        return res
+            
+    @api.model
+    def l10n_mx_edi_retrieve_attachments(self):
+        """
+        Propósito: Recupera todos los adjuntos CFDI generados para esta factura.
+        Retorno: Un recordset de ir.attachment.
+        """
+        self.ensure_one()
+        if not self.l10n_mx_edi_cfdi_name:
+            return []
+        domain = [
+            ('res_id', '=', self.id),
+            ('res_model', '=', self._name),
+            ('name', '=', self.l10n_mx_edi_cfdi_name)]
+        return self.env['ir.attachment'].search(domain)
+
+    def l10n_mx_edi_amount_to_text(self):
+        """
+        Propósito: Transforma un monto flotante a texto en formato mexicano para facturas.
+        Retorno: String con el monto en palabras.
+        """
+        self.ensure_one()
+        currency = self.currency_id.name.upper()
+        # M.N. = Moneda Nacional (National Currency)
+        # M.E. = Moneda Extranjera (Foreign Currency)
+        if currency == 'MXN':
+            currency_type = 'M.N'
+        elif currency == 'USD':
+            currency_type = 'USD'
+        else:
+            currency_type = 'M.E.'
+        # Split integer and decimal part
+        amount_i, amount_d = divmod(self.amount_total, 1)
+        amount_d = round(amount_d, 2)
+        amount_d = int(round(amount_d * 100, 2))
+        words = self.currency_id.with_context(lang=self.partner_id.lang or 'es_ES').amount_to_text(amount_i).upper()
+        invoice_words = f"{words} {amount_d:02d}/100 {currency_type}"
+        return invoice_words
+            
+    @api.model
+    def _get_invoice_in_payment_state(self):
+        """
+        Propósito: Sobrescribe el método para habilitar el estado 'in_payment' en facturas.
+        Retorno: Estado 'paid' para la factura.
+        """
+        # OVERRIDE to enable the 'in_payment' state on invoices.
+        return 'paid'
+
+    def _reverse_moves(self, default_values_list=None, cancel=False):
+        """
+        Propósito: Procesa las contramovimientos contables.
+        Parámetros: 
+            default_values_list: Lista de valores predeterminados
+            cancel: Indica si se debe cancelar el movimiento
+        Retorno: Movimientos invertidos
+        """
+        if not default_values_list:
+            default_values_list = [{} for move in self]
+
+        if cancel:
+            lines = self.mapped('line_ids')
+            # Avoid maximum recursion depth.
+            if lines:
+                lines.remove_move_reconcile()
+
+        reverse_type_map = {
+            'entry': 'entry',
+            'out_invoice': 'out_refund',
+            'out_refund': 'entry',
+            'in_invoice': 'in_refund',
+            'in_refund': 'entry',
+            'out_receipt': 'entry',
+            'in_receipt': 'entry',
+        }
+
+        move_vals_list = []
+        for move, default_values in zip(self, default_values_list):
+            default_values.update({
+                'move_type': reverse_type_map[move.move_type],
+                'reversed_entry_id': move.id,
+            })
+            move_vals_list.append(move.with_context(move_reverse_cancel=cancel)._reverse_move_vals(default_values, cancel=cancel))
+
+        reverse_moves = self.env['account.move'].create(move_vals_list)
+        reverse_moves._check_balanced()
+
+        # Reconcile moves together to cancel the previous one.
+        if cancel:
+            reverse_moves.with_context(move_reverse_cancel=cancel)._post(soft=False)
+            for move, reverse_move in zip(self, reverse_moves):
+                group = defaultdict(list)
+                for line in (move.line_ids + reverse_move.line_ids).filtered(lambda l: not l.reconciled):
+                    group[(line.account_id, line.currency_id)].append(line.id)
+                for (account, dummy), line_ids in group.items():
+                    if account.reconcile or account.internal_type == 'liquidity':
+                        self.env['account.move.line'].browse(line_ids).with_context(move_reverse_cancel=cancel).reconcile()
+
+        return reverse_moves
+
+    def _get_invoiced_lot_values1(self, product_id):
+        """ 
+        Propósito: Obtiene y prepara datos para mostrar tabla de lotes facturados en el reporte.
+        Parámetros:
+            product_id: ID del producto a filtrar
+        Retorno: Lista de valores de lotes
+        """
+        self.ensure_one()
+        from odoo.tools import float_is_zero
+
+        if self.state == 'draft':
+            return []  # Corregido: Retorna lista vacía en lugar de variable indefinida
+
+        sale_lines = self.invoice_line_ids.sale_line_ids
+        sale_orders = sale_lines.order_id
+        stock_move_lines = sale_lines.move_ids.filtered(lambda r: r.state == 'done').move_line_ids
+
+        # Get the other customer invoices and refunds.
+        ordered_invoice_ids = sale_orders.mapped('invoice_ids')\
+            .filtered(lambda i: i.state not in ['draft', 'cancel'])\
+            .sorted(lambda i: (i.invoice_date, i.id))
+
+        # Get the position of self in other customer invoices and refunds.
+        self_index = None
+        i = 0
+        for invoice in ordered_invoice_ids:
+            if invoice.id == self.id:
+                self_index = i
+                break
+            i += 1
+
+        # Get the previous invoices if any.
+        previous_invoices = ordered_invoice_ids[:self_index]
+
+        # Get the incoming and outgoing sml between self.invoice_date and the previous invoice (if any) of the related product.
+        write_dates = [wd for wd in self.invoice_line_ids.mapped('write_date') if wd]
+        self_datetime = max(write_dates) if write_dates else None
+        last_invoice_datetime = dict()
+        for product in self.invoice_line_ids.product_id:
+            last_invoice = previous_invoices.filtered(lambda inv: product in inv.invoice_line_ids.product_id)
+            last_invoice = last_invoice[-1] if len(last_invoice) else None
+            last_write_dates = last_invoice and [wd for wd in last_invoice.invoice_line_ids.mapped('write_date') if wd]
+            last_invoice_datetime[product] = max(last_write_dates) if last_write_dates else None
+
+        def _filter_incoming_sml1(ml):
+            if ml.state == 'done' and ml.location_id.usage == 'customer' and ml.lot_id:
+                last_date = last_invoice_datetime.get(ml.product_id)
+                if last_date:
+                    return last_date <= ml.date <= self_datetime
+                else:
+                    return ml.date <= self_datetime
+            return False
+
+        def _filter_outgoing_sml1(ml):
+            if ml.state == 'done' and ml.location_dest_id.usage == 'customer' and ml.lot_id:
+                last_date = last_invoice_datetime.get(ml.product_id)
+                if last_date:
+                    return last_date <= ml.date <= self_datetime
+                else:
+                    return ml.date <= self_datetime
+            return False
+
+        incoming_sml = stock_move_lines.filtered(_filter_incoming_sml1)
+        outgoing_sml = stock_move_lines.filtered(_filter_outgoing_sml1)
+
+        # Prepare and return lot_values
+        qties_per_lot = defaultdict(lambda: 0)
+        if self.move_type == 'out_refund':
+            for ml in outgoing_sml:
+                qties_per_lot[ml.lot_id] -= ml.product_uom_id._compute_quantity(ml.qty_done, ml.product_id.uom_id)
+            for ml in incoming_sml:
+                qties_per_lot[ml.lot_id] += ml.product_uom_id._compute_quantity(ml.qty_done, ml.product_id.uom_id)
+        else:
+            for ml in outgoing_sml:
+                qties_per_lot[ml.lot_id] += ml.product_uom_id._compute_quantity(ml.qty_done, ml.product_id.uom_id)
+            for ml in incoming_sml:
+                qties_per_lot[ml.lot_id] -= ml.product_uom_id._compute_quantity(ml.qty_done, ml.product_id.uom_id)
+        lot_values = []
+        for lot_id, qty in qties_per_lot.items():
+            if lot_id.product_id == product_id:
+                if float_is_zero(qty, precision_rounding=lot_id.product_id.uom_id.rounding):
+                    continue
+                lot_values.append({
+                    'product_name': lot_id.product_id.display_name,
+                    'quantity': self.env['ir.qweb.field.float'].value_to_html(qty, {'precision': self.env['decimal.precision'].precision_get('Product Unit of Measure')}),
+                    'uom_name': lot_id.product_uom_id.name,
+                    'lot_name': lot_id.name,
+                    # The lot id is needed by localizations to inherit the method and add custom fields on the invoice's report.
+                    'lot_id': lot_id.id
+                })
+        return lot_values
+
+    def _onchange_terms(self):
+        """
+        Propósito: Obtiene los términos de factura desde la compañía.
+        Retorno: Términos de factura de la compañía.
+        """
+        invoice_terms = self.company_id.invoice_terms
+        return invoice_terms
+
+    def action_post(self):
+        """
+        Propósito: Procesa la publicación de la factura y registra historiales de promoción.
+        Retorno: Resultado de publicación.
+        """
+        sale_order = self.env['sale.order'].search([('name', '=', self.invoice_origin)], limit=1)
+        line_sale = False
+        if sale_order and self.move_type == 'out_refund':
+            #recorremos las lineas de la factura
+            for line in self.invoice_line_ids:
+                for line_so in sale_order.order_line:
+                    if line.product_id == line_so.product_id:
+                        line_sale = line_so
+                        break
+                        
+                tf_partner_id = self.env['tf.res.partner']
+                for x in sale_order.partner_id.tf_vendor_parameter_ids:
+                    if x.category_id.id == line_sale.product_id.categ_id.id:
+                        tf_partner_id = x
+                        break
+                        
+                if not tf_partner_id:
+                    continue
+                    
+                #se realizan los calculos 
+                moneda_mxn = self.env['res.currency'].search([('id', '=', 33)])
+                moneda_usd = self.env['res.currency'].search([('id', '=', 2)])
+                price_unit = line.price_unit
+                
+                RECALCULATED_PRICE_UNIT = line.move_id.currency_id._convert_nimax(
+                    price_unit, moneda_usd, self.env.user.company_id, fields.Date.today(), line_sale.id)
+                monto_mxp = line.move_id.currency_id._convert_nimax(
+                    price_unit, moneda_mxn, self.env.user.company_id, fields.Date.today(), line_sale.id)
+                NIMAX_PRICE_MXP = monto_mxp
+                COST_NIMAX_USD = line.move_id.currency_id._convert_nimax(
+                    line_sale.COST_NIMAX_USD, moneda_usd, self.env.user.company_id, fields.Date.today(), line_sale.id)
+                COST_NIMAX_MXP = line.move_id.currency_id._convert_nimax(
+                    line_sale.COST_NIMAX_USD, moneda_mxn, self.env.user.company_id, fields.Date.today(), line_sale.id)
+                    
+                MARGIN_MXP = (NIMAX_PRICE_MXP * line.quantity) - (COST_NIMAX_MXP * line.quantity)
+                MARGIN_USD = (RECALCULATED_PRICE_UNIT * line.quantity) - (COST_NIMAX_USD * line.quantity)
+                TOTAL_USD = RECALCULATED_PRICE_UNIT * line.quantity
+                TOTAL_MXP = NIMAX_PRICE_MXP * line.quantity
+              
+                #creamos el registro en el historico de promociones 
+                self.env['tf.history.promo'].create({
+                    'vendor_id': tf_partner_id.partner_id.id,
+                    'product_id': line_sale.product_id.id,
+                    'customer_id': line_sale.order_id.partner_id.id,
+                    'customer_type': tf_partner_id.partner_type.id,
+                    'category_id': line_sale.product_id.categ_id.id,
+                    'qty': line.quantity,
+                    'recalculated_price_unit': RECALCULATED_PRICE_UNIT,
+                    'recalculated_price_unit_mxp': NIMAX_PRICE_MXP,
+                    'recalculated_cost_nimax_usd': COST_NIMAX_USD,
+                    'recalculated_cost_nimax_mxp': COST_NIMAX_MXP,
+                    'margin_mxp': MARGIN_MXP * -1,
+                    'margin_usd': MARGIN_USD * -1,
+                    'total_usd': TOTAL_USD * -1,
+                    'total_mxp': TOTAL_MXP * -1,
+                    'salesman_id': line.move_id.user_id.id,
+                    'sale_id': sale_order.id,
+                    'sale_order_line': line_sale.id,
+                })
+
+                #se marca la utima action desde factura 
+                self.env.cr.execute("""
+                    SELECT id FROM tf_history_promo 
+                    WHERE
+                      sale_id = %s AND 
+                      product_id = %s AND 
+                      sale_order_line = %s
+                    ORDER BY create_date DESC LIMIT 1
+                """, (sale_order.id, line.product_id.id, line_sale.id))
+                
+                history_table = [j[0] for j in self.env.cr.fetchall()]
+                tf_history_id = self.env['tf.history.promo'].browse(history_table)
+                if tf_history_id:
+                    tf_history_id.last_applied_promo = True
+                    
+        res = super().action_post()
+        return res
+
+    def get_promocion(self, line_id):
+        """
+        Propósito: Obtiene la promoción aplicada a una línea de factura.
+        Parámetros:
+            line_id: ID de la línea de factura
+        Retorno: Nombre de la promoción aplicada
+        """
+        self.env.cr.execute("""
+            SELECT order_line_id FROM sale_order_line_invoice_rel 
+            WHERE invoice_line_id = %s
+        """, (line_id,))
+        
+        ids = [k[0] for k in self.env.cr.fetchall()]
+        name = ''
+        
+        if ids:
+            line = self.env['sale.order.line'].search([('id', 'in', ids)], limit=1)
+            ultima_promo = self.env['tf.history.promo'].search([
+                ('sale_id', '=', line.order_id.id),
+                ('product_id', '=', line.product_id.id),
+                ('last_applied_promo', '=', True)
+            ], order="write_date desc", limit=1)
+            
+            if ultima_promo:
+                name = f"{ultima_promo.promo_id.id} : {ultima_promo.promo_id.name}"
+            else:
+                name = ' '
+                
+        return name
+
+    def get_tasa_xml(self, product_id):
+        """
+        Propósito: Obtiene la tasa de impuesto desde el XML CFDI para un producto.
+        Parámetros:
+            product_id: ID del producto
+        Retorno: Lista con información de impuestos
+        """
+        xml = self._l10n_mx_edi_decode_cfdi()
+        impuestos = []
+        
+        if xml is not None and 'cfdi_node' in xml:
+            conceptos = xml['cfdi_node'].Conceptos.Concepto
+            for product in conceptos:
+                if product.get('NoIdentificacion') == product_id and 'Impuestos' in product:
+                    for translado in product.Impuestos.Traslados.Traslado:
+                        if translado.attrib:
+                            vals = {
+                                'Tasa': translado.attrib['TasaOCuota'],
+                                'Base': round(float(translado.attrib['Base']), 2),
+                                'Impuesto': translado.attrib['Impuesto'],
+                                'Importe': round(float(translado.attrib['Importe']), 2),
+                            }
+                            impuestos.append(vals)
+                            break  # Optimizado: reemplaza la bandera con break
+
+        return impuestos
+
+    def get_product_lot(self, product_id):
+        """
+        Propósito: Obtiene los lotes de un producto en la factura.
+        Parámetros:
+            product_id: ID del producto
+        Retorno: String con nombres de lotes
+        """
+        names = ''
+        sale_order = self.env['sale.order'].search([('name', '=', self.invoice_origin)], limit=1)
+        
+        if not sale_order:
+            return names
+            
+        for pick in sale_order.picking_ids:
+            for move in pick.move_line_ids_without_package:
+                if product_id == move.product_id.id and move.lot_id.name:
+                    names += f"{move.lot_id.name}, "
+                    
+        return names
+        
+    def get_referencia_pedido(self):
+        """
+        Propósito: Obtiene la referencia de orden de compra del cliente.
+        Retorno: Referencia de pedido si existe, o texto vacío.
+        """
+        self.ensure_one()
+        self._as_debug_log(f"Llamada a get_referencia_pedido para factura {self.name} con origen {self.invoice_origin}")
+        
+        sale_orders = self.env['sale.order'].search([('invoice_ids', 'in', self.id)], limit=1)
+        if sale_orders and sale_orders.client_order_ref:
+            result = sale_orders.client_order_ref
+            self._as_debug_log(f"Referencia encontrada: {result}")
+            return result
+            
+        if self.invoice_origin:
+            # Intento alternativo buscando por nombre
+            sale_orders_alt = self.env['sale.order'].search([('name', '=', self.invoice_origin)], limit=1)
+            if sale_orders_alt and sale_orders_alt.client_order_ref:
+                result = sale_orders_alt.client_order_ref
+                self._as_debug_log(f"Referencia encontrada (método alternativo): {result}")
+                return result
+                
+        self._as_debug_log("No se encontró referencia de pedido")
+        return ''
+
+    def adjuntar_factura_model(self, invoice):
+        """
+        Propósito: Adjunta la factura al modelo.
+        Parámetros:
+            invoice: Objeto de factura
+        Retorno: String vacío
+        """
+        # TODO: Implementar lógica para adjuntar factura o eliminar método si no es necesario
+        _logger.info("[adjuntar_factura_model] Método no implementado")
+        return ''    
+
+    # --- Botón Timbrar Manual --- 
+    def button_as_manual_cfdi_sign(self):
+        """
+        Función para el botón que dispara manualmente el timbrado CFDI
+        """
+        self.ensure_one()
+        if self.state != 'posted':
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error'),
+                    'message': _('La factura debe estar en estado "Publicado" para timbrar el CFDI.'),
+                    'sticky': True,
+                    'type': 'danger',
+                }
+            }
+            
+        if not self.l10n_mx_edi_is_cfdi_needed:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error'),
+                    'message': _('Esta factura no requiere CFDI.'),
+                    'sticky': True,
+                    'type': 'danger',
+                }
+            }
+            
+        if self.l10n_mx_edi_cfdi_state:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error'),
+                    'message': _('Esta factura ya tiene un estado CFDI: %s') % self.l10n_mx_edi_cfdi_state,
+                    'sticky': True,
+                    'type': 'danger',
+                }
+            }
+            
+        # Si no hay errores, intentamos timbrar
+        try:
+            _logger.info("AS: Iniciando timbrado manual para factura %s (ID: %s)", self.name, self.id)
+            
+            # Ejecutar el mismo método que la acción automática
+            self._l10n_mx_edi_cfdi_invoice_try_send()
+            
+            # Devolver mensaje de éxito (aunque esto no garantiza que el timbrado fue exitoso)
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Proceso iniciado'),
+                    'message': _('Se ha iniciado el proceso de timbrado CFDI. Verifica el estado en unos momentos.'),
+                    'sticky': False,
+                    'type': 'success',
+                }
+            }
+        except Exception as e:
+            _logger.error("Error durante el timbrado manual CFDI: %s", str(e))
+            _logger.error(traceback.format_exc())
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error en timbrado'),
+                    'message': str(e),
+                    'sticky': True,
+                    'type': 'danger',
+                }
+            }
+
+    def as_action_manual_l10n_mx_edi_cfdi_try_send(self):
+        """
+        Método para el botón que intenta timbrar manualmente desde el botón
+        de Timbrar MX (Manual)
+        """
+        self.ensure_one()
+        if self.state != 'posted' or not self.l10n_mx_edi_is_cfdi_needed:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error'),
+                    'message': _('La factura debe estar publicada y requerir CFDI.'),
+                    'sticky': True,
+                    'type': 'danger',
+                }
+            }
+            
+        try:
+            _logger.info("[AS_MX_INV] Iniciando timbrado manual para factura %s (ID: %s)", self.name, self.id)
+            
+            # Ejecutar el mismo método que la acción automática
+            self._l10n_mx_edi_cfdi_invoice_try_send()
+            
+            self.message_post(
+                body=_("<p><b>Proceso de timbrado iniciado manualmente</b></p><p>Verificando resultados en unos momentos...</p>"),
+                subject="Timbrado Manual CFDI (AS)",
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+                body_is_html=True
+            )
+            
+            # Actualizar vista
+            return True
+        except Exception as e:
+            _logger.error("[AS_MX_INV] Error durante el timbrado manual CFDI: %s", str(e))
+            error_details = traceback.format_exc()
+            _logger.error(error_details)
+            
+            # Postear el error en el chatter para diagnóstico
+            self.message_post(
+                body=f"""<p><b>⚠️ Error al iniciar timbrado manual CFDI</b></p>
+                    <p>Detalles del error:</p>
+                    <pre>{str(e)}</pre>
+                    <p>Traza completa (para debug):</p>
+                    <pre>{error_details}</pre>
+                """,
+                subject="ERROR en Timbrado Manual CFDI (AS)",
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+                body_is_html=True
+            )
+            
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error en timbrado'),
+                    'message': str(e),
+                    'sticky': True,
+                    'type': 'danger',
+                }
+            }
+
+    def as_action_check_pac_config(self):
+        """
+        Método para el botón que verifica la configuración PAC
+        """
+        self.ensure_one()
+        try:
+            # Llamar al método desde el modelo check_pac
+            result = self.env['as_mx_invoice.check_pac'].create({}).action_check_pac_config()
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Verificación PAC'),
+                    'message': _('Verificación de PAC completada y añadida al chatter.'),
+                    'sticky': False,
+                    'type': 'success',
+                }
+            }
+        except Exception as e:
+            _logger.error("[AS_MX_INV] Error durante verificación PAC: %s", str(e))
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error en verificación'),
+                    'message': str(e),
+                    'sticky': True,
+                    'type': 'danger',
+                }
+            }
+
+    def as_action_fix_edi_documents(self):
+        """
+        Método para el botón que repara documentos EDI con problemas
+        """
+        self.ensure_one()
+        try:
+            # Llamar al método desde el modelo check_pac
+            result = self.env['as_mx_invoice.check_pac'].create({}).action_fix_edi_documents()
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Reparación EDI'),
+                    'message': _('Reparación de documentos EDI completada y añadida al chatter.'),
+                    'sticky': False,
+                    'type': 'success',
+                }
+            }
+        except Exception as e:
+            _logger.error("[AS_MX_INV] Error durante reparación EDI: %s", str(e))
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error en reparación'),
+                    'message': str(e),
+                    'sticky': True,
+                    'type': 'danger',
+                }
+            }
+
+    # --- Sobreescritura del Cálculo de Necesidad CFDI ---    
+    @api.depends('move_type', 'company_id.currency_id', 'origin_payment_id', 'statement_line_id', 'country_code')
+    def _compute_l10n_mx_edi_is_cfdi_needed(self):
+        """
+        OVERRIDE: Modificado en as_mx_invoice.
+        Permite CFDI aunque la moneda de la compañía NO sea MXN (¡OJO! Esto puede no ser estándar SAT).
+        Loguea las condiciones al chatter.
+        """
+        _logger_compute = logging.getLogger(__name__ + ".compute_cfdi_needed")
+
+        for move in self:
+            cond1_country_is_mx = move.country_code == 'MX'
+            cond2_company_currency_is_mxn = True # Forzado
+            company_currency_name = move.company_currency_id.name
+            is_payment = move._l10n_mx_edi_is_cfdi_payment()
+            cond3_move_type_ok = move.move_type in ('out_invoice', 'out_refund') or is_payment
+            final_result = cond1_country_is_mx and cond2_company_currency_is_mxn and cond3_move_type_ok
+            move.l10n_mx_edi_is_cfdi_needed = final_result
+
+            try:
+                message = f"""
+<b>Verificación Condiciones para Necesidad CFDI (MODIFICADO POR AS)</b><br/>
+--------------------------------------------------<br/>
+1. País Factura == 'MX': {cond1_country_is_mx} (Valor: {move.country_code})<br/>
+2. Moneda Compañía == 'MXN': <b style='color:orange;'>IGNORADO POR AS</b> (Moneda Real: {company_currency_name})<br/>
+3. Tipo Documento OK (Fact/Rectif Cliente o Pago): {cond3_move_type_ok} (Tipo: {move.move_type}, Es Pago: {is_payment})<br/>
+--------------------------------------------------<br/>
+<b>Resultado Final (Necesita CFDI): {final_result}</b>
+                """
+                if move.move_type in ('out_invoice', 'out_refund') or is_payment:
+                     move.message_post(
+                        body=message,
+                        subject="Detalle Cálculo Necesidad CFDI (AS Modificado)",
+                        message_type='comment',
+                        subtype_xmlid='mail.mt_note',
+                        body_is_html=True
+                     )
+            except Exception as e:
+                _logger_compute.warning(f"No se pudo postear detalle de cálculo CFDI (AS Mod) para {move.name}: {e}", exc_info=False)
+
+    # --- Sobreescritura del Post (Logueo DB - Corregido) --- 
+    def _post(self, soft=True):
+        res = super()._post(soft=soft)
+        for move in self.filtered(
+            lambda m: m.state == 'posted' 
+                      and m.country_code == 'MX' 
+                      and (m.move_type in ('out_invoice', 'out_refund') or m._l10n_mx_edi_is_cfdi_payment())
+        ):
+            _logger.info(f"[AS_MX_INV_DEBUG] Posting CFDI data check to chatter for invoice {move.name} (ID: {move.id}) - Filtro Directo OK")
+            try:
+                cr = self.env.cr
+                company = move.company_id
+                company_partner = company.partner_id
+                company_id = company.id
+                cr.execute("""
+                    SELECT c.name AS company_name, c.l10n_mx_edi_fiscal_regime
+                    FROM res_company c WHERE c.id = %s;
+                """, (company_id,))
+                company_data = cr.dictfetchone() or {}
+                company_name = company_data.get('company_name', 'Error')
+                company_regimen = company_data.get('l10n_mx_edi_fiscal_regime', '¡¡FALTA!!')
+                company_rfc = company_partner.vat or 'No encontrado'
+                company_zip = company_partner.zip or '¡¡FALTA!!'
+
+                # -- 2. Certificados CSD (usando ORM como antes) --
+                valid_certificates = self.env['certificate.certificate'].search_count([
+                    ('company_id', '=', company_id),
+                    ('is_valid', '=', True)
+                ])
+                csd_ok_str = 'Sí' if valid_certificates > 0 else '¡¡NO!!'
+
+                # -- 3. Configuración PAC - QUITADO TEMPORALMENTE POR AttributeError --
+                pac_ok_str = "(No verificado - Campos PAC ausentes en res.company)"
+                test_mode_str = "(No verificado)"
+                pac_name = "(No verificado)"
+                # Quitamos el intento de leer los campos PAC que no existen:
+                # pac_name = company.l10n_mx_edi_pac_name or 'No configurado'
+                # pac_username = company.l10n_mx_edi_pac_username or 'No config.'
+                # pac_password_set = bool(company.l10n_mx_edi_pac_password)
+                # pac_test_mode = company.l10n_mx_edi_pac_test_env
+                # pac_ok_str = 'Sí' if pac_name != 'No configurado' and pac_username != 'No config.' and pac_password_set else '¡¡NO!! Faltan datos PAC en Compañía'
+                # test_mode_str = 'Sí' if pac_test_mode else 'NO'
+
+                partner_id = move.partner_id.id
+                partner_data = {}
+                if partner_id:
+                    cr.execute("SELECT name AS c_name, vat AS c_rfc, l10n_mx_edi_fiscal_regime AS c_reg, zip AS c_zip FROM res_partner WHERE id = %s;", (partner_id,))
+                    partner_data = cr.dictfetchone() or {}
+                customer_name = partner_data.get('c_name', 'Error')
+                customer_rfc = partner_data.get('c_rfc', 'No enc.')
+                customer_regimen = partner_data.get('c_reg', '¡¡FALTA!!')
+                customer_zip = partner_data.get('c_zip', '¡¡FALTA!!')
+
+                payment_policy = move.l10n_mx_edi_payment_policy or 'N/C'
+                payment_method_id = move.l10n_mx_edi_payment_method_id.id
+                payment_method_code = 'Err'
+                if payment_method_id:
+                    cr.execute("SELECT code FROM l10n_mx_edi_payment_method WHERE id = %s;", (payment_method_id,))
+                    pm_res = cr.fetchone()
+                    payment_method_code = pm_res[0] if pm_res else '¡¡FALTA!!'
+                else:
+                    payment_method_code = '¡¡FALTA!!'
+                invoice_usage = move.l10n_mx_edi_usage or '¡¡FALTA!!'
+                currency_name = move.currency_id.name
+                currency_rate = move.invoice_currency_rate if move.currency_id != move.company_currency_id else 'N/A'
+
+                cr.execute("""
+                    SELECT
+                        aml.name AS DescripcionLinea
+                        /* Quitamos referencias a unspsc_code que no existe en esta BD */
+                        /*
+                        usc_prod.code AS ClaveProdServ,
+                        usc_uom.code AS ClaveUnidad
+                        */
+                    FROM account_move_line aml
+                    LEFT JOIN product_product pp ON aml.product_id = pp.id
+                    LEFT JOIN product_template pt ON pp.product_tmpl_id = pt.id
+                    /* Quitamos LEFT JOINs a tablas que no existen */
+                    /*  
+                    LEFT JOIN unspsc_code usc_prod ON pt.unspsc_code_id = usc_prod.id
+                    LEFT JOIN uom_uom uom ON aml.product_uom_id = uom.id
+                    LEFT JOIN unspsc_code usc_uom ON uom.unspsc_code_id = usc_uom.id
+                    */
+                    WHERE aml.move_id = %s AND aml.display_type = 'product' AND aml.quantity != 0
+                    ORDER BY aml.sequence, aml.id;
+                """, (move.id,))
+                lines_data = cr.dictfetchall()
+                line_details_html = []
+                if lines_data:
+                    for line in lines_data:
+                        # Quitamos referencias a campos que ya no existen en la consulta
+                        # clave_prod_serv_str = line.get('claveprodserv') or '¡¡FALTA!!'
+                        # clave_unidad_str = line.get('claveunidad') or '¡¡FALTA!!'
+                        # line_details_html.append(f"<li>L: '{line.get('descripcionlinea', '')[:20]}...' CPS: {clave_prod_serv_str} CU: {clave_unidad_str}</li>")
+                        line_details_html.append(f"<li>L: '{line.get('descripcionlinea', '')[:20]}...'</li>")
+                    line_details_html = "\n".join(line_details_html)
+                else:
+                    line_details_html = "<li>No hay líneas válidas para CFDI</li>"
+
+                # --- INICIO: Logueo Búsqueda de Certificado --- 
+                # Quitamos la llamada al método inexistente y hacemos nuestra propia búsqueda
+                # certificate_found = self.env['l10n_mx_edi.document']._get_edi_certificate(company)
+                
+                # FORZAMOS uso del certificado con ID 10 como solicitó el usuario
+                certificate_found = None
+                try:
+                    # Primero intentamos buscar específicamente el certificado con ID 10
+                    certificate_found = self.env['certificate.certificate'].browse(10)
+                    
+                    # --- VALIDACIONES DEL CERTIFICADO ---
+                    cert_validation_details = []
+                    
+                    # 1. ¿Existe el certificado?
+                    exists = certificate_found.exists()
+                    cert_validation_details.append(f"1. Certificado ID 10 existe: {'✅ SÍ' if exists else '❌ NO'}")
+                    
+                    if exists:
+                        # 2. ¿Está asignado a la compañía correcta?
+                        company_match = certificate_found.company_id.id == company.id
+                        cert_validation_details.append(f"2. Asignado a compañía correcta: {'✅ SÍ' if company_match else f'❌ NO (está asignado a {certificate_found.company_id.name}, debería ser {company.name})'}")
+                        
+                        # 3. ¿Tiene contenido del certificado (archivo .cer)?
+                        has_certificate = bool(certificate_found.pem_certificate)
+                        cert_validation_details.append(f"3. Tiene contenido de certificado (.cer): {'✅ SÍ' if has_certificate else '❌ NO'}")
+                        
+                        # 4. ¿Tiene clave privada (archivo .key)?
+                        has_private_key = certificate_found.private_key_id.id if certificate_found.private_key_id else False
+                        cert_validation_details.append(f"4. Tiene clave privada (.key): {'✅ SÍ' if has_private_key else '❌ NO'}")
+                        
+                        # 5. ¿Está activo?
+                        is_active = certificate_found.active
+                        cert_validation_details.append(f"5. Certificado activo: {'✅ SÍ' if is_active else '❌ NO'}")
+                        
+                        # 6. ¿Está dentro del rango de validez?
+                        now = fields.Datetime.now()
+                        valid_from_date = certificate_found.date_start if hasattr(certificate_found, 'date_start') else False
+                        valid_to_date = certificate_found.date_end if hasattr(certificate_found, 'date_end') else False
+                        
+                        date_valid = False
+                        date_reason = ""
+                        if not valid_from_date or not valid_to_date:
+                            date_reason = "(⚠️ Fechas no especificadas)"
+                        elif valid_from_date > now:
+                            date_reason = f"(⚠️ Aún no válido, inicia en {fields.Datetime.to_string(valid_from_date)})"
+                        elif valid_to_date < now:
+                            date_reason = f"(⚠️ Ya expiró el {fields.Datetime.to_string(valid_to_date)})"
+                        else:
+                            date_valid = True
+                        
+                        cert_validation_details.append(f"6. Fechas de validez correctas: {'✅ SÍ' if date_valid else f'❌ NO {date_reason}'}")
+                        
+                        # 7. ¿Tiene is_valid = True?
+                        is_valid_flag = certificate_found.is_valid
+                        cert_validation_details.append(f"7. Campo is_valid = True: {'✅ SÍ' if is_valid_flag else '❌ NO'}")
+                        
+                        # 8. ¿Hubo error al cargar?
+                        loading_error = certificate_found.loading_error if hasattr(certificate_found, 'loading_error') else None
+                        if loading_error:
+                            cert_validation_details.append(f"8. Error al cargar certificado: ❌ SÍ - {loading_error}")
+                        else:
+                            cert_validation_details.append(f"8. Error al cargar certificado: ✅ NO")
+                    
+                    # Agrega los detalles de validación al mensaje de certificado que se mostrará después
+                    cert_validations_msg = "<br/>".join(cert_validation_details)
+                    
+                    if not certificate_found.exists():
+                        # Si no existe el 10, intentamos buscar cualquier certificado válido
+                        certificates = self.env['certificate.certificate'].search([
+                            ('company_id', '=', company.id),
+                            ('is_valid', '=', True)
+                        ], limit=1)
+                        if certificates:
+                            certificate_found = certificates[0]
+                            _logger.warning(f"[AS_MX_INV_DEBUG] No se encontró certificado ID 10, usando alternativo ID {certificate_found.id}")
+                        else:
+                            _logger.error("[AS_MX_INV_DEBUG] No se encontró certificado ID 10 ni ningún certificado válido")
+                    else:
+                        _logger.info("[AS_MX_INV_DEBUG] Usando certificado forzado con ID 10")
+                except Exception as e:
+                    _logger.error(f"[AS_MX_INV_DEBUG] Error al buscar certificado: {e}")
+                    cert_validations_msg = f"Error al validar certificado: {e}"
+                
+                cert_details_msg = ""
+                if certificate_found and certificate_found.exists():
+                    cert_id = certificate_found.id
+                    cert_name = certificate_found.name or "(Sin nombre)"
+                    # Los campos que existen en certificate.certificate
+                    cert_from = fields.Date.to_string(certificate_found.date_start) if hasattr(certificate_found, 'date_start') and certificate_found.date_start else "N/A"
+                    cert_to = fields.Date.to_string(certificate_found.date_end) if hasattr(certificate_found, 'date_end') and certificate_found.date_end else "N/A"
+                    cert_details_msg = (
+                        f"Certificado Encontrado: Sí<br/>"
+                        f"- ID: {cert_id}<br/>"
+                        f"- Nombre: {html_escape(cert_name)}<br/>"
+                        f"- Válido Desde: {cert_from}<br/>"
+                        f"- Válido Hasta: {cert_to}<br/>"
+                        f"<br/><b>Validaciones del Certificado:</b><br/>"
+                        f"{cert_validations_msg}"
+                    )
+                    _logger.info(f"[AS_MX_INV_DEBUG] Certificado encontrado: ID {cert_id}, Vigencia: {cert_from} - {cert_to}")
+                else:
+                    cert_details_msg = "Certificado Encontrado: ¡NO! (Ninguno válido/vigente para la compañía)"
+                    if 'cert_validations_msg' in locals():
+                        cert_details_msg += f"<br/><br/><b>Validaciones del Certificado:</b><br/>{cert_validations_msg}"
+                    _logger.warning(f"[AS_MX_INV_DEBUG] No se encontró certificado válido para la compañía {company.id}")
+                # --- FIN: Logueo Búsqueda de Certificado --- 
+
+                # Construir mensaje HTML principal (incluyendo info de certificado)
+                message = f'''
+<b>Verificación Datos CFDI 4.0 (AS - desde DB - v4 PAC Omitido)</b><br/>
+--------------------------------------------------<br/>
+<b>Emisor (Compañía: {company_name}):</b><br/>
+- RFC: {company_rfc or 'No encontrado'}<br/>
+- Nombre Fiscal: {company_name or 'No encontrado'}<br/>
+- Régimen Fiscal: {company_regimen}<br/>
+- Código Postal Fiscal: {company_zip}<br/>
+- PAC Configurado: {pac_ok_str}<br/>
+<br/>
+<b>Certificado CSD Buscado:</b><br/>
+{cert_details_msg}<br/> 
+<br/>
+<b>Receptor (Cliente: {customer_name}):</b><br/>
+- RFC: {customer_rfc or 'No encontrado'}<br/>
+- Nombre Fiscal: {customer_name or 'No encontrado'}<br/>
+- Régimen Fiscal: {customer_regimen}<br/>
+- Código Postal Fiscal: {customer_zip}<br/>
+- Uso CFDI: {invoice_usage}<br/>
+<br/>
+<b>Factura:</b><br/>
+- Método Pago (PUE/PPD): {payment_policy}<br/>
+- Forma Pago (Código SAT): {payment_method_code}<br/>
+- Moneda: {currency_name}<br/>
+- Tipo Cambio (vs MXN): {currency_rate}<br/>
+<br/>
+<b>Líneas de Factura:</b><br/>
+<ul>{line_details_html}</ul>
+<br/>
+--------------------------------------------------<br/>
+<i>Revise estos datos con cuidado. Errores aquí impiden el timbrado.</i>
+                '''
+                move.message_post(body=message, subject="Check CFDI v4 (AS - DB)", message_type='comment', subtype_xmlid='mail.mt_note', body_is_html=True)
+                _logger.info(f"[AS_MX_INV_DEBUG] Posted check v4 (DB - PAC Omitted) to chatter for {move.name}")
+            except Exception as e:
+                _logger.error(f"[AS_MX_INV_DEBUG] Failed DB query/post chatter v4 for {move.name}: {e}", exc_info=True)
+                move.message_post(body=f"Error check CFDI v4 (AS): {e}")
+
+        return res 
+
+    def _l10n_mx_edi_add_invoice_cfdi_values(self, cfdi_values):
+        """
+        Hereda la función para agregar valores al diccionario CFDI.
+        Propósito: Añadir un mensaje al chatter con los datos clave procesados.
+        Parámetros:
+            cfdi_values (dict): El diccionario que se está poblando con valores CFDI.
+        Resultado:
+            Llama a super() y luego postea un mensaje en el chatter del registro actual (self).
+        """
+        _logger.info("[AS_MX_INVOCE_MOVE] Entrando a _l10n_mx_edi_add_invoice_cfdi_values heredado")
+        
+        # FIX: Asegurar que l10n_mx_edi_post_time sea un datetime válido
+        if not self.l10n_mx_edi_post_time:
+            _logger.warning(f"[AS_MX_INVOCE_MOVE] l10n_mx_edi_post_time es False o None, usando datetime.now()")
+            self.l10n_mx_edi_post_time = fields.Datetime.now()
+            
+        # Primero, dejamos que la función original haga todo su trabajo
+        super()._l10n_mx_edi_add_invoice_cfdi_values(cfdi_values)
+        _logger.info("[AS_MX_INVOCE_MOVE] super() ejecutado. Procesando datos para chatter.")
+
+        # Ahora, recolectamos los datos clave para mostrar
+        # Usamos .get() para evitar errores si alguna clave falta
+        data_to_log = {
+            "Emisor RFC": cfdi_values.get('emitter', {}).get('rfc'),
+            "Receptor RFC": cfdi_values.get('receiver', {}).get('rfc'),
+            "Fecha CFDI": cfdi_values.get('fecha'),
+            "Moneda": cfdi_values.get('moneda'),
+            "Tipo Cambio": cfdi_values.get('tipo_cambio'),
+            "SubTotal": cfdi_values.get('subtotal'),
+            "Descuento": cfdi_values.get('discount'),
+            "Total": cfdi_values.get('total'),
+            "Forma Pago": cfdi_values.get('forma_pago'),
+            "Método Pago": cfdi_values.get('metodo_pago'),
+            "Uso CFDI": cfdi_values.get('usage'),
+            "Régimen Fiscal Receptor": cfdi_values.get('receiver', {}).get('fiscal_regime'),
+            "Código Postal Lugar Expedición": cfdi_values.get('lugar_expedicion'),
+            "Número Certificado": cfdi_values.get('certificate_number'),
+            "Número Conceptos": len(cfdi_values.get('concepts', [])),
+            "Impuestos Trasladados (resumen)": cfdi_values.get('taxes', {}).get('traslados'),
+            "Impuestos Retenidos (resumen)": cfdi_values.get('taxes', {}).get('retenciones'),
+            "CFDI Relacionado (Tipo)": cfdi_values.get('related_cfdi', [{}])[0].get('type'),
+            "CFDI Relacionado (UUIDs)": ', '.join(cfdi_values.get('related_cfdi', [{}])[0].get('related_uuids', [])),
+            "Errores Detectados (si los hay)": '<br/>'.join(cfdi_values.get('errors', [])),
+        }
+
+        # Formateamos como HTML para el chatter
+        chatter_message = "<b>[AS] Datos CFDI Procesados:</b><br/>----------------------------------<br/>"
+        for key, value in data_to_log.items():
+            # Escapamos el valor por seguridad, por si tiene caracteres HTML
+            safe_value = html_escape(str(value)) if value is not None else '<i>N/A</i>'
+            chatter_message += f"<b>{html_escape(key)}:</b> {safe_value}<br/>"
+
+        _logger.info(f"[AS_MX_INVOCE_MOVE] Posteando datos CFDI en chatter para {self.name}")
+        try:
+            self.message_post(
+                body=chatter_message,
+                subject=f"Datos CFDI Procesados para {self.name}",
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+                body_is_html=True
+            )
+        except Exception as chatter_err:
+            _logger.error("[AS_MX_INVOCE_MOVE] Fallo al postear datos CFDI en chatter: %s", chatter_err, exc_info=True)
+
+        _logger.info("[AS_MX_INVOCE_MOVE] Saliendo de _l10n_mx_edi_add_invoice_cfdi_values heredado")
+        # No necesitamos devolver nada explícitamente, super() ya modificó cfdi_values in-place
+        
+    def l10n_mx_edi_get_xml_etree(self):
+        """
+        Propósito: Obtiene el árbol XML del CFDI de la factura.
+        Retorno: Objeto ElementTree con el XML del CFDI, o False si no existe.
+        """
+        self.ensure_one()
+        # Si no tenemos UUID, no hay XML
+        if not self.l10n_mx_edi_cfdi_uuid:
+            return False
+            
+        # Buscar adjuntos con el CFDI
+        attachment = self.env['ir.attachment'].search([
+            ('res_id', '=', self.id),
+            ('res_model', '=', self._name),
+            ('name', 'like', '%.xml')
+        ], limit=1)
+            
+        if not attachment:
+            return False
+            
+        # Intentar analizar el XML
+        try:
+            import base64
+            from lxml import etree
+            xml_content = base64.b64decode(attachment.datas)
+            return etree.fromstring(xml_content)
+        except Exception as e:
+            _logger.error("Error al parsear XML del CFDI: %s", e)
+            return False
+    
+    def l10n_mx_edi_get_tfd_etree(self, xml_etree):
+        """
+        Propósito: Obtiene el nodo TimbreFiscalDigital del XML del CFDI.
+        Parámetros:
+            xml_etree: ElementTree del XML del CFDI.
+        Retorno: Diccionario con los atributos del nodo TimbreFiscalDigital, o un diccionario vacío si no existe.
+        """
+        if xml_etree is False:
+            return {}
+            
+        try:
+            # Definir namespace para buscar nodos en el XML
+            namespaces = {
+                'cfdi': 'http://www.sat.gob.mx/cfd/3',
+                'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
+            }
+            
+            # Buscar el nodo TimbreFiscalDigital
+            node = xml_etree.xpath("//tfd:TimbreFiscalDigital", namespaces=namespaces)
+            if not node:
+                return {}
+                
+            # Devolver atributos como diccionario
+            return node[0].attrib
+        except Exception as e:
+            _logger.error("Error al obtener TimbreFiscalDigital del CFDI: %s", e)
+            return {}
+            
+    def l10n_mx_edi_get_et_etree(self, xml_etree):
+        """
+        Propósito: Obtiene información adicional del XML del CFDI (uso futuro).
+        Parámetros:
+            xml_etree: ElementTree del XML del CFDI.
+        Retorno: Diccionario con información adicional o un diccionario vacío si no existe.
+        """
+        # Por ahora, retorna un diccionario vacío ya que no se utiliza en el reporte
+        return {}
+        
+    def _get_l10n_mx_edi_cadena(self):
+        """
+        Propósito: Obtiene la cadena original del CFDI para verificación.
+        Retorno: Cadena original del CFDI o cadena vacía si no se puede obtener.
+        """
+        self.ensure_one()
+        xml_etree = self.l10n_mx_edi_get_xml_etree()
+        if not xml_etree:
+            return ""
+            
+        try:
+            # Aquí iría la lógica para generar la cadena original
+            # Como es complejo y requiere XSLT del SAT, simplemente retornamos una cadena que indica que
+            # se necesitaría implementar o usar el método nativo de Odoo si existe
+            if hasattr(self, '_l10n_mx_edi_get_cadena'):
+                return self._l10n_mx_edi_get_cadena()
+            return "Cadena original (requiere implementación)"
+        except Exception as e:
+            _logger.error("Error al generar cadena original del CFDI: %s", e)
+            return ""
+        
+# Asegúrate de que este archivo se importe en el __init__.py de la carpeta 'models'
+# Ejemplo: from . import as_mx_invoice_move
+
+# ... (resto del archivo si existe) ...
+# Agregar '// ... existing code ...' si es necesario para indicar dónde insertar esto
+# Si el archivo no existe, este será el contenido completo.
+# Si el archivo existe, buscar la clase que hereda de 'account.move' o crearla.
+
+# ... (resto del archivo si existe) ... 

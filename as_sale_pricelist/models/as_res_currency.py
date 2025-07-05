@@ -17,12 +17,22 @@ class ResCurrency(models.Model):
     def _get_conversion_rate_nimax(self, from_currency, to_currency, company, date, line_id):
         currency_rates = (from_currency + to_currency)._get_rates(company, date)
         if line_id:
-            line_sale = self.env['sale.order.line'].sudo().search([('id','=',line_id)])
-            if line_sale:
-                moneda = line_sale.order_id.currency_aux_id
-                rate = line_sale.order_id.sale_manual_currency_rate
-                if moneda and rate > 0 and line_sale.order_id.sale_manual_currency_rate_active:
-                    currency_rates[moneda.id]= rate
+            try:
+                line_sale = self.env['sale.order.line'].sudo().search([('id','=',line_id)])
+                if line_sale:
+                    moneda = line_sale.order_id.currency_aux_id
+                    # Verificamos si el campo sale_manual_currency_rate existe en la orden
+                    if hasattr(line_sale.order_id, 'sale_manual_currency_rate'):
+                        rate = line_sale.order_id.sale_manual_currency_rate
+                        if moneda and rate > 0 and hasattr(line_sale.order_id, 'sale_manual_currency_rate_active') and line_sale.order_id.sale_manual_currency_rate_active:
+                            currency_rates[moneda.id] = rate
+                    else:
+                        # Si no existe el campo, usamos la tasa de cambio regular para la moneda auxiliar
+                        if moneda:
+                            _logger.info(f"[_get_conversion_rate_nimax] Usando tasa de cambio estándar para {moneda.name}")
+            except Exception as e:
+                _logger.error(f"[_get_conversion_rate_nimax] Error al obtener tasa de cambio: {str(e)}")
+        
         res = currency_rates.get(to_currency.id) / currency_rates.get(from_currency.id)
         return res
 

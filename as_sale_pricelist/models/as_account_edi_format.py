@@ -16,6 +16,13 @@ from odoo.tools.xml_utils import _check_with_xsd
 from odoo.tools.float_utils import float_round, float_is_zero
 EQUIVALENCIADR_PRECISION_DIGITS = 10
 
+class AccountMove(models.Model):
+    _inherit = 'account.move'
+
+def action_print_pdf(self):
+        self.ensure_one()
+        return self.env.ref('account.account_invoices').report_action(self.id)
+
 class AccountEdiFormat(models.Model):
     _inherit = 'account.edi.format'
 

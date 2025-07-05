@@ -2,126 +2,60 @@
     <data>
 
         <record model="ir.ui.view" id="tf_history_promo_tree_view">
-            <field name="name">tf.history.promo tree</field>
+            <field name="name">tf.history.promo.tree.view</field>
             <field name="model">tf.history.promo</field>
             
             <field name="arch" type="xml">
-                <tree string="History Promo" >
-                   <field name="create_date" optional="show"/>
-                    <field name="promo_ids" optional="show" widget="many2many_tags"/>
-                    <field name="promo_id" optional="show"/>
-                    <field name="sale_order_line" optional="hide"/>
-                    <field name="as_pricelist_id" optional="show"/>
-                    <field name="fecha_venta" optional="show"/>
-                    <field name="sale_id" optional="show"/>
-                    <field name="vendor_id" optional="show"/>
-                    <field name="product_id" optional="show"/>
-                    <field name="customer_id" optional="show"/>
-                    <field name="customer_type" optional="show"/>
-                    <field name="category_id" optional="show"/>
-                    <field name="qty" optional="show"/>
-                    <field name="recalculated_price_unit" optional="hide"/>
-                    <field name="recalculated_price_unit_mxp" optional="hide"/>
-                    <field name="recalculated_cost_nimax_usd" optional="hide"/>
-                    <field name="recalculated_cost_nimax_mxp" optional="hide"/>
-                    <field name="margin_mxp" optional="hide"/>
-                    <field name="margin_usd" optional="hide"/>
-                    <field name="total_usd" optional="hide"/>
-                    <field name="total_mxp" optional="hide"/>
-                    <field name="invoice_ids" optional="show" widget="many2many_tags"/>
-                    <field name="last_applied_promo" optional="hide"/>
-                    <field name="salesman_id" optional="show"/>
-                    <field name="aty_invoice" optional="hide"/>
-                    <field name="fecha_factura" optional="hide"/>
-                    <field name="state_sale" invisible="True"/>
-                </tree>
+                <list string="Historial de Promociones">
+                    <field name="sale_id"/>
+                    <field name="sale_order_line"/>
+                    <field name="promo_id"/>
+                    <field name="vendor_id"/>
+                    <field name="product_id"/>
+                    <field name="customer_id"/>
+                    <field name="qty"/>
+                    <field name="last_applied_promo"/>
+                    <field name="total_usd"/>
+                    <field name="total_mxp"/>
+                </list>
             </field>
         </record>
 
         <record model="ir.ui.view" id="tf_history_promo_form_view">
-            <field name="name">itf.history.promo Form</field>
+            <field name="name">tf.history.promo.form.view</field>
             <field name="model">tf.history.promo</field>
             <field name="arch" type="xml">
-                <form string="History Promo">
+                <form string="Historial de Promociones">
                     <sheet>
                         <group>
-<!--                            <group id="header_left_group">-->
-<!--                                <field name="promotion_id"/>-->
-<!--                            </group>-->
-                            <group id="header_left_group">
-                                <field name="promo_id"/>
-                            </group>
-                            <field name="as_pricelist_id" optional="show"/>
-                            <group id="header_left_group">
-                                <field name="fecha_venta" readonly='1' force_save="1" />
-                            </group>
-                            <group id="header_left_group">
+                            <group>
                                 <field name="vendor_id"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="product_id"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="customer_id"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="customer_type"/>
-                            </group>
-                            <group id="header_left_group">
+                                <field name="as_pricelist_id"/>
                                 <field name="category_id"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="qty"/>
                             </group>
-                            <group id="header_left_group">
+                            <group>
                                 <field name="recalculated_price_unit"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="recalculated_price_unit_mxp"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="recalculated_cost_nimax_usd"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="recalculated_cost_nimax_mxp"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="margin_mxp"/>
-                            </group>                            
-                            <group id="header_left_group">
-                                <field name="invoice_name"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="margin_usd"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="total_usd"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="total_mxp"/>
                             </group>
-                            <group id="header_left_group">
-                                <field name="last_applied_promo"/>
-                            </group>
-                            <group id="header_left_group">
+                            <group>
                                 <field name="salesman_id"/>
-                            </group>
-                            <group id="header_left_group">
                                 <field name="sale_id"/>
-                            </group>
-                            <group id="header_left_group">
-                                <field name="sale_id"/>
-                            </group> 
-                             <group id="header_left_group">
-                                <field name="fecha_factura"/>
-                            </group>
-                            <group id="header_left_group">
-                                <field name="invoice_ids" widget="many2many_tags"/>
-                                <field name="state_sale" invisible="True"/>
+                                <field name="sale_order_line"/>
+                                <field name="promo_id"/>
+                                <field name="last_applied_promo"/>
                             </group>
                         </group>
                     </sheet>
-
                 </form>
             </field>
         </record>
@@ -129,19 +63,24 @@
             <field name="name">tf.history.promo.search</field>
             <field name="model">tf.history.promo</field>
             <field name="arch" type="xml">
-                <search string="buscar">
-                    <group expand="0" string="Group By">
-                        <filter string="Factura de cliente" name="group_by_invoice_ids" domain="[]" context="{'group_by': 'invoice_name'}"/>
+                <search string="Buscar">
+                    <field name="product_id"/>
+                    <field name="customer_id"/>
+                    <field name="sale_id"/>
+                    <field name="promo_id"/>
+                    <group expand="0" string="Agrupar Por">
+                        <filter string="Producto" name="group_by_product" domain="[]" context="{'group_by': 'product_id'}"/>
+                        <filter string="Cliente" name="group_by_customer" domain="[]" context="{'group_by': 'customer_id'}"/>
+                        <filter string="Pedido" name="group_by_sale" domain="[]" context="{'group_by': 'sale_id'}"/>
+                        <filter string="Promoción" name="group_by_promo" domain="[]" context="{'group_by': 'promo_id'}"/>
                     </group>
                 </search>
             </field>
         </record>
-        <record model="ir.actions.act_window" id="tf_history_promo_action_window">
-            <field name="name">History Promo</field>
+        <record id="action_history_promo" model="ir.actions.act_window">
+            <field name="name">Historial de Promociones</field>
             <field name="res_model">tf.history.promo</field>
-            <field name="view_mode">tree,form</field>
-            <field name="domain" eval="[('state_sale', '!=', 'draft')]" />
-
+            <field name="view_mode">list,form</field>
         </record>
    <record id="tf_history_promo_action_confirm" model="ir.actions.server">
         <field name="name">Actualizar Numero Factura</field>
@@ -152,8 +91,11 @@
     </record>
         <!-- <menuitem name="History Promo" id="menu_tf_history_promo_main"/> -->
 
-        <menuitem name="Historico de Promociones" id="menu_tf_history_promo" action="tf_history_promo_action_window"
-                  parent="sale.product_menu_catalog"/>
+        <menuitem id="menu_history_promo"
+                  name="Historial de Promociones"
+                  action="action_history_promo"
+                  parent="sale.menu_sale_report"
+                  sequence="20"/>
 
     </data>
 </odoo>

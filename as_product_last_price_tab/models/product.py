@@ -24,49 +24,96 @@
 #   Pedro M. Baeza <pedro.baeza@serviciosbaeza.com>
 #   Ana Juaristi <anajuaristi@avanzosc.es>
 ##############################################################################
+import logging
 from odoo import api, fields, models
 
+_logger = logging.getLogger(__name__)
 
-class ProductProductAmore(models.Model):
-    _inherit = 'product.product'
-
-    def _get_last_purchase(self):
-        """ Get last purchase price, last purchase date and last supplier """
-        for line in self:
-            lines = self.env['purchase.order.line'].search(
-                [('product_id', '=', line.id),
-                ('state', 'in', ['purchase', 'done'])]).sorted(
-                key=lambda l: l.order_id.date_order, reverse=True)
-            line.as_last_purchase_date = lines[:1].order_id.date_order
-            line.as_last_purchase_price = lines[:1].price_unit
-            line.as_last_supplier_id = lines[:1].order_id.partner_id
+class AsProductLastPrice(models.AbstractModel):
+    """Mixin para compartir funcionalidad de últimos precios"""
+    _name = 'as.product.last.price.mixin'
+    _description = 'Last Price Mixin'
 
     as_last_purchase_price = fields.Float(
-        string='Last Purchase Price', compute='_get_last_purchase')
+        string='Last Purchase Price', compute='_compute_last_purchase', store=True)
     as_last_purchase_date = fields.Datetime(
-        string='Last Purchase Date', compute='_get_last_purchase')
+        string='Last Purchase Date', compute='_compute_last_purchase', store=True)
     as_last_supplier_id = fields.Many2one(
         comodel_name='res.partner', string='Last Supplier',
-        compute='_get_last_purchase')
+        compute='_compute_last_purchase', store=True)
+        
+    as_last_sale_price = fields.Float(
+        string='Last Sale Price', compute='_compute_last_sale', store=True)
+    as_last_sale_date = fields.Datetime(
+        string='Last Sale Date', compute='_compute_last_sale', store=True)
+    as_last_customer_id = fields.Many2one(
+        comodel_name='res.partner', string='Last Customer',
+        compute='_compute_last_sale', store=True)
 
-class as_ProductTemplatePurchaseOrder(models.Model):
-    _inherit = 'product.template'
+    def _get_purchase_line_domain(self):
+        """Método para obtener el dominio específico para líneas de compra"""
+        self.ensure_one()
+        if self._name == 'product.template':
+            return [('product_id.product_tmpl_id', '=', self.id)]
+        return [('product_id', '=', self.id)]
 
-    def _get_last_purchase(self):
-        """ Get last purchase price, last purchase date and last supplier """
-        for line in self:
-            lines = self.env['purchase.order.line'].search(
-                [('product_id', '=', line.id),
-                ('state', 'in', ['purchase', 'done'])]).sorted(
-                key=lambda l: l.order_id.date_order, reverse=True)
-            line.as_last_purchase_date = lines[:1].order_id.date_order
-            line.as_last_purchase_price = lines[:1].price_unit
-            line.as_last_supplier_id = lines[:1].order_id.partner_id
+    def _get_sale_line_domain(self):
+        """Método para obtener el dominio específico para líneas de venta"""
+        self.ensure_one()
+        if self._name == 'product.template':
+            return [('product_id.product_tmpl_id', '=', self.id)]
+        return [('product_id', '=', self.id)]
 
-    as_last_purchase_price = fields.Float(
-        string='Last Purchase Price', compute='_get_last_purchase')
-    as_last_purchase_date = fields.Datetime(
-        string='Last Purchase Date', compute='_get_last_purchase')
-    as_last_supplier_id = fields.Many2one(
-        comodel_name='res.partner', string='Last Supplier',
-        compute='_get_last_purchase')
+    @api.depends('product_variant_ids.as_last_purchase_price', 
+                'product_variant_ids.as_last_purchase_date', 
+                'product_variant_ids.as_last_supplier_id')
+    def _compute_last_purchase(self):
+        """Calcula último precio de compra, fecha y proveedor"""
+        for product in self:
+            try:
+                domain = product._get_purchase_line_domain() + [
+                    ('state', 'in', ['purchase', 'done']),
+                    ('order_id.state', 'in', ['purchase', 'done'])
+                ]
+                line = self.env['purchase.order.line'].search(
+                    domain, order='date_planned desc', limit=1)
+                
+                product.as_last_purchase_date = line.date_planned if line else False
+                product.as_last_purchase_price = line.price_unit if line else 0.0
+                product.as_last_supplier_id = line.order_id.partner_id.id if line and line.order_id.partner_id else False
+            except Exception as e:
+                _logger.error("Error al calcular último precio de compra: %s", str(e))
+                product.as_last_purchase_date = False
+                product.as_last_purchase_price = 0.0
+                product.as_last_supplier_id = False
+
+    @api.depends('product_variant_ids.as_last_sale_price', 
+                'product_variant_ids.as_last_sale_date', 
+                'product_variant_ids.as_last_customer_id')
+    def _compute_last_sale(self):
+        """Calcula último precio de venta, fecha y cliente"""
+        for product in self:
+            try:
+                domain = product._get_sale_line_domain() + [
+                    ('state', 'in', ['sale', 'done']),
+                    ('order_id.state', 'in', ['sale', 'done'])
+                ]
+                line = self.env['sale.order.line'].search(
+                    domain, order='create_date desc', limit=1)
+                
+                product.as_last_sale_date = line.order_id.date_order if line and line.order_id else False
+                product.as_last_sale_price = line.price_unit if line else 0.0
+                product.as_last_customer_id = line.order_id.partner_id.id if line and line.order_id.partner_id else False
+            except Exception as e:
+                _logger.error("Error al calcular último precio de venta: %s", str(e))
+                product.as_last_sale_date = False
+                product.as_last_sale_price = 0.0
+                product.as_last_customer_id = False
+
+class ProductProduct(models.Model):
+    _name = 'product.product'
+    _inherit = ['product.product', 'as.product.last.price.mixin']
+
+class ProductTemplate(models.Model):
+    _name = 'product.template'
+    _inherit = ['product.template', 'as.product.last.price.mixin']

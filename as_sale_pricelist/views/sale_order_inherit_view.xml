@@ -7,43 +7,254 @@
 		<field name="inherit_id" ref="sale.view_order_form"/>
 		<field name="priority">55</field>
 		<field name="arch" type="xml">
-			<xpath expr="//notebook//page[@name='order_lines']/field[@name='order_line']/tree/field[@name='price_total']" position="after">
-			  <field name="as_product_comisionable" invisible="1"/>
-				<button name="promo_apply" type="object" attrs="{'invisible': [('as_product_comisionable', '!=', False)]}" string="Promo" icon="fa-percent" context="{'as_pricelist_id': as_pricelist_id }"/>
-			</xpath>			
-			<xpath expr="//notebook//page[@name='order_lines']/field[@name='order_line']/tree/field[@name='price_total']" position="after">
-				<button name="pricelist_apply" type="object" attrs="{'invisible': [('as_product_comisionable', '!=', False)]}" string="Precios" icon="fa-cart-plus"/>
-			</xpath>
-
-			<xpath expr="//tree//field[@name='product_uom_qty']" position="after">
-			
-				<field name="as_pricelist_id" optional="show" string="Lista Precio"/>
-			</xpath>
-			<xpath expr="//notebook//page[@name='order_lines']/field[@name='order_line']/tree" position="inside">
-				<field name="RECALCULATED_PRICE_UNIT" optional="hide"/>
-				<field name="NIMAX_PRICE_MXP" optional="hide"/>
-				<field name="COST_NIMAX_USD" optional="hide"/>
-				<field name="COST_NIMAX_MXP" optional="hide"/>
-				<field name="MARGIN_MXP" optional="hide"/>
-				<field name="MARGIN_USD" optional="hide"/>
-				<field name="TOTAL_USD" optional="hide"/>
-				<field name="TOTAL_MXP" optional="hide"/>
-				<field name="RECALCULATED_COST_NIMAX_USD" optional="hide"/>
-				<field name="as_margin_porcentaje" optional="hide"/>
-				<!-- <field name="as_log_price" optional="hide"/> -->
-			</xpath>
+			<!-- Campos en el formulario principal -->
 			<field name="payment_term_id" position="after">
 				<field name="last_promo_id" invisible="1"/>
-				<field name="currency_aux_id"/>
+				<field name="currency_aux_id" options="{'no_create': True}"/>
 				<field name="as_margin"/>
-				<field name="as_aprobe" invisible="True"/>
+				<field name="as_aprobe" invisible="1"/>
 			</field>
+			
 			<xpath expr="//field[@name='pricelist_id']" position="attributes">
-				  <attribute name="invisible">1</attribute>
+				<attribute name="invisible">1</attribute>
 			</xpath>
+			
 			<xpath expr="//field[@name='partner_shipping_id']" position="after">
 				<field name="as_zebra_sale" />
-				<field name="as_usuario_final" attrs="{'invisible': [('as_zebra_sale', '=', False)],'required': [('as_zebra_sale', '=', True)]}"/>
+				<field name="as_usuario_final" invisible="as_zebra_sale == False" required="as_zebra_sale == True"/>
+			</xpath>
+			
+			<!-- Reemplazar completamente el campo order_line -->
+			<xpath expr="//field[@name='order_line']" position="replace">
+				<field name="order_line" widget="section_and_note_one2many">
+					<list string="Sales Order Lines" editable="bottom">
+
+
+    <control>
+                                    <create name="add_product_control" string="Add a product"/>
+                                    <create name="add_section_control" string="Add a section" context="{'default_display_type': 'line_section'}"/>
+                                    <create name="add_note_control" string="Add a note" context="{'default_display_type': 'line_note'}"/>
+                                    <button name="action_add_from_catalog" string="Catalog" type="object" class="px-4 btn-link" context="{'order_id': parent.id}"/>
+                                </control>
+
+                                <field name="sequence" widget="handle" />
+                                <!-- We do not display the type because we don't want the user to be bothered with that information if he has no section or note. -->
+                                <field name="display_type" column_invisible="True"/>
+                                <field name="product_uom_category_id" column_invisible="True"/>
+                                <field name="product_type" column_invisible="True"/>
+                                <field name="product_updatable" column_invisible="True"/>
+                                <field name="is_downpayment" column_invisible="True"/>
+                                <field
+                                    name="product_id"
+                                    string="Product Variant"
+                                    readonly="not product_updatable"
+                                    required="not display_type and not is_downpayment"
+                                    force_save="1"
+                                    context="{
+                                        'partner_id': parent.partner_id,
+                                        'quantity': product_uom_qty,
+                                        'pricelist': parent.pricelist_id,
+                                        'uom':product_uom,
+                                        'company_id': parent.company_id,
+                                        'default_lst_price': price_unit,
+                                        'default_uom_id': product_uom,
+                                    }"
+                                    options="{
+                                        'no_open': True,
+                                    }"
+                                    optional="hide"
+                                    domain="[('sale_ok', '=', True)]"
+                                    widget="sol_product_many2one"/>
+                                <field name="product_template_id"
+                                    string="Product"
+                                    readonly="id and not product_updatable"
+                                    required="not display_type and not is_downpayment"
+                                    context="{
+                                        'partner_id': parent.partner_id,
+                                        'quantity': product_uom_qty,
+                                        'pricelist': parent.pricelist_id,
+                                        'uom':product_uom,
+                                        'company_id': parent.company_id,
+                                        'default_list_price': price_unit,
+                                        'default_uom_id': product_uom,
+                                    }"
+                                    options="{
+                                        'no_open': True,
+                                    }"
+                                    optional="show"
+                                    domain="[('sale_ok', '=', True)]"
+                                    widget="sol_product_many2one"
+                                    placeholder="Type to find a product..."/>
+                                <field name="product_template_attribute_value_ids" column_invisible="1" />
+                                <field name="product_custom_attribute_value_ids" column_invisible="1" >
+                                    <list>
+                                        <field name="custom_product_template_attribute_value_id" />
+                                        <field name="custom_value" />
+                                    </list>
+                                </field>
+                                <field name="product_no_variant_attribute_value_ids" column_invisible="1" />
+                                <field name="is_configurable_product" column_invisible="1" />
+                                <field name="linked_line_id" column_invisible="1"/>
+                                <field name="virtual_id" column_invisible="1"/>
+                                <field name="linked_virtual_id" column_invisible="1"/>
+                                <field name="selected_combo_items" column_invisible="1"/>
+                                <field name="combo_item_id" column_invisible="1"/>
+                                <field
+                                    name="name"
+                                    widget="sol_text"
+                                    optional="show"
+                                />
+                                <field name="analytic_distribution" widget="analytic_distribution"
+                                           optional="hide"
+                                           groups="analytic.group_analytic_accounting"
+                                           options="{'product_field': 'product_id', 'business_domain': 'sale_order', 'amount_field': 'price_subtotal'}"/>
+                                <field
+                                    name="product_uom_qty"
+                                    decoration-info="(not display_type and invoice_status == 'to invoice')" decoration-bf="(not display_type and invoice_status == 'to invoice')"
+                                    context="{
+                                        'partner_id': parent.partner_id,
+                                        'quantity': product_uom_qty,
+                                        'pricelist': parent.pricelist_id,
+                                        'uom': product_uom,
+                                        'company_id': parent.company_id
+                                    }"
+                                    readonly="is_downpayment"/>
+								<field name="as_pricelist_id" optional="show" string="Lista Precio" options="{'no_create': True}"/>
+                                <field
+                                    name="qty_delivered"
+                                    decoration-info="(not display_type and invoice_status == 'to invoice')" decoration-bf="(not display_type and invoice_status == 'to invoice')"
+                                    string="Entregado"
+                                    column_invisible="parent.state != 'sale'"
+                                    readonly="qty_delivered_method != 'manual' or is_downpayment"
+                                    optional="show"/>
+                                <field name="qty_delivered_method" column_invisible="True"/>
+                                <field
+                                    name="qty_invoiced"
+                                    decoration-info="(not display_type and invoice_status == 'to invoice')" decoration-bf="(not display_type and invoice_status == 'to invoice')"
+                                    string="Facturado"
+                                    column_invisible="parent.state != 'sale'"
+                                    optional="show"/>
+                                <field name="qty_to_invoice" column_invisible="True"/>
+                                <field name="product_uom_readonly" column_invisible="True"/>
+                                <field name="product_uom" column_invisible="True" groups="!uom.group_uom"/>
+                                <field
+                                    name="product_uom"
+                                    force_save="1"
+                                    string="UoM"
+                                    readonly="product_uom_readonly"
+                                    required="not display_type and not is_downpayment"
+                                    context="{'company_id': parent.company_id}"
+                                    groups="uom.group_uom"
+                                    options='{"no_open": True}'
+                                    width="60px"
+                                    optional="show"/>
+                                <field
+                                    name="customer_lead"
+                                    optional="hide"
+                                    width="80px"
+                                    readonly="parent.state not in ['draft', 'sent', 'sale'] or is_downpayment"/>
+                                <field name="product_packaging_qty" invisible="not product_id or not product_packaging_id" groups="product.group_stock_packaging" optional="show"/>
+                                <field name="product_packaging_id" invisible="not product_id" context="{'default_product_id': product_id, 'list_view_ref':'product.product_packaging_tree_view', 'form_view_ref':'product.product_packaging_form_view'}" groups="product.group_stock_packaging" optional="show"/>
+                                <field
+                                    name="price_unit"
+                                    readonly="qty_invoiced &gt; 0"/>
+                                <field name="technical_price_unit" column_invisible="1"/>
+                                <field
+                                    name="tax_id"
+                                    widget="many2many_tags"
+                                    options="{'no_create': True}"
+                                    domain="[('type_tax_use', '=', 'sale'), ('company_id', 'parent_of', parent.company_id), ('country_id', '=', parent.tax_country_id)]"
+                                    context="{'active_test': True}"
+                                    readonly="qty_invoiced &gt; 0 or is_downpayment"
+                                    optional="show"/>
+                                <field
+                                    name="discount"
+                                    string="Disc.%"
+                                    groups="sale.group_discount_per_so_line"
+                                    width="50px"
+                                    optional="show"/>
+                                <field name="is_downpayment" column_invisible="True"/>
+                                <field name="price_subtotal"
+                                       column_invisible="parent.company_price_include == 'tax_included'"
+                                       invisible="is_downpayment"
+                                       string="Total"/>
+                                <field name="price_total"
+                                       column_invisible="parent.company_price_include == 'tax_excluded'"
+                                       invisible="is_downpayment"
+                                       string="Total"/>
+                                <!-- Optional amounts -->
+                                <field name="price_total"
+                                       column_invisible="parent.company_price_include == 'tax_included'"
+                                       optional="hide"
+                                       invisible="is_downpayment"
+                                       string="Tax Incl."/>
+                                <field name="price_subtotal"
+                                       column_invisible="parent.company_price_include == 'tax_excluded'"
+                                       optional="hide"
+                                       invisible="is_downpayment"
+                                       string="Tax Excl."/>
+                                <!-- Others fields -->
+                                <field name="tax_calculation_rounding_method" column_invisible="True"/>
+                                <field name="state" column_invisible="True"/>
+                                <field name="invoice_status" column_invisible="True"/>
+                                <field name="currency_id" column_invisible="True"/>
+                                <field name="price_tax" column_invisible="True"/>
+                                <field name="company_id" column_invisible="True"/>
+
+
+
+<!-- 
+
+						<control>
+							<create string="Add a product"/>
+							<create string="Add a section" context="{'default_display_type': 'line_section'}"/>
+							<create string="Add a note" context="{'default_display_type': 'line_note'}"/>
+						</control>
+						
+						<field name="sequence" widget="handle"/>
+						<field name="display_type" invisible="1"/>
+						<field name="product_id" options="{'no_create': True}"/>
+						<field name="product_template_id" invisible="1"/>
+						<field name="name" widget="section_and_note_text"/>
+						<field name="product_uom_qty"/>
+						<field name="product_uom" groups="uom.group_uom" options="{'no_create': True}"/>
+						<field name="price_unit"/>
+						<field name="discount" groups="sale.group_discount_per_so_line"/>
+						<field name="tax_id" widget="many2many_tags" options="{'no_create': True}"/> -->
+						<field name="price_subtotal"/>
+						<field name="as_product_comisionable" invisible="1"/>
+						<button name="pricelist_apply" type="object" invisible="as_product_comisionable != False" string="Precios" icon="fa-cart-plus"/>
+						<button name="promo_apply" type="object" invisible="as_product_comisionable != False" string="Promo" icon="fa-percent" context="{'as_pricelist_id': as_pricelist_id }"/>
+					</list>
+					
+					<form>
+						<field name="display_type" invisible="1"/>
+						<field name="product_id" options="{'no_create': True}"/>
+						<field name="name"/>
+						<field name="product_uom_qty"/>
+						<field name="as_pricelist_id" string="Lista Precio" options="{'no_create': True}"/>
+						<field name="product_uom" groups="uom.group_uom" options="{'no_create': True}"/>
+						<field name="price_unit"/>
+						<field name="discount" groups="sale.group_discount_per_so_line"/>
+						<field name="tax_id" widget="many2many_tags" options="{'no_create': True}"/>
+						<field name="price_subtotal"/>
+						<field name="as_product_comisionable" invisible="1"/>
+						<button name="pricelist_apply" type="object" invisible="as_product_comisionable != False" string="Precios" icon="fa-cart-plus"/>
+						<button name="promo_apply" type="object" invisible="as_product_comisionable != False" string="Promo" icon="fa-percent" context="{'as_pricelist_id': as_pricelist_id }"/>
+						<group>
+							<field name="RECALCULATED_PRICE_UNIT" optional="hide"/>
+							<field name="NIMAX_PRICE_MXP" optional="hide"/>
+							<field name="COST_NIMAX_USD" optional="hide"/>
+							<field name="COST_NIMAX_MXP" optional="hide"/>
+							<field name="MARGIN_MXP" optional="hide"/>
+							<field name="MARGIN_USD" optional="hide"/>
+							<field name="TOTAL_USD" optional="hide"/>
+							<field name="TOTAL_MXP" optional="hide"/>
+							<field name="RECALCULATED_COST_NIMAX_USD" optional="hide"/>
+							<field name="as_margin_porcentaje" optional="hide"/>
+						</group>
+					</form>
+				</field>
 			</xpath>
 		</field>
 	</record>

@@ -1,0 +1,13 @@
+=> 18.0.0.1 :- Date 22 Nov 2024
+:- Fixed AttributeError: 'account.move' object has no attribute 'payment_id.
+
+18.0.0.2 ==> Fixed issue of when we create multiple journal with companay currency and payment with differnt journal at that time differnce entry can't be generated and also when we confrim payment at that time manual currency rate can't be passed on joural entry.
+
+=> 18.0.0.3 :- Date 17 Dec 2024
+:- Fixed the issue with journal entries when paying a customer invoice or a vendor bill using Apply Manual Exchange.
+
+=> 18.0.0.4 :- Date 27 January 2025
+:- IMP -->  New Exchange Rate setting under accounting  --> Inverted Rate and  Normal Rate
+
+18.0.0.5 ==> When create picking from receipt and try to validate picking at that time trace back occurs.
+

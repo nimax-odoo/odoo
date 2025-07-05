@@ -1,31 +1,7 @@
 <odoo>
     <data>
 
-        <record model="ir.ui.view" id="tf_gift_coupon_program_tree_view">
-            <field name="name">tf.gift.coupon.program tree</field>
-            <field name="model">tf.gift.coupon.program</field>
-            <field name="arch" type="xml">
-                <tree string="Gift" editable="bottom">
-                    <field name="coupon_id"/>
-                    <field name="name"/>
-                    <field name="max_gifted_qty"/>
-                    <field name="gifted_qty"/>
-                    <field name="balance"/>
-                </tree>
-            </field>
-        </record>
 
-        <record model="ir.actions.act_window" id="tf_gift_coupon_program_action_window">
-            <field name="name">Gift</field>
-            <field name="res_model">tf.gift.coupon.program</field>
-            <field name="view_mode">tree</field>
-
-        </record>
-
-        <menuitem name="Gift" id="menu_tf_gift_coupon_program_main"/>
-
-        <menuitem name="Gift" id="menu_tf_gift_coupon_program" action="tf_gift_coupon_program_action_window"
-                  parent="menu_tf_gift_coupon_program_main"/>
 
     </data>
 </odoo>

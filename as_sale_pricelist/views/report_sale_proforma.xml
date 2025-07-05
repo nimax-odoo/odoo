@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_saleorder_document" inherit_id="sale.report_saleorder_document" priority="1000">
+        <xpath expr="//th[@name='th_subtotal']" position="after">
+            <th name="th_promo" class="text-end">
+                <span>PROMO</span>
+            </th>
+        </xpath>
+        <xpath expr="//td[@name='td_subtotal']" position="after">
+            <td name="td_promo" class="text-end">
+                <span t-esc="doc.get_promocion(line.id)" />
+            </td>
+        </xpath>
+
+    </template>
+</odoo>

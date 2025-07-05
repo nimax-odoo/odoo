@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Definición del Reporte PDF -->
+        <record id="action_comision_vendedor" model="ir.actions.report">
+            <field name="name">Reporte de Comisiones</field>
+            <field name="model">as.comisiones</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">as_sale_pricelist.report_comision_vendedor</field>
+            <field name="report_file">as_sale_pricelist.report_comision_vendedor</field>
+            <field name="binding_model_id" ref="model_as_comisiones"/>
+            <field name="binding_type">report</field>
+        </record>
+
+        <!-- Definición del Reporte XLSX -->
+        <record id="comision_vendedor_xlsx" model="ir.actions.report">
+            <field name="name">Reporte de Comisiones (Excel)</field>
+            <field name="model">as.comisiones</field>
+            <field name="report_type">xlsx</field>
+            <field name="report_name">as_sale_pricelist.comision_vendedor_xlsx_report</field>
+            <field name="report_file">as_sale_pricelist.comision_vendedor_xlsx_report</field>
+            <field name="print_report_name">'Comisiones - %s' % object.start_date</field>
+            <field name="binding_model_id" ref="model_as_comisiones"/>
+            <field name="binding_type">report</field>
+        </record>
+
+        <!-- Template para el reporte QWeb PDF -->
+        <template id="report_comision_vendedor">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Reporte de Comisiones</h2>
+                        <div class="row mt16 mb16">
+                            <div class="col-3">
+                                <strong>Desde:</strong>
+                                <p t-esc="data['start_date']"/>
+                            </div>
+                            <div class="col-3">
+                                <strong>Hasta:</strong>
+                                <p t-esc="data['end_date']"/>
+                            </div>
+                        </div>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Vendedor</th>
+                                    <th>Orden</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Monto</th>
+                                    <th>Comisión</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="orders" t-value="env['sale.order'].search([
+                                    ('date_order', '&gt;=', data['start_date']),
+                                    ('date_order', '&lt;=', data['end_date']),
+                                    ('user_id', 'in', data['user_id'] if isinstance(data['user_id'], list) else [data['user_id']]),
+                                    ('state', 'in', ['sale', 'done'])
+                                ])"/>
+                                <t t-set="total_comision" t-value="0"/>
+                                <t t-foreach="orders" t-as="order">
+                                    <t t-set="comision" t-value="env['as.tabla.comisiones'].calculate_comision(order.amount_total)"/>
+                                    <t t-set="total_comision" t-value="total_comision + comision"/>
+                                    <tr>
+                                        <td><span t-field="order.user_id.name"/></td>
+                                        <td><span t-field="order.name"/></td>
+                                        <td><span t-field="order.partner_id.name"/></td>
+                                        <td><span t-field="order.date_order"/></td>
+                                        <td><span t-field="order.amount_total"/></td>
+                                        <td><span t-esc="comision"/></td>
+                                    </tr>
+                                </t>
+                                <tr>
+                                    <td colspan="5" class="text-right"><strong>Total Comisiones:</strong></td>
+                                    <td><strong t-esc="total_comision"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo> 

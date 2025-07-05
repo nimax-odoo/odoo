@@ -1,158 +1,127 @@
 # -*- coding: utf-8 -*-
 # Part of BrowseInfo. See LICENSE file for full copyright and licensing details.
 
-from odoo import fields, models,api
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
-from odoo.tools.float_utils import float_round
+from odoo import fields, models, api,_
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT, get_lang
+from odoo.exceptions import UserError
+from odoo.tools.float_utils import float_compare, float_round
+
 
 class PurchaseOrder(models.Model):
-    _inherit ='purchase.order'
-    
-    purchase_manual_currency_rate_active = fields.Boolean('Apply Manual Exchange')
-    purchase_manual_currency_rate = fields.Float('Rate', digits=(12, 6))
+	_inherit ='purchase.order'
+	
+	purchase_manual_currency_rate_active = fields.Boolean('Apply Manual Exchange')
+	purchase_manual_currency_rate = fields.Float('Rate', digits=(12, 6))
+ 
+	@api.constrains("purchase_manual_currency_rate")
+	def _check_sale_manual_currency_rate(self):
+		for record in self:
+			if record.purchase_manual_currency_rate_active:
+				if record.purchase_manual_currency_rate == 0:
+					raise UserError(
+						_('Exchange Rate Field is required , Please fill that.'))
+				is_inverted_rate = self.env['ir.config_parameter'].sudo().get_param("bi_manual_currency_exchange_rate.inverted_rate")
+				if is_inverted_rate:
+					if record.purchase_manual_currency_rate <1 :
+						raise UserError(_('Exchange Rate must be greater than or equal to 1 .'))
+
+	def _prepare_invoice(self):
+		res = super(PurchaseOrder, self)._prepare_invoice()
+		if self.purchase_manual_currency_rate_active:
+			res.update({
+				'manual_currency_rate_active': self.purchase_manual_currency_rate_active,
+				'manual_currency_rate' : self.purchase_manual_currency_rate,
+			})
+		return res
+
+	@api.onchange('purchase_manual_currency_rate_active', 'currency_id')
+	def check_currency_id(self):
+		if self.purchase_manual_currency_rate_active:
+			if self.currency_id == self.company_id.currency_id:
+				self.purchase_manual_currency_rate_active = False
+				raise UserError(
+					_('Company currency and Purchase currency same, You can not add manual Exchange rate for same currency.'))
+
 
 class PurchaseOrderLine(models.Model):
-    _inherit ='purchase.order.line'
+	_inherit ='purchase.order.line'
+	
+	@api.depends('product_qty', 'product_uom', 'company_id','order_id.purchase_manual_currency_rate')
+	def _compute_price_unit_and_date_planned_and_name(self):
+		for line in self:
+			if not line.product_id or line.invoice_lines or not line.company_id:
+				continue
+			params = {'order_id': line.order_id}
+			seller = line.product_id._select_seller(
+				partner_id=line.partner_id,
+				quantity=line.product_qty,
+				date=line.order_id.date_order and line.order_id.date_order.date() or fields.Date.context_today(line),
+				uom_id=line.product_uom,
+				params=params)
 
-    def _get_stock_move_price_unit(self):
-        self.ensure_one()
-        order = self.order_id
-        price_unit = self.price_unit
-        price_unit_prec = self.env['decimal.precision'].precision_get('Product Price')
-        if self.taxes_id:
-            qty = self.product_qty or 1
-            price_unit = self.taxes_id.with_context(round=False).compute_all(
-                price_unit, currency=self.order_id.currency_id, quantity=qty, product=self.product_id, partner=self.order_id.partner_id
-            )['total_void']
-            price_unit = float_round(price_unit / qty, precision_digits=price_unit_prec)
-        if self.product_uom.id != self.product_id.uom_id.id:
-            price_unit *= self.product_uom.factor / self.product_id.uom_id.factor
-        if order.currency_id != order.company_id.currency_id:
-            price_unit = order.currency_id._convert(
-                price_unit, order.company_id.currency_id, self.company_id, self.date_order or fields.Date.today(), round=False)
-        if self.order_id.purchase_manual_currency_rate_active and self.order_id.purchase_manual_currency_rate > 0:
-            price_unit = self.order_id.currency_id.round((self.price_unit)/self.order_id.purchase_manual_currency_rate)
-        
-        return price_unit
+			if seller or not line.date_planned:
+				line.date_planned = line._get_date_planned(seller).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
 
-    # def _prepare_stock_moves(self, picking):
-    #     """ Prepare the stock moves data for one order line. This function returns a list of
-    #     dictionary ready to be used in stock.move's create()
-    #     """
+			# If not seller, use the standard price. It needs a proper currency conversion.
+			if not seller:
+				unavailable_seller = line.product_id.seller_ids.filtered(
+					lambda s: s.partner_id == line.order_id.partner_id)
+				if not unavailable_seller and line.price_unit and line.product_uom == line._origin.product_uom:
+					# Avoid to modify the price unit if there is no price list for this partner and
+					# the line has already one to avoid to override unit price set manually.
+					continue
+				po_line_uom = line.product_uom or line.product_id.uom_po_id
+				price_unit = line.env['account.tax']._fix_tax_included_price_company(
+					line.product_id.uom_id._compute_price(line.product_id.standard_price, po_line_uom),
+					line.product_id.supplier_taxes_id,
+					line.taxes_id,
+					line.company_id,
+				)
+				if line.order_id.purchase_manual_currency_rate_active:
+					is_inverted_rate = self.env['ir.config_parameter'].sudo().get_param("bi_manual_currency_exchange_rate.inverted_rate")
+					if is_inverted_rate:
+						if line.order_id.purchase_manual_currency_rate:
+							price_unit = price_unit / line.order_id.purchase_manual_currency_rate
+					else:
+						price_unit = price_unit * line.order_id.purchase_manual_currency_rate
+					# price_unit = price_unit * line.order_id.purchase_manual_currency_rate
+				else:
+					price_unit = line.product_id.cost_currency_id._convert(
+						price_unit,
+						line.currency_id,
+						line.company_id,
+						line.date_order or fields.Date.context_today(line),
+						False
+					)
+				line.price_unit = float_round(price_unit, precision_digits=max(line.currency_id.decimal_places, self.env['decimal.precision'].precision_get('Product Price')))
+				continue
 
-    #     rec  = super(PurchaseOrderLine, self)._prepare_stock_moves(picking)
-    #     seller = self.product_id._select_seller(
-    #         partner_id=self.partner_id,
-    #         quantity=self.product_qty,
-    #         date=self.order_id.date_order,
-    #         uom_id=self.product_uom)
-        
-    #     price_unit = self.env['account.tax']._fix_tax_included_price_company(seller.price, self.product_id.supplier_taxes_id, self.taxes_id, self.company_id) if seller else 0.0
-    #     if price_unit and seller and self.order_id.currency_id and seller.currency_id != self.order_id.currency_id:
-    #         price_unit = seller.currency_id.compute(price_unit, self.order_id.currency_id)
+			price_unit = line.env['account.tax']._fix_tax_included_price_company(seller.price, line.product_id.supplier_taxes_id, line.taxes_id, line.company_id) if seller else 0.0
+			if line.order_id.purchase_manual_currency_rate_active:
+				is_inverted_rate = self.env['ir.config_parameter'].sudo().get_param("bi_manual_currency_exchange_rate.inverted_rate")
+				if is_inverted_rate:
+					if line.order_id.purchase_manual_currency_rate:
+						price_unit = price_unit / line.order_id.purchase_manual_currency_rate
+				else:
+					price_unit = price_unit * line.order_id.purchase_manual_currency_rate
+				# price_unit = price_unit * line.order_id.purchase_manual_currency_rate
+			else:
+				price_unit = seller.currency_id._convert(price_unit, line.currency_id, line.company_id, line.date_order or fields.Date.context_today(line), False)
+			price_unit = float_round(price_unit, precision_digits=max(line.currency_id.decimal_places, self.env['decimal.precision'].precision_get('Product Price')))
+			line.price_unit = seller.product_uom._compute_price(price_unit, line.product_uom)
+			line.discount = seller.discount or 0.0
 
-    #     if seller and self.product_uom and seller.product_uom != self.product_uom:
-    #         price_unit = seller.product_uom._compute_price(price_unit, self.product_uom)
-        
-    #     if self.order_id.purchase_manual_currency_rate_active:
-    #         price_unit = self.order_id.currency_id.round((self.price_unit)/self.order_id.purchase_manual_currency_rate)
-        
-        
-
-    #     for line in rec :
-
-    #         line.update({'price_unit' : price_unit})
-
-        
-    #     return rec
-    
-    @api.onchange('product_qty', 'product_uom')
-    def _onchange_quantity(self):
-        if not self.product_id:
-            return
-
-        seller = self.product_id._select_seller(
-            partner_id=self.partner_id,
-            quantity=self.product_qty,
-            date=self.order_id.date_order,
-            uom_id=self.product_uom)
-
-        if seller or not self.date_planned:
-            self.date_planned = self._get_date_planned(seller).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-
-        if not seller:
-            return
-
-        price_unit = self.env['account.tax']._fix_tax_included_price_company(seller.price, self.product_id.supplier_taxes_id, self.taxes_id, self.company_id) if seller else 0.0
-        if price_unit and seller and self.order_id.currency_id and seller.currency_id != self.order_id.currency_id:
-            price_unit = seller.currency_id.compute(price_unit, self.order_id.currency_id)
-
-        if seller and self.product_uom and seller.product_uom != self.product_uom:
-            price_unit = seller.product_uom._compute_price(price_unit, self.product_uom)
-        
-        if self.order_id.purchase_manual_currency_rate_active:
-            price_unit = self.product_id.lst_price * self.order_id.purchase_manual_currency_rate
-
-        self.price_unit = price_unit
+			# record product names to avoid resetting custom descriptions
+			default_names = []
+			vendors = line.product_id._prepare_sellers({})
+			product_ctx = {'seller_id': None, 'partner_id': None, 'lang': get_lang(line.env, line.partner_id.lang).code}
+			default_names.append(line._get_product_purchase_description(line.product_id.with_context(product_ctx)))
+			for vendor in vendors:
+				product_ctx = {'seller_id': vendor.id, 'lang': get_lang(line.env, line.partner_id.lang).code}
+				default_names.append(line._get_product_purchase_description(line.product_id.with_context(product_ctx)))
+			if not line.name or line.name in default_names:
+				product_ctx = {'seller_id': seller.id, 'lang': get_lang(line.env, line.partner_id.lang).code}
+				line.name = line._get_product_purchase_description(line.product_id.with_context(product_ctx))
 
 
-class AccountInvoice(models.Model):
-    _inherit = 'account.move'
-
-
-
-    @api.onchange('purchase_vendor_bill_id', 'purchase_id')
-    def _onchange_purchase_auto_complete(self):
-        ''' Load from either an old purchase order, either an old vendor bill.
-
-        When setting a 'purchase.bill.union' in 'purchase_vendor_bill_id':
-        * If it's a vendor bill, 'invoice_vendor_bill_id' is set and the loading is done by '_onchange_invoice_vendor_bill'.
-        * If it's a purchase order, 'purchase_id' is set and this method will load lines.
-
-        /!\ All this not-stored fields must be empty at the end of this function.
-        '''
-        if self.purchase_vendor_bill_id.vendor_bill_id:
-            self.invoice_vendor_bill_id = self.purchase_vendor_bill_id.vendor_bill_id
-            self._onchange_invoice_vendor_bill()
-        elif self.purchase_vendor_bill_id.purchase_order_id:
-            self.purchase_id = self.purchase_vendor_bill_id.purchase_order_id
-        self.purchase_vendor_bill_id = False
-
-        if not self.purchase_id:
-            return
-
-        # Copy partner.
-        self.partner_id = self.purchase_id.partner_id
-        self.fiscal_position_id = self.purchase_id.fiscal_position_id
-        self.invoice_payment_term_id = self.purchase_id.payment_term_id
-        self.currency_id = self.purchase_id.currency_id
-
-        if self.purchase_id.purchase_manual_currency_rate_active:
-            self.manual_currency_rate_active = self.purchase_id.purchase_manual_currency_rate_active
-            self.manual_currency_rate = self.purchase_id.purchase_manual_currency_rate
-
-        # Copy purchase lines.
-        po_lines = self.purchase_id.order_line - self.line_ids.mapped('purchase_line_id')
-        new_lines = self.env['account.move.line']
-        for line in po_lines.filtered(lambda l: not l.display_type):
-            new_line = new_lines.new(line._prepare_account_move_line(self))
-            new_line.account_id = new_line._get_computed_account()
-            new_line._onchange_price_subtotal()
-            new_lines += new_line
-        new_lines._onchange_mark_recompute_taxes()
-
-        # Compute invoice_origin.
-        origins = set(self.line_ids.mapped('purchase_line_id.order_id.name'))
-        self.invoice_origin = ','.join(list(origins))
-
-        # Compute ref.
-        refs = set(self.line_ids.mapped('purchase_line_id.order_id.partner_ref'))
-        refs = [ref for ref in refs if ref]
-        self.ref = ','.join(refs)
-
-        # Compute _invoice_payment_ref.
-        if len(refs) == 1:
-            self._invoice_payment_ref = refs[0]
-
-        self.purchase_id = False
-        self._onchange_currency()        
+	

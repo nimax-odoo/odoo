@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_move_form_inherit_as_mx_invoice" model="ir.ui.view">
+            <field name="name">account.move.form.inherit.as_mx_invoice</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button name="button_as_manual_cfdi_sign"
+                        type="object"
+                        string="Timbrar CFDI Manualmente (AS)"
+                        class="oe_highlight"
+                        invisible="['|', ('state', '!=', 'posted'),
+                                             '|', ('l10n_mx_edi_is_cfdi_needed', '=', False),
+                                          ('l10n_mx_edi_cfdi_state', '!=', False)]"
+                        help="Intenta generar y timbrar el CFDI manualmente. Usar sólo si el proceso automático falla y la configuración es correcta."
+                        groups="account.group_account_invoice"/>                    
+                        
+                        <button name="button_as_manual_cfdi_sign_payment"
+                        type="object"
+                        string="Timbrar CFDI Pago"
+                        class="oe_highlight"
+                        invisible="[('state', '!=', 'posted')]"
+                        help="Intenta generar y timbrar el CFDI manualmente. Usar sólo si el proceso automático falla y la configuración es correcta."
+                        groups="account.group_account_invoice"/>
+                </xpath>
+
+                <xpath expr="//page[@id='other_tab']//group[@id='other_tab_group']" position="inside">
+                    <group string="AS: Estado Validación Botón Timbrado Manual" name="as_mx_invoice_button_visibility_status">
+                        <field name="l10n_mx_edi_is_cfdi_needed" readonly="1"/>
+                        <field name="l10n_mx_edi_cfdi_state" readonly="1"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Acción del servidor para verificar PAC y certificados -->
+        <record id="action_as_mx_check_pac_config" model="ir.actions.server">
+            <field name="name">Verificar Config. PAC/CFDI (AS)</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">code</field>
+            <field name="code">
+                action = env['as_mx_invoice.check_pac'].create({}).action_check_pac_config()
+            </field>
+            <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
+        </record>
+
+        <!-- Acción del servidor para verificar certificado -->
+        <record id="action_as_mx_check_certificate" model="ir.actions.server">
+            <field name="name">Verificar Certificado (AS)</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">code</field>
+            <field name="code">
+                action = env['as_mx_invoice.check_pac'].create({}).check_pac_certificate()
+            </field>
+            <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
+        </record>        
+        
+        <record id="action_update_sat_invoices" model="ir.actions.server">
+            <field name="name">Actualizar SAT</field>
+            <field name="state">code</field>
+            <field name="binding_view_types">form,list</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="code">
+                action = records.sd_l10n_mx_edi_cfdi_try_sat()
+            </field>
+        </record>
+
+        <!-- Heredar vista de formulario para agregar botón -->
+        <record id="view_as_mx_invoice_form" model="ir.ui.view">
+            <field name="name">as_mx_invoice.account_move_view_form</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <!-- Agregar botón en el header -->
+                <button name="action_register_payment" position="before">
+                    <button name="as_action_manual_l10n_mx_edi_cfdi_try_send" 
+                        type="object" 
+                        string="Timbrar MX (Manual)" 
+                        groups="account.group_account_manager"
+                        invisible="not l10n_mx_edi_is_cfdi_needed or l10n_mx_edi_cfdi_state in ('sent', 'cancel')"/>
+                    
+                    <button name="as_action_retry_l10n_mx_edi_cfdi_with_current_date" 
+                        type="object" 
+                        string="Reintentar Timbrado (Hora Actual)" 
+                        groups="account.group_account_manager"
+                        invisible="not l10n_mx_edi_is_cfdi_needed or l10n_mx_edi_cfdi_state != 'failed'"/>
+                    
+                    <button name="as_action_check_pac_config" 
+                        type="object" 
+                        string="Verificar PAC" 
+                        icon="fa-gear" 
+                        groups="account.group_account_manager"
+                        invisible="not l10n_mx_edi_is_cfdi_needed"/>
+                        
+                    <button name="as_action_fix_edi_documents" 
+                        type="object" 
+                        string="Reparar EDI" 
+                        icon="fa-wrench" 
+                        groups="account.group_account_manager"
+                        invisible="not l10n_mx_edi_is_cfdi_needed"/>
+                </button>
+            </field>
+        </record>
+        <record id="view_account_payment_inherit_as_mx_invoice" model="ir.ui.view">
+            <field name="name">account.payment.form.inherit.as_mx_invoice</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_form"/>
+            <field name="arch" type="xml">
+                <button name="action_draft" position="before">
+                    <button name="button_as_manual_cfdi_sign"
+                        type="object"
+                        string="Timbrar CFDI"
+                        class="oe_highlight"
+                        invisible="state not in ('paid','in_process')"/>                    
+                        
+                        
+                        
+                </button>
+                <xpath expr="//field[@name='memo']" position="after">
+                     <field name="l10n_mx_edi_payment_method_id" invisible="country_code != 'MX'" readonly="state == 'cancel'" options="{'no_open': True}"/>
+                        <field name="l10n_mx_edi_cfdi_origin" invisible="country_code != 'MX'" readonly="state == 'cancel'"/>
+                </xpath>
+
+            </field>
+        </record>
+    </data>
+</odoo> 

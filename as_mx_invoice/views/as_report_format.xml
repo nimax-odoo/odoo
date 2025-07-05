@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Definición de formato de papel personalizado para facturas MX -->
+        <record id="as_mx_invoice_paperformat" model="report.paperformat">
+            <field name="name">Factura Nimax México</field>
+            <field name="default" eval="False"/>
+            <field name="format">Letter</field>
+            <field name="page_height">0</field>
+            <field name="page_width">0</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">65</field>
+            <field name="margin_bottom">25</field>
+            <field name="margin_left">8</field>
+            <field name="margin_right">8</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">60</field>
+            <field name="dpi">90</field>
+        </record>
+        
+        <!-- Sustitución del reporte de factura estándar -->
+        <record id="account.account_invoices" model="ir.actions.report">
+            <field name="name">Factura Nimax MX</field>
+            <field name="model">account.move</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">as_mx_invoice.report_invoice_print</field>
+            <field name="report_file">as_mx_invoice.report_invoice_print</field>
+            <field name="print_report_name">'%s' % (object._get_report_base_filename())</field>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_type">report</field>
+            <field name="paperformat_id" ref="as_mx_invoice_paperformat"/>
+            <field name="attachment_use" eval="True"/>
+            <field name="attachment">(object.state == 'posted') and object.as_get_name_invoice()</field>
+        </record>
+        
+        <!-- Reporte alternativo específico de MX (accesible desde menú) -->
+        <record id="as_mx_invoice_alternative_report" model="ir.actions.report">
+            <field name="name">Factura MX (Alternativa)</field>
+            <field name="model">account.move</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">as_mx_invoice.report_invoice_print</field>
+            <field name="report_file">as_mx_invoice.report_invoice_print</field>
+            <field name="print_report_name">'%s' % (object._get_report_base_filename())</field>
+            <field name="attachment_use" eval="True"/>
+            <field name="attachment">(object.state in ('posted') and object.as_get_name_invoice())</field>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_type">report</field>
+            <field name="paperformat_id" ref="as_mx_invoice_paperformat"/>
+        </record>
+    </data>
+</odoo> 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-# For copyright and license notices, see __openerp__.py file in root directory
+# For copyright and license notices, see __manifest__.py file in root directory
 ##############################################################################
 
 import json
@@ -160,7 +160,7 @@ class AsStockAPI(http.Controller):
             dict: Datos de stock en formato JSON o mensaje de error
         """
         # Obtener los parámetros del cuerpo JSON
-        params = request.jsonrequest or {}
+        params = json.loads(request.httprequest.data.decode('utf-8')) or {}
         
         _logger.info("[as_get_stock] Recibida solicitud POST de consulta de stock")
         self._as_log_request('/nimax/stock', 'POST', params)
@@ -315,7 +315,7 @@ class AsStockAPI(http.Controller):
                 product_code = product.default_code or ''
                 product_name = quant['product_id'][1]
                 key = f"{location_name}_{product_code}"
-                
+                nimax_price_usd = 0
                 # Obtener los attribute_line_ids del producto
                 attribute_lines = []
                 try:
@@ -686,7 +686,7 @@ class AsStockAPI(http.Controller):
             dict: Datos de stock y precios en formato JSON o mensaje de error
         """
         # Obtener los parámetros del cuerpo JSON
-        params = request.jsonrequest or {}
+        params = json.loads(request.httprequest.data.decode('utf-8')) or {} or {}
         
         _logger.info("[as_get_stock_with_price] Recibida solicitud POST de consulta de stock con precios")
         self._as_log_request('/nimax/stock_with_price', 'POST', params)

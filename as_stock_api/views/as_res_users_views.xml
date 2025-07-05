@@ -10,30 +10,30 @@
                 <page string="API de Stock" groups="base.group_system">
                     <group>
                         <field name="as_api_enabled"/>
-                        <field name="as_api_key" attrs="{'invisible': [('as_api_enabled', '=', False)], 'readonly': [('as_api_enabled', '=', False)]}"/>
-                        <div class="text-muted" attrs="{'invisible': [('as_api_enabled', '=', False)]}">
+                        <field name="as_api_key" invisible="not as_api_enabled" readonly="not as_api_enabled"/>
+                        <div class="text-muted" invisible="not as_api_enabled">
                             Puede editar manualmente la clave API o usar los botones para generarla automáticamente.
                         </div>
                     </group>
-                    <group attrs="{'invisible': [('as_api_enabled', '=', False)]}">
-                        <field name="as_stock_percentaje" attrs="{'required': [('as_api_enabled', '=', True)]}" widget="percentage"/>
+                    <group invisible="not as_api_enabled">
+                        <field name="as_stock_percentaje" required="as_api_enabled" widget="percentage"/>
                         <div class="text-muted">
                             Porcentaje del stock real que se mostrará en la API. Por ejemplo, 80% mostrará el 80% del stock real.
                         </div>
-                        <field name="as_pricelist" attrs="{'invisible': [('as_api_enabled', '=', False)]}"/>
+                        <field name="as_pricelist" invisible="not as_api_enabled"/>
                         <div class="text-muted">
                             Lista de precios que se utilizará por defecto en la API de Stock con precios. Si se deja vacío, se usará la lista de precios del cliente.
                         </div>
-                        <field name="as_partner_id" attrs="{'invisible': [('as_api_enabled', '=', False)]}"/>
+                        <field name="as_partner_id" invisible="not as_api_enabled"/>
                         <div class="text-muted">
                             Cliente que se utilizará por defecto en las consultas de la API de Stock con precios. Si se especifica, no será necesario incluir el parámetro partner_id en las llamadas a la API.
                         </div>
-                        <field name="as_warehouse_ids" attrs="{'invisible': [('as_api_enabled', '=', False)]}" widget="many2many_tags" options="{'no_create': True}"/>
+                        <field name="as_warehouse_ids" invisible="not as_api_enabled" widget="many2many_tags" options="{'no_create': True}"/>
                         <div class="text-muted">
                             Almacenes cuyos productos se mostrarán en la API. Si no se selecciona ninguno, se mostrarán todos los almacenes.
                         </div>
                     </group>
-                    <group attrs="{'invisible': [('as_api_enabled', '=', False)]}">
+                    <group invisible="not as_api_enabled">
                         <button name="as_generate_api_key" 
                                 string="Generar Nueva Clave" 
                                 type="object" 
@@ -45,7 +45,7 @@
                     </group>
                     
                     <!-- Campo para mostrar y copiar la clave API -->
-                    <group attrs="{'invisible': ['|', ('as_api_enabled', '=', False), ('as_api_key', '=', False)]}">
+                    <group invisible="not as_api_enabled or not as_api_key">
                         <field name="as_api_key_display" readonly="1" widget="CopyClipboardChar" 
                                string="Clave API (para copiar)" class="text-break"/>
                         <button name="as_copy_api_key" 
@@ -55,7 +55,7 @@
                     </group>
                     
                     <!-- Enlace para descargar la colección de Postman -->
-                    <div class="alert alert-success" role="alert" attrs="{'invisible': ['|', ('as_api_enabled', '=', False), ('as_api_key', '=', False)]}">
+                    <div class="alert alert-success" role="alert" invisible="not as_api_enabled or not as_api_key">
                         <p>
                             <strong>Colección de Postman:</strong>
                         </p>
@@ -63,13 +63,13 @@
                             Descargue la colección de Postman preconfigurada con su clave API para probar la API de Stock.
                         </p>
                         <p>
-                            <a href="/nimax/stock/postman_collection" class="btn btn-success" target="_blank">
+                            <a href="/nimax/stock/postman_collection" class="btn btn-success" target="_blank" role="button">
                                 <i class="fa fa-download"/> Descargar Colección de Postman
                             </a>
                         </p>
                     </div>
                     
-                    <div class="alert alert-info" role="alert" attrs="{'invisible': [('as_api_enabled', '=', False)]}">
+                    <div class="alert alert-info" role="alert" invisible="not as_api_enabled">
                         <p>
                             <strong>Instrucciones:</strong>
                         </p>

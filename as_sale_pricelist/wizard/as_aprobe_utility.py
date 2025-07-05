@@ -27,3 +27,19 @@ class asSaleOrderPromoWizard(models.Model):
             else:
                 raise ValidationError('Contraseña incorrecta, no se puede aprobar la venta')
 
+
+class asAprobeUtility(models.TransientModel):
+    _name = 'as.aprobe.utility'
+    _description = 'Aprobe Utility Wizard'
+
+    as_password = fields.Char(string='Contraseña para aprobar Utilidad')
+    as_sale = fields.Many2one('sale.order', 'Sale Order')
+
+    def as_aprobe_utility(self):
+        password_config = self.env['ir.config_parameter'].sudo().get_param('as_sale_pricelist.as_password_utilidad1')
+        if self.as_sale.as_aprobe_utility == False:
+            if self.as_password == password_config:
+                self.as_sale.update({'as_aprobe_utility':True})
+            else:
+                raise ValidationError('Contraseña incorrecta, no se puede aprobar la utilidad')
+

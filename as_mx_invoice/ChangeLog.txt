@@ -1,0 +1,115 @@
+[2023-06-10] Versión 1.0.1
+- Implementación inicial del módulo
+- Botón de timbrado manual
+- Formato personalizado de impresión
+
+[2023-08-15] Versión 1.0.15
+- Implementación de manejo defensivo para método l10n_mx_edi_get_xml_etree
+- Mejoras en el formato de impresión
+
+[2023-10-20] Versión 1.0.18
+- Simplificación de la plantilla QWeb
+- Eliminación de llamadas dinámicas a métodos Python desde QWeb
+- Reemplazo de t-esc con t-field para mayor seguridad
+- Simplificación del código QR
+
+[2024-06-21] Versión 1.0.20
+- Modificación del método _get_edi_certificate para buscar dinámicamente certificados
+- Eliminación de la referencia fija al certificado con ID 10
+- Mejora en el manejo de errores de certificados
+
+[2024-06-21] Versión 1.0.21
+- Corrección de la generación del código QR en el reporte de factura
+- Simplificación del método de generación del QR para mejorar compatibilidad
+- Adición de manejo de errores para los casos donde no se encuentra el sello del CFDI 
+
+[2024-07-09] Versión 1.0.22
+- Modificación de la validación de certificados para hacerla completamente dinámica
+- Eliminación de referencias estáticas al certificado con ID 10 en todo el módulo
+- Actualización de la acción de servidor para verificar certificados dinámicamente
+- Mejora en los mensajes de validación para mostrar el ID real del certificado encontrado 
+
+[2024-07-09] Versión 1.0.23
+- Corrección del error "Fecha y hora de generación fuera de rango" 
+- Actualización del campo l10n_mx_edi_post_time a la hora actual en cada envío
+- Optimización del proceso de generación de fechas CFDI para sincronizar con el PAC 
+
+[2024-07-16] Versión 1.0.24
+- Mejora en la detección y solución del error "Fecha y hora de generación fuera de rango"
+- Implementación de logging detallado de fechas en el chatter para diagnóstico
+- Validación del rango horario permitido por el SAT (-72 horas a +5 minutos)
+- Mejora del botón de reintento con información detallada del rango de fechas 
+
+[2024-07-25] Versión 1.0.25
+- Corrección del error "External ID not found in the system: as_mx_invoice.report_invoice_print"
+- Actualización del manifiesto para incluir correctamente las plantillas de reporte en la instalación
+- Inclusión explícita de los archivos de reporte en el array 'data' del manifiesto
+- Mejora en la carga de archivos XML relacionados con los formatos de factura 
+
+[2024-07-26] Versión 1.0.26
+- Corrección del error "El valor enviado a un campo monetario no es numérico"
+- Modificación de la plantilla XML para validar valores monetarios antes de usar el widget
+- Implementación de condiciones t-if para evitar enviar cadenas vacías a widgets monetarios
+- Mejora en la gestión de valores nulos o no numéricos en los campos de precio e importe 
+
+[2024-07-27] Versión 1.0.27
+- Corrección del error "401 Fecha y hora de generación fuera de rango" por diferencia de zonas horarias
+- Implementación de conversión explícita de UTC a zona horaria de México (América/Mexico_City)
+- Ajuste para manejar la diferencia de 6 horas entre el servidor y el SAT
+- Mejora en el log del chatter para mostrar información detallada sobre la corrección de zona horaria 
+
+[2024-07-28] Versión 1.0.28
+- Corrección del error "Datetime field expects a naive datetime" en el método _l10n_mx_edi_add_invoice_cfdi_values
+- Eliminación del atributo de zona horaria (tzinfo) al asignar la fecha a l10n_mx_edi_post_time
+- Compatibilidad mejorada con los campos Datetime de Odoo que requieren datetime naive
+- Solución a errores de timbrado relacionados con manipulación de zonas horarias
+
+[2024-07-28] Versión 1.0.29
+- Corrección definitiva del problema de diferencia de 6 horas en la fecha del CFDI
+- Uso directo de la hora de México en lugar de convertir a UTC antes de asignar a l10n_mx_edi_post_time
+- Solución al error "401 Fecha y hora de generación fuera de rango" causado por diferencia entre UTC y hora de México
+- Asegurar compatibilidad con la zona horaria esperada por el SAT (América/Ciudad_de_México)
+
+[2024-07-28] Versión 1.0.30
+- Implementación de logs avanzados para diagnóstico de problemas de zona horaria
+- Forzado directo del valor 'fecha' en el diccionario cfdi_values con hora de México
+- Monitoreo detallado de valores y manipulación de fechas en flujo CFDI
+- Trazabilidad mejorada para identificar problemas de horario en timbrado CFDI
+
+[2024-07-28] Versión 1.0.31
+- Corrección del error "can only concatenate str (not "float") to str" en la generación del código QR
+- Implementación de manejo robusto para valores monetarios en el QR del CFDI
+- Mejora en la plantilla as_report_invoice_mx.xml para prevenir errores de tipo al generar QR
+- Verificación de nulos y conversión segura de tipos para valores numéricos 
+
+[2024-07-28] Versión 1.0.32
+- Reimplementación completa de la generación del código QR basada en la lógica oficial de Odoo
+- Creación del método get_l10n_mx_edi_qr_code_url() para estandarizar la generación de URLs para códigos QR
+- Corrección del formato de los valores monetarios a 6 decimales según requisitos SAT
+- Mejora en el manejo de errores con mensaje visible cuando no se puede generar el QR
+- Compatibilidad mejorada con el formato oficial de verificación CFDI del SAT 
+
+[2024-07-28] Versión 1.0.33
+- Implementación de logs avanzados de depuración para diagnóstico de problemas con código QR
+- Creación de método alternativo para extraer información CFDI directo del XML
+- Sistema de fallback para intentar generar QR por múltiples métodos si el principal falla
+- Mejora en la visualización de errores del QR con información detallada de los valores faltantes
+- Implementación de extracción completa de datos del XML para casos donde los campos de Odoo no están disponibles 
+
+[2024-05-23] Versión 1.0.34
+- Corrección del error "ReportController.report_barcode() missing 1 required positional argument: 'barcode_type'"
+- Actualización de los parámetros en las URLs para generación de códigos QR
+- Cambio de 'type=QR' a 'barcode_type=QR' en los métodos get_l10n_mx_edi_qr_code_url() y get_l10n_mx_edi_qr_code_url_alternative()
+- Compatibilidad con la versión actual del controlador ReportController de Odoo 18 Enterprise
+
+[2024-05-24] Versión 1.0.35
+- Implementación de herencia para funcionalidad "Force CFDI" con debugging completo
+- Creación del modelo AsMxEdiDocument que hereda l10n_mx_edi.document con logging avanzado
+- Creación del modelo AsMxAccountMove que hereda account.move para pagos Force CFDI
+- Adición de logs detallados con IDs únicos de traza para seguimiento completo
+- Implementación de mensajes automáticos en chatter para proceso Force CFDI
+- Validaciones mejoradas de configuración PAC y certificados antes del envío
+- Registro de tiempos de ejecución y estados antes/después del proceso
+- Manejo robusto de errores con información técnica detallada
+- Sistema de logging específico con prefijos [AS_FORCE_CFDI] y [AS_PAYMENT_FORCE]
+- Documentación completa en FORCE_CFDI_DEBUG.md para debugging y troubleshooting 

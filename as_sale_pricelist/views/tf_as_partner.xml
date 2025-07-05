@@ -2,19 +2,13 @@
     <data>
 
         <record model="ir.ui.view" id="tf_res_partner_tree_view">
-            <field name="name">tf.res.partner tree</field>
+            <field name="name">tf.res.partner.tree.view</field>
             <field name="model">tf.res.partner</field>
             <field name="arch" type="xml">
-                <tree string="Vendor Parameter">
+                <list>
                     <field name="name"/>
-                    <field name="partner_id"/>
-                    <field name="partner_type"/>
                     <field name="category_id"/>
-                    <field name="purchase_discount"/>
-                    <field name="partner_discount"/>
-                    <field name="cost_deal_import"/>
-                    <field name="fulfillment_rebate"/>
-                </tree>
+                </list>
             </field>
         </record>
 
@@ -51,7 +45,6 @@
                             </group>
                         </group>
                     </sheet>
-
                 </form>
             </field>
         </record>
@@ -59,11 +52,8 @@
         <record model="ir.actions.act_window" id="tf_res_partner_action_window">
             <field name="name">Vendor Parameter</field>
             <field name="res_model">tf.res.partner</field>
-            <field name="view_mode">tree,form</field>
-
+            <field name="view_mode">list,form</field>
         </record>
-
-        <!-- <menuitem name="Vendor Parameter" id="menu_tf_res_partner_main"/> -->
 
         <menuitem name="Parametros de Proveedor" id="menu_tf_res_partner" action="tf_res_partner_action_window"
                   parent="sale.product_menu_catalog"/>

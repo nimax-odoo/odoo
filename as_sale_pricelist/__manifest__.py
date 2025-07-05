@@ -1,6 +1,5 @@
-
 # -*- coding: utf-8 -*-
-# Part of Softhealer Technologies.
+# Part of Ahorasoft.
 {
     "name" : "Ahorasoft Lista de Precios por Linea de Productos en Ventas",
     "author" : "Ahorasoft",
@@ -11,7 +10,7 @@
     "description": """
 Lista de precios por linea de producto en ventas.
 """,    
-    "version":"1.0.6",
+    "version":"18.0.1.0.49",
     "depends" : [
         "base",
         "sale_management",
@@ -20,44 +19,50 @@ Lista de precios por linea de producto en ventas.
         'sale_margin',
         'as_product_last_price_tab',
         "purchase",
-        "sale_coupon",
+        # "loyalty",  # Eliminada esta dependencia para evitar problemas de normalización
         "crm",
-        "stock"
-        ,'report_xlsx',
+        "stock",
+        'report_xlsx',
         "sale",
-        "l10n_mx_edi",
+        # "l10n_mx_edi",
         "stock_account",
-        "bi_manual_currency_exchange_rate",
-        "l10n_mx_edi_40",
+        # "bi_manual_currency_exchange_rate",
+        # "l10n_mx_edi_40",  # Eliminada esta dependencia que no está disponible
+        "sales_team",
         ],
     "application" : True,
     "data" : [
+              # Cargar primero datos y seguridad
               "security/ir.model.access.csv",
+              'data/mail_template_data.xml',  # Disabled mail template data
+              
+              # Luego las vistas
               'views/as_product_template.xml',
               'views/sale_order_inherit_view.xml',
               'views/as_product_pricelist.xml',
               'views/as_partner_type.xml',
               'views/as_partner.xml',
               'views/as_marca.xml',
-              'views/as_sale_coupon_program.xml',
+              'views/coupon_views.xml',
               'views/tf_as_partner.xml',
               'views/history_promo.xml',
               'views/product_pricelist.xml',
+              'views/as_tabla_comisiones.xml',
+              'views/as_res_config.xml',
+              'views/tf_promotions_gift.xml',
+              # 'views/report_sale_proforma.xml',
+            #   'views/assets.xml',
+              
+              # Finalmente los wizards
               'wizard/sale_order_pricelist_update_wizard.xml',
               'wizard/as_promotion.xml',
-              # 'views/tf_promotions_gift.xml',
-              'views/report/as_sale_report_templates.xml',
-              #'views/report/as_report_invoice.xml',
-              'views/as_tabla_comisiones.xml',
               'wizard/as_report_comisiones.xml',
-              'views/as_res_config.xml',
-              #'views/as_report_component.xml',
-              'views/as_report_invoice_mx.xml',
               'wizard/as_aprobe_utility.xml',
-              'views/as_report_format.xml',
-              'data/mail_template_data.xml',
+              'wizard/as_aprobe_utility.xml',
             ],            
-    "images": ["static/description/background.png",],              
+    # "icon": "static/description/icon.png",
     "auto_install":False,
     "installable" : True,
+    "license": "LGPL-3",
+    # "post_init_hook": "migrations.remove_problematic_entry.migrate",
 }

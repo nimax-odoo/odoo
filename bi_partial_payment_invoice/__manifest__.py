@@ -3,13 +3,11 @@
 
 {
     'name' : 'Invoice Partial Payment Reconciliation',
-    'version' : '1.0.3',
+    'version' : '18.0.0.2',
     'category' : 'Sales',
-    'depends' : ['base', 
-        'account', 'sale', 'sale_management','bi_manual_currency_exchange_rate'
-    ],
-    'author': 'BrowseInfo',
-    'summary': 'Partial Invoice payment invoice reconciliation payment invoice register payment with reconciliation invoice partial reconciliation payment reconciliation add outstanding with write off invoice write off invoice residual payment partial invoice payment',
+    'depends' : ['base', 'account', 'sale', 'sale_management'],
+    'author': 'BROWSEINFO',
+    'summary': 'Partial Invoice payment invoice reconciliation payment with reconciliation invoice partial reconciliation payment reconciliation add outstanding with write off invoice write off invoice payment partial payment partial reconcile Partial Payment Reconcile',
     'description': '''
 
        Partial Invoice Payment in odoo,
@@ -22,23 +20,24 @@
        Remaining Outstanding Credit/Debit Amount in odoo,
 
     ''',
-    'website' : 'https://www.browseinfo.in',
+    'website' : "https://www.browseinfo.com/demo-request?app=bi_partial_payment_invoice&version=18&edition=Community",
     'price': 89,
     'currency': 'EUR',
     'data': [
         'security/ir.model.access.csv',
-        'wizard/account_payment_view.xml',
-        'wizard/multiple_paymemt_view.xml',
-        'views/account_move_view.xml',
+        # 'wizard/account_payment_view.xml',
+        # 'views/account_move_view.xml',
+        # 'wizard/multiple_paymemt_view.xml',
     ],
-    'qweb' : [],
-    'auto_install': False,
-    'installable': True,
-    "live_test_url":'https://youtu.be/8mCirowgP1o',
-    "images":['static/description/Banner.png'],
-    "assets": {
-        "web.assets_backend": [
-            "bi_partial_payment_invoice/static/src/js/account_payment.js",
+    'assets': {
+        'web.assets_backend': [
+            'bi_partial_payment_invoice/static/src/js/account_payment.js',
         ],
     },
+    'qweb' : [],
+    'license' : 'OPL-1',
+    'auto_install': False,
+    'installable': True,
+    "live_test_url":'https://www.browseinfo.com/demo-request?app=bi_partial_payment_invoice&version=18&edition=Community',
+    "images":['static/description/Banner.gif'],
 }

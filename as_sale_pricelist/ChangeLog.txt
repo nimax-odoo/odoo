@@ -1,0 +1,401 @@
+# Changelog
+Todos los cambios notables en este módulo serán documentados en este archivo.
+
+## [18.0.1.0.47] - 17/05/2025
+- Agregado script de pre-migración para solucionar problemas con foreign key en tf_history_promo
+- Eliminado constraint de clave foránea tf_history_promo_promo_id_fkey automáticamente
+- Eliminado constraint de clave foránea sale_order_last_promo_id_fkey automáticamente
+- Eliminado constraint de clave foránea as_sale_order_promo_wizard_line_sh_promo_id_fkey automáticamente
+- Creación automática de registros dummy en coupon_program para IDs referenciados en todas las tablas
+- Preservación de la integridad referencial creando promociones migradas para IDs faltantes
+- Limpieza de registros huérfanos en tf_history_promo que no existen en coupon_program
+- Mejorado el proceso de actualización del módulo para prevenir errores de foreign key
+- Verificación y creación automática de la tabla coupon_program si no existe
+- Implementada migración robusta que funciona incluso cuando la tabla no está inicializada
+- Actualizada referencia al grupo de seguridad product.group_discount_per_so_line por sale.group_discount_per_so_line
+- Corregido error "El grupo product.group_discount_per_so_line que está definido en la vista no existe"
+- Eliminadas vistas personalizadas Studio incompatibles con Odoo 18
+- Desactivadas vistas Studio que hacían referencia al grupo obsoleto product.group_discount_per_so_line
+- Corregidos errores RELAXNG en vistas XML personalizadas de Studio
+
+## [18.0.1.0.49] - 10/05/2024
+- Migrados los métodos l10n_mx_edi_retrieve_attachments y l10n_mx_edi_amount_to_text a as_mx_invoice
+- Eliminadas referencias a reportes antiguos en el código
+- Limpieza de archivos no utilizados
+- Mejorada la organización del código
+
+## [18.0.1.0.48] - 10/05/2024
+- Migrado el método action_invoice_print a as_mx_invoice
+- Eliminadas referencias a reportes antiguos en el código
+- Limpieza de archivos no utilizados
+- Mejorada la organización del código
+
+## [18.0.1.0.46] - 10/05/2024
+- Eliminados reportes antiguos de facturación que fueron migrados a as_mx_invoice
+- Eliminadas referencias a reportes antiguos en el código
+- Limpieza de archivos no utilizados
+- Mejorada la organización del código
+
+## [18.0.1.0.45] - 01/05/2024
+- Versión inicial para Odoo 18 Enterprise
+- Implementada funcionalidad básica de lista de precios
+- Agregado soporte para promociones
+- Integración con CRM
+
+## [18.0.1.0.44] - 2025-04-23
+### Corregido
+- Resuelto problema "Session expired due to inactivity" al usar el módulo durante largo tiempo.
+- Corregido error en el cálculo de descuentos cuando el precio unitario es cero o negativo.
+- Solucionado error al exportar listas de precio en formato CSV con caracteres especiales.
+
+## [18.0.1.0.43] - 2025-04-21
+### Corregido
+- Corregido error en vista XML as_partner.xml: añadidas opciones en el campo as_partner_type y corregido typo en "Vendor Parameter".
+- Corregido el parámetro de icono en __manifest__.py: cambiado "images" por "icon" para compatibilidad con Odoo 18.
+- Solucionado problema al importar listas de precios desde archivos Excel con formatos incorrectos.
+
+## [18.0.1.0.42] - 2025-04-19
+### Corregido
+- Resuelto error "Field coupon.program.active: unknown parameter 'tracking'" eliminando el parámetro tracking de los campos active y name.
+- Resuelto error "Field tf.history.promo.customer_type with unknown comodel_name 'tf.partner.type'" cambiando la referencia a 'as.partner.type'.
+- Eliminado también el parámetro tracking en los campos del modelo as.partner.type.
+- Solucionado problema con assets frontend en la ruta /web/assets/1/e42c68d/web.assets_frontend.min.css.
+- Adaptado y activado el módulo 'as_product_last_price_tab' para Odoo 18 Enterprise.
+- Corregida búsqueda en líneas de venta para usar 'create_date' en lugar de 'date_order'.
+- Mejorado manejo de errores en el cálculo de últimos precios.
+
+## [18.0.1.0.41] - 2025-04-17
+### Eliminado
+- Eliminado archivo vacío as_sale_order_views.xml que estaba duplicado con sale_order_inherit_view.xml 
+
+### Corregido
+- Solucionado error "Invalid field 'id' on model '_unknown'" al intentar duplicar órdenes de venta
+- Corregido el campo coupon_ids en sale.order.line para usar 'coupon.program' en lugar de 'as.coupon.program'
+- Agregado atributo copy=False para evitar que se copien los cupones al duplicar líneas de ventas
+- Agregado ondelete='set null' en el campo last_promo_id de sale.order para limpiar referencias nulas
+- Optimizado el método action_confirm en SaleOrder para manejar mejor las referencias a coupons y evitar errores
+- Mejorada la compatibilidad con el modelo coupon.program de Odoo 18
+
+## [18.0.1.0.40] - 2024-XX-XX
+### Eliminado
+- Eliminado archivo vacío as_sale_order_views.xml que estaba duplicado con sale_order_inherit_view.xml 
+
+### Corregido
+- Solucionado error "Invalid field 'id' on model '_unknown'" al intentar duplicar órdenes de venta
+- Corregido el campo coupon_ids en sale.order.line para usar 'coupon.program' en lugar de 'as.coupon.program'
+- Agregado atributo copy=False para evitar que se copien los cupones al duplicar
+- Agregado ondelete='set null' en el campo last_promo_id de sale.order para eliminar referencias nulas 
+
+## [18.0.1.0.39] - 2025-04-16
+### Mejorado
+- Se actualiza la documentación de pruebas (pruebas.md) para reflejar correctamente la estructura actual de menús.
+- Se añade una nueva sección "Menús y Navegación" en la documentación de pruebas.
+- Se corrigen las rutas de acceso a los programas de cupones y promociones.
+- Se añade información detallada sobre tipos de promociones (DEAL, DEMO, ESPECIAL, FABRICANTE).
+- Se agrega documentación adicional sobre la integración entre programas y cupones.
+- Se expande la documentación sobre la gestión de cupones y su ciclo de vida.
+
+## [18.0.1.0.38] - 2025-04-16
+### Mejorado
+- Se implementa la extensión TableExtension específica de markdown para un mejor renderizado de tablas.
+- Se añade mejora post-procesamiento del HTML para resaltar elementos importantes.
+- Se mejora el estilo visual de las tablas con efectos hover, sticky headers y sombras.
+- Se añaden estilos para tarjetas de problemas conocidos con bordes laterales de color.
+- Se optimiza el formato de números, estados (Sí/No) y nombres de funcionalidades.
+- Se implementa módulo re para procesar expresiones regulares y mejorar el HTML generado.
+
+## [18.0.1.0.36] - 2025-04-16
+### Corregido
+- Se remueven los archivos de controladores de la lista 'data' en el __manifest__.py ya que estaban causando el error "Can't load unknown file type" durante la actualización del módulo.
+- Los controladores siguen siendo parte del módulo pero no se declaran como archivos de datos XML/CSV.
+
+## [18.0.1.0.35] - 2025-04-15
+### Cambiado
+- Se modifica la ruta del controlador de documentación de pruebas de '/nimax/venta/pruebas' a '/nimax/as_sale_pricelist/pruebas' para mejorar la organización y especificidad de las rutas.
+
+## [18.0.1.0.34] - 2025-04-15
+### Añadido
+- Se agrega controlador web para visualizar la documentación de pruebas públicamente en la ruta /nimax/as_sale_pricelist/pruebas
+- Se crea un archivo de documentación de pruebas (pruebas.md) con tablas detalladas para testear todas las funcionalidades del módulo
+
+### Corregido
+- Se elimina la herencia de 'mail.thread' y 'mail.activity.mixin' del modelo coupon.program para evitar la creación de seguidores y problemas con el componente chatter.
+
+## [18.0.1.0.33] - 2025-04-14
+### Corregido
+- Se elimina la herencia de 'mail.thread' y 'mail.activity.mixin' del modelo coupon.program para evitar la creación de seguidores y problemas con el componente chatter.
+
+## [18.0.1.0.32] - 2025-04-14
+### Corregido
+- Se elimina la herencia de 'mail.thread' y 'mail.activity.mixin' del modelo coupon.program para evitar la creación de seguidores y problemas con el componente chatter.
+
+## [18.0.1.0.28] - 2025-04-14
+### Corregido
+- Solución definitiva para el problema de visualización con chatter en formularios
+- Implementada una técnica especial: campos chatter cargados como invisibles al inicio
+- Mejorada la estructura del formulario para evitar conflictos entre componentes
+- Simplificada la definición de los widgets del chatter para mayor compatibilidad
+
+## [18.0.1.0.27] - 2025-04-13
+### Corregido
+- Restaurado el chatter en los formularios de cupones y programas de promoción
+- Corregido problema de visualización donde los campos desaparecían al usar el chatter
+- Optimizadas las opciones del widget mail_followers para mejor funcionamiento
+- Mejorada la compatibilidad entre los componentes del chatter y la estructura del formulario
+
+## [18.0.1.0.26] - 2025-04-13
+### Corregido
+- Mejorada la vista de cupones para mejor usabilidad
+- Eliminado el chatter innecesario en la vista de cupones
+- Agregado campo de estado visible en la vista de lista de cupones
+- Agregados botones de estadísticas y contador de cupones
+- Corregido el flujo de estados en los cupones (draft->sent->used)
+- Añadidos filtros y agrupamientos en las vistas de búsqueda
+
+## [18.0.1.0.25] - 2025-04-11
+### Corregido
+- Solucionado error "No se pudo completar la operación: otro modelo necesita el registro que está siendo eliminado" al usar el wizard de promociones.
+- Convertidos los modelos `as.sale.order.promo.wizard` y `as.sale.order.promo.wizard.line` de `models.Model` a `models.TransientModel`.
+- Agregado el atributo `ondelete='cascade'` al campo `sh_promo_id` para evitar restricciones de clave foránea.
+- Mejorada la descripción del modelo `as.sale.order.promo.wizard.line` para mayor claridad.
+- Corregido error 'KeyError: False' en mail.followers que provocaba errores en cupones y programas
+- Implementada solución para prevenir seguidores inválidos en los modelos coupon.coupon y coupon.program
+- Se actualiza la vista de cupones para utilizar los atributos de condición compatibles con Odoo 18
+
+## [18.0.1.0.24] - 2025-04-10
+### Corregido
+- Solucionado error "psycopg2.errors.UndefinedColumn: column 'expected_earning' of relation 'coupon_program' does not exist" al crear cupones.
+- Añadido el campo `expected_earning` al modelo `coupon.program`.
+- Añadidos campos específicos para diferentes tipos de promociones (`as_type`, `PRICE_UNIT_USD`, `COST_NIMAX_USD`, etc.).
+- Completada la definición de campos necesarios para el funcionamiento de los diferentes tipos de promociones (DEAL, DEMO, ESPECIAL, FABRICANTE).
+- Actualizada interfaz gráfica con todos los campos de promociones para completar la vista de formulario coupon.program
+
+## [18.0.1.0.23] - 2025-04-10
+### Corregido
+- Solucionado error "KeyError: 'as.coupon.program'" al abrir el wizard de promociones.
+- Modificado el wizard as_promotion.py para usar el modelo 'coupon.program' en lugar de 'as.coupon.program'.
+- Actualizada la referencia del campo sh_promo_id para apuntar al modelo correcto.
+- Asegurada la consistencia en el uso del modelo de programas de cupones en todo el módulo.
+- Corrección en la referencia de modelo coupon.program
+
+## [18.0.1.0.22] - 2025-04-10
+### Corregido
+- Solucionado error "AttributeError: 'product.product' object has no attribute 'as_last_purchase_price'" al abrir el wizard de lista de precios.
+- Mejorado el manejo de campos faltantes en el modelo product.product.
+- Implementado fallback a standard_price cuando as_last_purchase_price no existe.
+- Añadida protección contra división por cero en el cálculo de descuentos.
+- Mejorado el logging para facilitar la depuración de problemas con campos inexistentes.
+- Se corrigieron problemas de migración relacionados con los comodines de SQL
+
+## [18.0.1.0.21] - 2025-04-10
+### Corregido
+- Solucionado error "AttributeError: 'sale.order' object has no attribute 'sale_manual_currency_rate'" al abrir el wizard de lista de precios.
+- Mejorado el método `_get_conversion_rate_nimax` para manejar el caso donde los campos de tasa manual de moneda no existen.
+- Añadido manejo de excepciones en la conversión de moneda para evitar errores críticos.
+- Añadido logging para facilitar la depuración de problemas con la conversión de moneda.
+- Corregido problema con el parámetro 'quantity' en el método _compute_price_rule
+- Actualizados los parámetros de la API para hacerlos compatibles con Odoo 18
+
+## [18.0.1.0.20] - 2025-04-10
+### Corregido
+- Solucionado error "AttributeError: 'sale.order' object has no attribute 'sale_manual_currency_rate'" al abrir el wizard de lista de precios.
+- Mejorado el método `_get_conversion_rate_nimax` para manejar el caso donde los campos de tasa manual de moneda no existen.
+- Añadido manejo de excepciones en la conversión de moneda para evitar errores críticos.
+- Añadido logging para facilitar la depuración de problemas con la conversión de moneda.
+- Problema con as_last_purchase_price resuelto
+- Mejorada la migración de cupones
+
+## [18.0.1.0.19] - 2025-04-02
+### Corregido
+- Arreglado el error "TypeError: Pricelist._compute_price_rule() missing 1 required positional argument: 'quantity'" al usar el wizard de lista de precios.
+- Adaptada la llamada al método `_compute_price_rule` para usar la nueva API de Odoo 18.
+- Mejorado el manejo de errores en el cálculo de precios con listas de precios.
+- Añadido logging para facilitar la depuración de problemas con el cálculo de precios.
+- Corrección de error en la migración de cupones
+- Ajustes en la estructura de los datos de vistas XML
+
+## [18.0.1.0.18] - 2025-04-02
+### Implementado
+- Reimplementado el wizard de lista de precios basado en la versión de Odoo 15.
+- Adaptada la lógica de cálculo de precios y márgenes del wizard de Odoo 15 a Odoo 18.
+- Mejorada la interfaz de usuario del wizard para mostrar información relevante de precios y márgenes.
+- Implementado el cálculo automático de precios basado en la lista de precios seleccionada.
+- Añadido soporte para el cálculo de descuentos y utilidades basados en parámetros del proveedor.
+- Mejorado el manejo de conversiones de moneda para garantizar cálculos precisos.
+- Implementada la creación automática de registros de historial de promociones al aplicar precios.
+- Actualizadas las relaciones entre modelos para mejor compatibilidad
+
+### Corregido
+- Resuelto el problema de inicialización del wizard al hacer clic en el botón "Precios".
+- Corregido el método `pricelist_apply` para pasar correctamente el contexto al wizard.
+- Mejorado el manejo de errores en la creación de registros de historial.
+
+## [18.0.1.0.17] - 2025-04-02
+### Corregido
+- Arreglado el error "El registro no existe o se eliminó" al hacer clic en el botón "Precios".
+- Mejorado el método `pricelist_apply` para pasar correctamente el ID de la orden de venta en el contexto.
+- Reescrito el método `update_sale_line_unit_price` para eliminar referencias a variables no definidas.
+- Mejorado el manejo de errores al crear registros de historial de promociones.
+- Actualizada la referencia a `self.env.user.company_id` por `self.env.company` para seguir estándares de Odoo 18.
+- Implementadas mejores prácticas para buscar monedas por referencia externa en lugar de IDs fijos.
+- Primera versión migrada con soporte básico
+- Compatibilidad inicial con Odoo 18
+
+## [18.0.1.0.16] - 2025-04-02
+### Corregido
+- Resuelto error "sale.order.currency_aux_id field is undefined" al cargar la vista de órdenes de venta.
+- Corregido el campo currency_aux_id en sale.order para proporcionar un valor predeterminado seguro de USD cuando no existe la referencia.
+- Corregida la relación en el campo last_promo_id para apuntar a 'coupon.program' en lugar de 'as.coupon.program'.
+- Ejecutada query SQL para eliminar la constraint foreign key problemática (sale_order_last_promo_id_fkey).
+- Actualizada la vista sale_order_inherit_view.xml para ser compatible con Odoo 18.
+- Revisadas y actualizadas todas las etiquetas list/tree en los archivos XML para mantener compatibilidad con Odoo 18.
+- Implementado manejo adecuado de excepciones para referencias a monedas (res.currency).
+- Corregido error al hacer clic en el botón "Precios" cambiando los wizards de models.Model a models.TransientModel.
+
+### Consultas SQL ejecutadas
+```sql
+-- Eliminar la restricción foreign key existente
+ALTER TABLE sale_order DROP CONSTRAINT IF EXISTS sale_order_last_promo_id_fkey;
+
+-- Actualizar todos los registros con last_promo_id inválido a NULL
+UPDATE sale_order
+SET last_promo_id = NULL
+WHERE last_promo_id IS NOT NULL 
+  AND NOT EXISTS (
+    SELECT 1 FROM coupon_program WHERE id = sale_order.last_promo_id
+  );
+
+-- Agregar la nueva restricción de clave foránea
+ALTER TABLE sale_order
+ADD CONSTRAINT sale_order_last_promo_id_fkey
+FOREIGN KEY (last_promo_id) REFERENCES coupon_program(id) ON DELETE SET NULL;
+
+-- Eliminar tablas de wizard persistentes (ahora son transitorias)
+DROP TABLE IF EXISTS sale_order_pricelist_wizard CASCADE;
+DROP TABLE IF EXISTS sale_order_pricelist_wizard_line CASCADE;
+```
+
+## [18.0.1.0.15] - 2025-04-02
+### Corregido
+- Resuelto error "sale.order.currency_aux_id field is undefined" al cargar la vista de órdenes de venta.
+- Corregido el campo currency_aux_id en sale.order para proporcionar un valor predeterminado seguro de USD cuando no existe la referencia.
+- Corregida la relación en el campo last_promo_id para apuntar a 'coupon.program' en lugar de 'as.coupon.program'.
+- Ejecutada query SQL para eliminar la constraint foreign key problemática (sale_order_last_promo_id_fkey).
+- Actualizada la vista sale_order_inherit_view.xml para ser compatible con Odoo 18.
+- Revisadas y actualizadas todas las etiquetas list/tree en los archivos XML para mantener compatibilidad con Odoo 18.
+- Implementado manejo adecuado de excepciones para referencias a monedas (res.currency).
+- Corregido error al hacer clic en el botón "Precios" cambiando los wizards de models.Model a models.TransientModel.
+
+## [18.0.1.0.14] - 2023-03-13
+### Corregido
+- Cambiado el elemento <tree> por <list> en las vistas embebidas de tf_vendor_parameter_ids, tf_gift_coupon_program y as_partner_type.
+- Corregido el error "Cannot find key 'tree' in the 'views' registry" al abrir el formulario de contactos.
+
+## [18.0.1.0.13] - 2023-03-13
+### Corregido
+- Actualizado el atributo view_mode en todas las acciones para usar 'list' en lugar de 'tree'.
+- Corregido el problema al hacer clic en contactos desde el formulario de orden de venta.
+- Actualizado el ID y nombre de las acciones para seguir una convención de nombres consistente.
+
+## [18.0.1.0.12] - 2023-03-13
+### Corregido
+- Cambiado el elemento <tree> por <list> en todas las vistas del módulo.
+- Corregido el error "Cannot find key 'tree' in the 'views' registry" al abrir el formulario de contactos.
+- Actualizado el ID y nombre de las vistas para seguir una convención de nombres consistente.
+
+## [18.0.1.0.11] - 2023-03-13
+### Corregido
+- Agregado script de migración para crear la tabla as_coupon_program si no existe.
+- Agregado script de migración para corregir las relaciones entre tablas.
+- Solucionado el error "relation 'as_coupon_program' does not exist" al duplicar registros.
+
+## [18.0.1.0.10] - 2023-03-13
+### Corregido
+- Actualizado el atributo mode del campo order_line para usar 'list' en lugar de 'tree'.
+- Cambiado el elemento <tree> por <list> en la vista de líneas de pedido.
+- Corregido el error "Cannot find key 'tree' in the 'views' registry".
+
+## [18.0.1.0.9] - 2023-03-13
+### Corregido
+- Corrección radical de la vista XML para órdenes de venta.
+- Reemplazo completo del campo order_line para evitar problemas con XPath.
+- Adaptación a la estructura de Odoo 18 para las líneas de pedido.
+
+## [18.0.1.0.8] - 2023-03-13
+### Corregido
+- Corrección de la vista XML para órdenes de venta para alinear con la estructura de Odoo 18.
+- Corrección de expresiones XPath que causaban errores de instalación del módulo.
+
+## [18.0.1.0.7] - 2023-03-13
+### Corregido
+- Corrección de la vista XML para órdenes de venta para alinear con la estructura de Odoo 18.
+- Corrección de expresiones XPath que causaban errores de instalación del módulo.
+
+## [18.0.1.0.6] - 2023-03-13
+### Corregido
+- Corrección de la vista XML para órdenes de venta para alinear con la estructura de Odoo 18.
+- Corrección de expresiones XPath que causaban errores de instalación del módulo.
+
+## [18.0.1.0.5] - 2023-03-12
+### Cambiado
+- Eliminada la dependencia del módulo "loyalty"
+- Creado un modelo personalizado "as.coupon.program" para reemplazar "loyalty.program"
+- Actualizado el modelo "sale.order.line" para usar "as.coupon.program" en lugar de "loyalty.program"
+- Actualizado el modelo "sale.order" para usar "as.coupon.program" en lugar de "loyalty.program"
+- Actualizado el wizard "as.sale.order.promo.wizard" para usar "as.coupon.program"
+- Actualizado el modelo "tf.history.promo" para usar "as.coupon.program"
+- Creadas vistas para el modelo personalizado "as.coupon.program"
+
+## [18.0.1.0.4] - 2023-03-12
+### Corregido
+- Cambiado el campo `last_promo_id` en el modelo `sale.order` a `ondelete='restrict'` y `required=False`
+- Creado un script de pre-migración más agresivo que desactiva temporalmente las restricciones de clave foránea
+- Limpiadas todas las referencias problemáticas en la base de datos
+
+## [18.0.1.0.3] - 2023-03-12
+### Corregido
+- Añadido `ondelete='cascade'` al campo `sh_promo_id` en el modelo `as.sale.order.promo.wizard.line` para evitar errores de clave foránea
+- Ampliado el script de pre-migración para limpiar referencias en el wizard y en el historial de promociones
+
+## [18.0.1.0.2] - 2023-03-12
+### Corregido
+- Añadido `ondelete='set null'` al campo `last_promo_id` en el modelo `sale.order` para evitar errores de clave foránea
+- Añadido `ondelete='restrict'` al campo `coupon_ids` en el modelo `sale.order.line`
+- Creados scripts de migración para manejar la transición de `coupon.program` a `loyalty.program`
+
+## [18.0.1.0.1] - 2023-03-12
+### Cambiado
+- Eliminada la dependencia del módulo "l10n_mx_edi_40" que no está disponible en el sistema
+
+## [18.0.1.0.0] - 2023-03-12
+### Migrado
+- Migración completa del módulo a Odoo 18 Enterprise
+
+### Cambiado
+- Reemplazado "sale_coupon" por "loyalty" en las dependencias del módulo
+- Migrado el modelo "coupon.program" a "loyalty.program"
+- Añadidos campos adicionales en "loyalty.program" para mantener la funcionalidad de "coupon.program"
+- Actualizado el campo "coupon_ids" en "sale.order.line" para usar "loyalty.program"
+- Actualizado el campo "last_promo_id" en "sale.order" para usar "loyalty.program"
+- Actualizado el wizard "as.sale.order.promo.wizard" para trabajar con "loyalty.program"
+- Actualizado el uso de "self.env.user.company_id" a "self.env.company" según la API de Odoo 18
+- Creada una nueva vista para extender "loyalty.program" con los campos necesarios
+
+### Mantenido
+- Todos los nombres de campos existentes para asegurar la compatibilidad con la base de datos
+- La misma experiencia de usuario en la selección de listas de precios y promociones
+- La lógica de negocio adaptándola a la nueva API y estructura de Odoo 18
+
+## [1.0.6] - Versión anterior
+- Versión para Odoo 15 Enterprise 
+
+## [18.0.1.0.31] - 2024-05-16
+### Corregido
+- Añadido registro detallado de los filtros de búsqueda de promociones en el chatter de la orden de venta
+- Esto permite diagnosticar por qué no aparecen promociones en el wizard 
+
+## [19.0.0.1] - 10/05/2024
+- Migrada función as_get_name_invoice al módulo as_mx_invoice para mejor organización de código.
+
+## [19.0.0.0] - 01/05/2024
+- Se actualizaron campos x_studio a la nueva estructura Odoo v18 

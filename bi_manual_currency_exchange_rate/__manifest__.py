@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # Part of BrowseInfo. See LICENSE file for full copyright and licensing details.
 {
-    "name" : "Currency Exchange Rate on Invoice/Payment/Sale/Purchase in Odoo",
-    "version" : "1.0.4",
-    "depends" : ['base','account','purchase','sale_management','stock'],
-    "author": "BrowseInfo",
-    "summary": "This module helps to apply manual currency rate on invoice, payment, sales and purchase order ",
+    "name" : "Manual Currency Exchange Rate on Invoice/Payment/Sale/Purchase in Odoo",
+    "version" : "18.0.0.5",
+    "depends" : ['base','account','purchase','sale_management','stock','stock_landed_costs'],
+    "author": "BROWSEINFO",
+    "summary": "Apps apply manual currency rate on invoice manual currency rate on payment manual currency rate on sales manual currency rate on purchase custom currency rate on invoice manual Currency Exchange Rate on Invoice custom Currency Exchange Rate on sales order",
     "description": """
     Odoo/OpenERP module for manul currency rate converter
     Currency Exchange Rate on Invoice/Payment/Sale/Purchase, manual multi currency process on invoice, multi currency payment
@@ -125,19 +125,22 @@
     if you are using Odoo multi-currency working to provide invoices, sale order, purchase order to customers from different countries along with currency rates according to their country? For Odoo This module is designed to provide currency rate exchange in real time can be really useful Currency Exchange Rates in Odoo. 
 
     """,
+    "price": 22,
+    "currency": "EUR",
     'category': 'Accounting',
-    "website" : "www.browseinfo.in",
+    "website" : "https://www.browseinfo.com/demo-request?app=bi_manual_currency_exchange_rate&version=18&edition=Community",
     "data" :[
-             "views/customer_invoice.xml",
+            # "views/res_config_inherit.xml",
+            #  "views/customer_invoice.xml",
              "views/account_payment_view.xml",
-             "views/purchase_view.xml",
-             "views/sale_view.xml",
-    ],
-    'qweb':[
-    ],
+            #  "views/purchase_view.xml",
+            #  "views/sale_view.xml",
+        ],
+    'qweb':[],
     "auto_install": False,
     "installable": True,
-    'live_test_url':'https://youtu.be/nRdIuuxi9yI',
-	"images":['static/description/Banner.png'],
+    'live_test_url':'https://www.browseinfo.com/demo-request?app=bi_manual_currency_exchange_rate&version=18&edition=Community',
+	"images":['static/description/Banner.gif'],
+    "license": "OPL-1",
 }
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

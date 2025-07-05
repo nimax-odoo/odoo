@@ -1,0 +1,23 @@
+{
+    'name': 'AS Account Payment',
+    'version': '18.0.1.0.0',
+    'category': 'Accounting',
+    'summary': 'Custom modifications for account payments',
+    'description': """
+        This module modifies the payment20 template to use the inverse of the exchange rate for EquivalenciaDR.
+    """,
+    'depends': [
+        'l10n_mx_edi',
+        'account_accountant',
+        'account_edi',
+    ],
+    'data': [
+        'security/ir.model.access.csv',
+        'views/as_account_payment.xml',
+        'data/as_payment20.xml',
+    ],
+    'installable': True,
+    'auto_install': False,
+    'application': False,
+    'license': 'LGPL-3',
+}

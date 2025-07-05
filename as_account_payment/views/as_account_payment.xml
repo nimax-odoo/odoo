@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_payment_form_inherit_as_payment" model="ir.ui.view">
+        <field name="name">account.payment.form.inherit.as.payment</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='group2']" position="after">
+                <group name="edi_document_group">
+                    <field name="as_edi_doc" readonly="1" string="Documento EDI"/>
+                    <field name="xml_file" widget="binary" filename="xml_filename"/>
+                    <field name="xml_filename" invisible="1"/>
+                    <button name="action_upload_replace_xml"
+                            type="object"
+                            class="btn-primary"
+                            string="Subir/Reemplazar XML"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

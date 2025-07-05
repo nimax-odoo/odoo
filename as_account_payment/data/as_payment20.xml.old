@@ -1,0 +1,10 @@
+<!-- <?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="as_payment20_inherit" inherit_id="l10n_mx_edi_40.payment20">
+            <xpath expr="//*[name()='pago20:DoctoRelacionado']" position="attributes">
+                <attribute name="t-att-EquivalenciaDR">round(1.0 / invoice_vals.get('exchange_rate', 1.0), invoice_vals['EQUIVALENCIADR_PRECISION_DIGITS'])</attribute>
+            </xpath>
+        </template>
+    </data>
+</odoo> -->

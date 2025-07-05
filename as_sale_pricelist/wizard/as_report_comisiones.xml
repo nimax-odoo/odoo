@@ -11,7 +11,6 @@
                     <field name="start_date"/>
                     <field name="end_date"/>
                     <field name="user_id" widget="many2many_tags"/>
-                  
                 </group>
                 <footer>
                     <button name="export_xls" 
@@ -44,7 +43,20 @@
         file="as_sale_pricelist.comision_report_xlsx.xlsx"
         attachment_use="False" />
 
-        <menuitem id="as_comision_vendedor" parent="sale.menu_sale_report" name="Calculo de Comisiones" action="action_comision_vendedor_qweb" sequence="11"  />
+    <menuitem id="as_comision_vendedor" parent="sale.menu_sale_report" name="Calculo de Comisiones" action="action_comision_vendedor_qweb" sequence="11"  />
+
+    <record id="action_report_comisiones" model="ir.actions.act_window">
+        <field name="name">Reporte de Comisiones</field>
+        <field name="res_model">as.comisiones</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_report_comisiones"
+              name="Reporte Detallado de Comisiones"
+              action="action_report_comisiones"
+              parent="sale.menu_sale_report"
+              sequence="12"/>
 
 </data>
 </odoo>

@@ -1,0 +1,35 @@
+Fecha,Módulo,Bug Corregido,Detalles,Versión
+2025-04-23,as_sale_pricelist,Campo faltante en res.partner,Agregado campo partner_company_registry_placeholder para resolver el error "res.partner.partner_company_registry_placeholder field is undefined",18.0.1.0.44
+2025-04-21,as_sale_pricelist,Errores en vista XML,Corregido error en vista XML as_partner.xml: añadidas opciones en el campo as_partner_type y corregido typo en "Vendor Parameter",18.0.1.0.43
+2025-04-21,as_sale_pricelist,Error en parámetro de icono,Corregido el parámetro de icono en __manifest__.py: cambiado "images" por "icon" para compatibilidad con Odoo 18,18.0.1.0.43
+2025-04-19,as_sale_pricelist,Error en campo tracking,Resuelto error "Field coupon.program.active: unknown parameter tracking" eliminando el parámetro tracking de los campos active y name,18.0.1.0.42
+2025-04-19,as_sale_pricelist,Error en comodel_name,Resuelto error "Field tf.history.promo.customer_type with unknown comodel_name 'tf.partner.type'" cambiando la referencia a 'as.partner.type',18.0.1.0.42
+2025-04-19,as_sale_pricelist,Error en assets frontend,Solucionado problema con assets frontend en la ruta /web/assets/1/e42c68d/web.assets_frontend.min.css,18.0.1.0.42
+2025-04-19,as_sale_pricelist,Error en búsqueda,Corregida búsqueda en líneas de venta para usar 'create_date' en lugar de 'date_order',18.0.1.0.42
+2025-04-17,as_sale_pricelist,Error al duplicar órdenes,Solucionado error "Invalid field 'id' on model '_unknown'" al intentar duplicar órdenes de venta,18.0.1.0.41
+2025-04-17,as_sale_pricelist,Error en campo coupon_ids,Corregido el campo coupon_ids en sale.order.line para usar 'coupon.program' en lugar de 'as.coupon.program',18.0.1.0.41
+2025-04-14,as_sale_pricelist,Error en visualización chatter,Solución definitiva para el problema de visualización con chatter en formularios,18.0.1.0.28
+2025-04-13,as_sale_pricelist,Error en formularios,Corregido problema de visualización donde los campos desaparecían al usar el chatter,18.0.1.0.27
+2025-04-13,as_sale_pricelist,Errores en vista de cupones,Mejorada la vista de cupones para mejor usabilidad y corregido el flujo de estados,18.0.1.0.26
+2025-04-15,as_sale_pricelist,Error en controladores,Se remueven los archivos de controladores de la lista 'data' en el __manifest__.py que causaban el error "Can't load unknown file type",18.0.1.0.36
+2025-04-15,as_sale_pricelist,Error en herencia de modelos,Se elimina la herencia de 'mail.thread' y 'mail.activity.mixin' del modelo coupon.program para evitar problemas con el chatter,18.0.1.0.34
+2025-04-16,as_sale_pricelist,Error de archivos duplicados,Eliminado archivo vacío as_sale_order_views.xml que estaba duplicado con sale_order_inherit_view.xml,18.0.1.0.40
+2025-04-11,as_sale_pricelist,Error al eliminar registros,Solucionado error "No se pudo completar la operación: otro modelo necesita el registro que está siendo eliminado" al usar el wizard de promociones,18.0.1.0.25
+2025-04-11,as_sale_pricelist,Error KeyError en mail.followers,Corregido error 'KeyError: False' en mail.followers que provocaba errores en cupones y programas,18.0.1.0.25
+2025-04-10,as_sale_pricelist,Error de columna indefinida,Solucionado error "psycopg2.errors.UndefinedColumn: column 'expected_earning' of relation 'coupon_program' does not exist" al crear cupones,18.0.1.0.24
+2025-04-10,as_sale_pricelist,Error de KeyError,Solucionado error "KeyError: 'as.coupon.program'" al abrir el wizard de promociones,18.0.1.0.23
+2025-04-10,as_sale_pricelist,Error de AttributeError,Solucionado error "AttributeError: 'product.product' object has no attribute 'as_last_purchase_price'",18.0.1.0.22
+2025-04-10,as_sale_pricelist,Error de atributo,Solucionado error "AttributeError: 'sale.order' object has no attribute 'sale_manual_currency_rate'",18.0.1.0.21
+2025-04-02,as_sale_pricelist,Error en parámetro,Arreglado el error "TypeError: Pricelist._compute_price_rule() missing 1 required positional argument: 'quantity'",18.0.1.0.19
+2025-04-02,as_sale_pricelist,Error de registro,Arreglado el error "El registro no existe o se eliminó" al hacer clic en el botón "Precios",18.0.1.0.17
+2025-04-02,as_sale_pricelist,Error de campo indefinido,Resuelto error "sale.order.currency_aux_id field is undefined" al cargar la vista de órdenes de venta,18.0.1.0.16
+2025-04-23,as_sale_pricelist,Error de sesión caducada,Resuelto problema "Session expired due to inactivity" al usar el módulo durante largo tiempo,18.0.1.0.45
+2025-04-22,as_sale_pricelist,Error en cálculo de descuentos,Corregido error en el cálculo de descuentos cuando el precio unitario es cero o negativo,18.0.1.0.45
+2025-04-22,as_sale_pricelist,Error en exportación CSV,Solucionado error al exportar listas de precio en formato CSV con caracteres especiales,18.0.1.0.45
+2025-04-21,as_sale_pricelist,Error en traducciones,Corregidas traducciones faltantes en el wizard de promociones y cupones,18.0.1.0.44
+2025-04-20,as_sale_pricelist,Error en validación de campos,Implementada validación correcta de campos numéricos para evitar valores inválidos,18.0.1.0.44
+2025-04-20,as_sale_pricelist,Error en concurrencia,Mejorado el manejo de bloqueos de registros al editar simultáneamente la misma orden de venta,18.0.1.0.44
+2025-04-18,as_sale_pricelist,Error en importación,Solucionado problema al importar listas de precios desde archivos Excel con formatos incorrectos,18.0.1.0.43
+2025-04-17,as_sale_pricelist,Error en permisos,Corregido problema de permisos donde usuarios sin acceso a cupones podían ver algunas opciones restringidas,18.0.1.0.41
+2025-04-16,as_sale_pricelist,Error en paginación,Solucionado error de paginación en listas con gran cantidad de registros de promociones,18.0.1.0.40
+2025-04-15,as_sale_pricelist,Error en filtros de búsqueda,Mejorados los filtros de búsqueda para incluir todos los campos relevantes en cupones y promociones,18.0.1.0.37

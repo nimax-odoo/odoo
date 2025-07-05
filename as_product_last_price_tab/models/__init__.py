@@ -1,5 +1,4 @@
 # -*- encoding: utf-8 -*-
+# Part of Ahorasoft.
 
 from . import product
-#experimental
-from . import product_so

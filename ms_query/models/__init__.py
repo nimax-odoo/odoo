@@ -1,1 +1,3 @@
-from . import ms_query
+from . import (
+    ms_query
+)

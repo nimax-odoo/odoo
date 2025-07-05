@@ -33,6 +33,12 @@
         <field name="target">new</field>
     </record>
 
-  
+    <record id="action_aprobe_utility" model="ir.actions.act_window">
+        <field name="name">Aprobar Utilidad</field>
+        <field name="res_model">as.aprobe.utility</field>
+        <field name="view_mode">list,form</field>
+        <field name="target">new</field>
+    </record>
+
 </data>
 </odoo>
