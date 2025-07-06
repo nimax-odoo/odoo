@@ -6,22 +6,22 @@
         <field name="model">coupon.program</field>
         <field name="arch" type="xml">
             <list>
-            <field name="sequence" widget="handle"/>
-                <field name="as_type"/>
+                <field name="sequence" widget="handle" />
+                <field name="as_type" />
 
-                
-                <field name="name"/>
-                    <field name="create_uid"/>
-    <field name="create_date"/>
-    <field name="write_uid"/>
-                <field name="rule_date_to"/>
-                <field name="active" widget="boolean_toggle"/>
-                <field name="coupon_count"/>
-                    <field name="rule_date_to" optional="show"/>
-    <field name="COST_NIMAX_USD" optional="show"/>
-    <field name="PRICE_UNIT_USD" optional="show"/>
-    <field name="tf_balance" optional="show"/>
-                <field name="company_id"/>
+
+                <field name="name" />
+                <field name="create_uid" />
+                <field name="create_date" />
+                <field name="write_uid" />
+                <field name="rule_date_to" />
+                <field name="active" widget="boolean_toggle" />
+                <field name="coupon_count" />
+                <field name="rule_date_to" optional="show" />
+                <field name="COST_NIMAX_USD" optional="show" />
+                <field name="PRICE_UNIT_USD" optional="show" />
+                <field name="tf_balance" optional="show" />
+                <field name="company_id" />
             </list>
         </field>
     </record>
@@ -33,88 +33,107 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_view_coupons" type="object" string="Ver Cupones" class="oe_highlight"/>
-                    <button name="action_view_coupon_program_statistics" type="object" string="Estadísticas" class="btn-secondary"/>
+                    <button name="action_view_coupons" type="object" string="Ver Cupones" class="oe_highlight" />
+                    <button name="action_view_coupon_program_statistics" type="object" string="Estadísticas"
+                        class="btn-secondary" />
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_coupons" type="object" class="oe_stat_button" icon="fa-ticket">
-                            <field name="coupon_count" string="Cupones" widget="statinfo"/>
+                            <field name="coupon_count" string="Cupones" widget="statinfo" />
                         </button>
                     </div>
                     <div class="oe_title">
-                        <h1><field name="name" placeholder="Nombre del Programa"/></h1>
+                        <h1>
+                            <field name="name" placeholder="Nombre del Programa" />
+                        </h1>
                     </div>
                     <group>
                         <group>
-                            <field name="active"/>
-                            <field name="as_type" required="1"/>
-                            <field name="sequence"/>
-                            <field name="program_type"/>
-                            <field name="promo_code"/>
-                            <field name="promo_code_usage" invisible="promo_code == False"/>
+                            <field name="active" />
+                            <field name="as_type" required="1" />
+                            <field name="sequence" />
+                            <field name="program_type" />
+                            <field name="promo_code" />
+                            <field name="promo_code_usage" invisible="promo_code == False" />
                         </group>
                         <group>
-                            <field name="rule_date_from"/>
-                            <field name="rule_date_to"/>
-                            <field name="currency_id" options="{'no_create': True, 'no_open': True}"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="rule_date_from" />
+                            <field name="rule_date_to" />
+                            <field name="currency_id" options="{'no_create': True, 'no_open': True}" />
+                            <field name="company_id" groups="base.group_multi_company" />
+                            <group string="Gift">
+                            <field name="tf_gifted_qty"  />
+                            <field name="tf_max_gifted_qty"  />
+                            <field name="tf_balance"  />
+                            </group>
+
+
                         </group>
                     </group>
                     <notebook>
                         <page string="Condiciones" name="conditions">
                             <group>
                                 <group string="Reglas de productos">
-                                    <field name="rule_products_domain" widget="domain" options="{'model': 'product.product'}" required="1"/>
-                                    <field name="rule_min_quantity"/>
+                                    <field name="rule_products_domain" widget="domain"
+                                        options="{'model': 'product.product'}" required="1" />
+                                    <field name="rule_min_quantity" />
                                 </group>
                                 <group string="Reglas de clientes">
-                                    <field name="rule_partners_domain" widget="domain" options="{'model': 'res.partner'}"/>
-                                    <field name="rule_minimum_amount"/>
-                                    <field name="rule_minimum_amount_tax_inclusion" invisible="rule_minimum_amount == 0"/>
+                                    <field name="rule_partners_domain" widget="domain"
+                                        options="{'model': 'res.partner'}" />
+                                    <field name="rule_minimum_amount" />
+                                    <field name="rule_minimum_amount_tax_inclusion"
+                                        invisible="rule_minimum_amount == 0" />
                                 </group>
                             </group>
                         </page>
                         <page string="Tipo de promoción" name="promotion_type">
                             <group>
                                 <group invisible="as_type != 'DEAL'">
-                                    <field name="discount_type" required="as_type == 'DEAL'"/>
-                                    <field name="discount_percentage" invisible="discount_type != 'percentage'" required="discount_type == 'percentage'"/>
-                                    <field name="discount_fixed_amount" invisible="discount_type != 'fixed_amount'" required="discount_type == 'fixed_amount'"/>
-                                    <field name="expected_earning"/>
+                                    <field name="discount_type" required="as_type == 'DEAL'" />
+                                    <field name="discount_percentage" invisible="discount_type != 'percentage'"
+                                        required="discount_type == 'percentage'" />
+                                    <field name="discount_fixed_amount" invisible="discount_type != 'fixed_amount'"
+                                        required="discount_type == 'fixed_amount'" />
+                                    <field name="expected_earning" />
                                 </group>
                                 <group invisible="as_type != 'DEMO'">
-                                    <field name="discount_percentage" required="as_type == 'DEMO'"/>
-                                    <field name="discount_fixed_amount" required="as_type == 'DEMO'"/>
-                                    <field name="COSTO" required="as_type == 'DEMO'"/>
+                                    <field name="discount_percentage" required="as_type == 'DEMO'" />
+                                    <field name="discount_fixed_amount" required="as_type == 'DEMO'" />
+                                    <field name="COSTO" required="as_type == 'DEMO'" />
                                 </group>
                                 <group invisible="as_type != 'ESPECIAL'">
-                                    <field name="PRICE_UNIT_USD" required="as_type == 'ESPECIAL'"/>
-                                    <field name="COST_NIMAX_USD" required="as_type == 'ESPECIAL'"/>
+                                    <field name="PRICE_UNIT_USD" required="as_type == 'ESPECIAL'" />
+                                    <field name="COST_NIMAX_USD" required="as_type == 'ESPECIAL'" />
                                 </group>
                                 <group invisible="as_type != 'FABRICANTE'">
-                                    <field name="DISCOUNT_AMOUNT_USD" required="as_type == 'FABRICANTE'"/>
+                                    <field name="DISCOUNT_AMOUNT_USD" required="as_type == 'FABRICANTE'" />
                                 </group>
                             </group>
                         </page>
                         <page string="Opciones avanzadas" name="advanced_options">
                             <group>
                                 <group string="Aplicación">
-                                    <field name="discount_apply_on"/>
-                                    <field name="discount_specific_product_ids" widget="many2many_tags" options="{'no_create': True}" invisible="discount_apply_on != 'specific_products'" required="discount_apply_on == 'specific_products'"/>
-                                    <field name="discount_max_amount"/>
-                                    <field name="reward_description"/>
-                                    <field name="reward_type"/>
-                                    <field name="reward_product_id" invisible="reward_type != 'product'" required="reward_type == 'product'"/>
-                                    <field name="reward_product_quantity" invisible="reward_type != 'product'"/>
+                                    <field name="discount_apply_on" />
+                                    <field name="discount_specific_product_ids" widget="many2many_tags"
+                                        options="{'no_create': True}"
+                                        invisible="discount_apply_on != 'specific_products'"
+                                        required="discount_apply_on == 'specific_products'" />
+                                    <field name="discount_max_amount" />
+                                    <field name="reward_description" />
+                                    <field name="reward_type" />
+                                    <field name="reward_product_id" invisible="reward_type != 'product'"
+                                        required="reward_type == 'product'" />
+                                    <field name="reward_product_quantity" invisible="reward_type != 'product'" />
                                 </group>
                                 <group string="Limitaciones">
-                                    <field name="maximum_use_number"/>
-                                    <field name="validity_duration"/>
-                                    <field name="tf_gifted_qty"/>
-                                    <field name="tf_max_gifted_qty"/>
-                                    <field name="order_count"/>
-                                    <field name="total_order_count"/>
+                                    <field name="maximum_use_number" />
+                                    <field name="validity_duration" />
+                                    <field name="tf_gifted_qty" />
+                                    <field name="tf_max_gifted_qty" />
+                                    <field name="order_count" />
+                                    <field name="total_order_count" />
                                 </group>
                             </group>
                         </page>
@@ -130,13 +149,14 @@
         <field name="model">coupon.program</field>
         <field name="arch" type="xml">
             <search>
-                <field name="name"/>
-                <filter string="Activos" name="active" domain="[('active', '=', True)]"/>
-                <filter string="Inactivos" name="inactive" domain="[('active', '=', False)]"/>
-                <filter string="Válidos hoy" name="valid_today" domain="[('rule_date_from', '&lt;=', context_today().strftime('%Y-%m-%d')), '|', ('rule_date_to', '&gt;=', context_today().strftime('%Y-%m-%d')), ('rule_date_to', '=', False)]"/>
+                <field name="name" />
+                <filter string="Activos" name="active" domain="[('active', '=', True)]" />
+                <filter string="Inactivos" name="inactive" domain="[('active', '=', False)]" />
+                <filter string="Válidos hoy" name="valid_today"
+                    domain="[('rule_date_from', '&lt;=', context_today().strftime('%Y-%m-%d')), '|', ('rule_date_to', '&gt;=', context_today().strftime('%Y-%m-%d')), ('rule_date_to', '=', False)]" />
                 <group expand="0" string="Agrupar por">
-                    <filter string="Tipo" name="group_by_type" context="{'group_by': 'as_type'}"/>
-                    <filter string="Programa" name="group_by_program" context="{'group_by': 'program_type'}"/>
+                    <filter string="Tipo" name="group_by_type" context="{'group_by': 'as_type'}" />
+                    <filter string="Programa" name="group_by_program" context="{'group_by': 'program_type'}" />
                 </group>
             </search>
         </field>
@@ -148,11 +168,11 @@
         <field name="model">coupon.coupon</field>
         <field name="arch" type="xml">
             <list>
-                <field name="name"/>
-                <field name="code"/>
-                <field name="partner_id"/>
-                <field name="state"/>
-                <field name="active" widget="boolean_toggle"/>
+                <field name="name" />
+                <field name="code" />
+                <field name="partner_id" />
+                <field name="state" />
+                <field name="active" widget="boolean_toggle" />
             </list>
         </field>
     </record>
@@ -164,34 +184,39 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,sent,used"/>
-                    <button name="action_confirm" string="Confirmar" type="object" class="oe_highlight" invisible="state not in ('draft')"/>
-                    <button name="action_use" string="Usar" type="object" class="oe_highlight" invisible="state not in ('sent')"/>
-                    <button name="action_cancel" string="Cancelar" type="object" invisible="state not in ('draft','sent')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,sent,used" />
+                    <button name="action_confirm" string="Confirmar" type="object" class="oe_highlight"
+                        invisible="state not in ('draft')" />
+                    <button name="action_use" string="Usar" type="object" class="oe_highlight"
+                        invisible="state not in ('sent')" />
+                    <button name="action_cancel" string="Cancelar" type="object"
+                        invisible="state not in ('draft','sent')" />
                 </header>
                 <sheet>
                     <div class="oe_title">
-                        <h1><field name="name" placeholder="Nombre del Cupón"/></h1>
+                        <h1>
+                            <field name="name" placeholder="Nombre del Cupón" />
+                        </h1>
                     </div>
                     <group>
                         <group>
-                            <field name="program_id"/>
-                            <field name="code"/>
-                            <field name="partner_id"/>
-                            <field name="active"/>
+                            <field name="program_id" />
+                            <field name="code" />
+                            <field name="partner_id" />
+                            <field name="active" />
                         </group>
                         <group>
-                            <field name="date"/>
-                            <field name="date_start"/>
-                            <field name="date_end"/>
-                            <field name="order_id"/>
+                            <field name="date" />
+                            <field name="date_start" />
+                            <field name="date_end" />
+                            <field name="order_id" />
                         </group>
                     </group>
                     <group>
                         <group string="Detalles del descuento">
-                            <field name="discount_type"/>
-                            <field name="discount_percentage"/>
-                            <field name="discount_fixed_amount"/>
+                            <field name="discount_type" />
+                            <field name="discount_percentage" />
+                            <field name="discount_fixed_amount" />
                         </group>
                     </group>
                 </sheet>
@@ -205,20 +230,20 @@
         <field name="model">coupon.coupon</field>
         <field name="arch" type="xml">
             <search>
-                <field name="name"/>
-                <field name="code"/>
-                <field name="partner_id"/>
-                <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Enviado" name="sent" domain="[('state', '=', 'sent')]"/>
-                <filter string="Usado" name="used" domain="[('state', '=', 'used')]"/>
-                <filter string="Expirado" name="expired" domain="[('state', '=', 'expired')]"/>
-                <filter string="Cancelado" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
-                <filter string="Activos" name="active" domain="[('active', '=', True)]"/>
-                <filter string="Inactivos" name="inactive" domain="[('active', '=', False)]"/>
+                <field name="name" />
+                <field name="code" />
+                <field name="partner_id" />
+                <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]" />
+                <filter string="Enviado" name="sent" domain="[('state', '=', 'sent')]" />
+                <filter string="Usado" name="used" domain="[('state', '=', 'used')]" />
+                <filter string="Expirado" name="expired" domain="[('state', '=', 'expired')]" />
+                <filter string="Cancelado" name="cancelled" domain="[('state', '=', 'cancelled')]" />
+                <filter string="Activos" name="active" domain="[('active', '=', True)]" />
+                <filter string="Inactivos" name="inactive" domain="[('active', '=', False)]" />
                 <group expand="0" string="Agrupar por">
-                    <filter string="Programa" name="group_by_program" context="{'group_by': 'program_id'}"/>
-                    <filter string="Estado" name="group_by_state" context="{'group_by': 'state'}"/>
-                    <filter string="Cliente" name="group_by_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Programa" name="group_by_program" context="{'group_by': 'program_id'}" />
+                    <filter string="Estado" name="group_by_state" context="{'group_by': 'state'}" />
+                    <filter string="Cliente" name="group_by_partner" context="{'group_by': 'partner_id'}" />
                 </group>
             </search>
         </field>
@@ -238,7 +263,9 @@
     </record>
 
     <!-- Menús -->
-    <menuitem id="menu_coupon_root" name="Cupones" sequence="5" parent="sale.product_menu_catalog"/>
-    <menuitem id="menu_coupon_program" name="Programas de Promoción" parent="menu_coupon_root" action="action_coupon_program" sequence="10"/>
-    <menuitem id="menu_coupon_coupon" name="Cupones" parent="menu_coupon_root" action="action_coupon_coupon" sequence="20"/>
-</odoo> 
+    <menuitem id="menu_coupon_root" name="Cupones" sequence="5" parent="sale.product_menu_catalog" />
+    <menuitem id="menu_coupon_program" name="Programas de Promoción" parent="menu_coupon_root"
+        action="action_coupon_program" sequence="10" />
+    <menuitem id="menu_coupon_coupon" name="Cupones" parent="menu_coupon_root" action="action_coupon_coupon"
+        sequence="20" />
+</odoo>
