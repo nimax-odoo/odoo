@@ -217,6 +217,10 @@ class AsAccountInvoice(models.Model):
             partner_bank_vat = partner_bank.l10n_mx_edi_vat
 
         payment_account_ord = re.sub(r'\s+', '', bank_account.acc_number or '') or None
+        for pay in self.payment_ids:
+            if pay.sd_partner_bank_id:
+                payment_account_ord = re.sub(r'\s+', '', pay.sd_partner_bank_id.acc_number or '') or None
+
         payment_account_receiver = re.sub(r'\s+', '', self.journal_id.bank_account_id.acc_number or '') or None
 
         cfdi_values.update({
@@ -686,13 +690,13 @@ class AsAccountInvoice(models.Model):
                 if not self.env.context.get('skip_chatter_log'):
                     # Crear un nuevo entorno con el contexto modificado para la siguiente llamada
                     ctx = dict(self.env.context, skip_chatter_log=True)
-                    self.with_context(ctx).sudo().message_post(
-                        body=f"<p><b>DEBUG [{trace_id}]:</b> {message}</p>",
-                        subject="DEBUG Log",
-                        message_type='comment',
-                        subtype_xmlid='mail.mt_note',
-                        body_is_html=True
-                    )
+                    # self.with_context(ctx).sudo().message_post(
+                    #     body=f"<p><b>DEBUG [{trace_id}]:</b> {message}</p>",
+                    #     subject="DEBUG Log",
+                    #     message_type='comment',
+                    #     subtype_xmlid='mail.mt_note',
+                    #     body_is_html=True
+                    # )
             except Exception as e:
                 _logger.error(f"Error al postear en chatter: {e}. Continúa el proceso.")
         except Exception as general_error:
@@ -1179,29 +1183,11 @@ class AsAccountInvoice(models.Model):
         return names
         
     def get_referencia_pedido(self):
-        """
-        Propósito: Obtiene la referencia de orden de compra del cliente.
-        Retorno: Referencia de pedido si existe, o texto vacío.
-        """
-        self.ensure_one()
-        self._as_debug_log(f"Llamada a get_referencia_pedido para factura {self.name} con origen {self.invoice_origin}")
-        
-        sale_orders = self.env['sale.order'].search([('invoice_ids', 'in', self.id)], limit=1)
-        if sale_orders and sale_orders.client_order_ref:
-            result = sale_orders.client_order_ref
-            self._as_debug_log(f"Referencia encontrada: {result}")
-            return result
-            
-        if self.invoice_origin:
-            # Intento alternativo buscando por nombre
-            sale_orders_alt = self.env['sale.order'].search([('name', '=', self.invoice_origin)], limit=1)
-            if sale_orders_alt and sale_orders_alt.client_order_ref:
-                result = sale_orders_alt.client_order_ref
-                self._as_debug_log(f"Referencia encontrada (método alternativo): {result}")
-                return result
-                
-        self._as_debug_log("No se encontró referencia de pedido")
-        return ''
+        sale_order = self.env['sale.order'].search([('name','=',self.invoice_origin)],limit=1)
+        if sale_order and 'x_studio_orden_de_compra' in sale_order:
+            return sale_order.x_studio_orden_de_compra
+        else:
+            return 'N/A'
 
     def adjuntar_factura_model(self, invoice):
         """
@@ -1393,13 +1379,13 @@ class AsAccountInvoice(models.Model):
             # Ejecutar el mismo método que la acción automática
             
             
-            self.message_post(
-                body=_("<p><b>Proceso de timbrado iniciado manualmente</b></p><p>Verificando resultados en unos momentos...</p>"),
-                subject="Timbrado Manual CFDI (AS)",
-                message_type='comment',
-                subtype_xmlid='mail.mt_note',
-                body_is_html=True
-            )
+            # self.message_post(
+            #     body=_("<p><b>Proceso de timbrado iniciado manualmente</b></p><p>Verificando resultados en unos momentos...</p>"),
+            #     subject="Timbrado Manual CFDI (AS)",
+            #     message_type='comment',
+            #     subtype_xmlid='mail.mt_note',
+            #     body_is_html=True
+            # )
             
             # Actualizar vista
             return True
@@ -1409,18 +1395,18 @@ class AsAccountInvoice(models.Model):
             _logger.error(error_details)
             
             # Postear el error en el chatter para diagnóstico
-            self.message_post(
-                body=f"""<p><b>⚠️ Error al iniciar timbrado manual CFDI</b></p>
-                    <p>Detalles del error:</p>
-                    <pre>{str(e)}</pre>
-                    <p>Traza completa (para debug):</p>
-                    <pre>{error_details}</pre>
-                """,
-                subject="ERROR en Timbrado Manual CFDI (AS)",
-                message_type='comment',
-                subtype_xmlid='mail.mt_note',
-                body_is_html=True
-            )
+            # self.message_post(
+            #     body=f"""<p><b>⚠️ Error al iniciar timbrado manual CFDI</b></p>
+            #         <p>Detalles del error:</p>
+            #         <pre>{str(e)}</pre>
+            #         <p>Traza completa (para debug):</p>
+            #         <pre>{error_details}</pre>
+            #     """,
+            #     subject="ERROR en Timbrado Manual CFDI (AS)",
+            #     message_type='comment',
+            #     subtype_xmlid='mail.mt_note',
+            #     body_is_html=True
+            # )
             
             return {
                 'type': 'ir.actions.client',
@@ -1564,13 +1550,13 @@ class AsAccountInvoice(models.Model):
             # Ejecutar el mismo método que la acción automática
             self._l10n_mx_edi_cfdi_invoice_try_send()
             
-            self.message_post(
-                body=date_info,
-                subject="Reintento de Timbrado CFDI con Fecha Actual (AS)",
-                message_type='comment',
-                subtype_xmlid='mail.mt_note',
-                body_is_html=True
-            )
+            # self.message_post(
+            #     body=date_info,
+            #     subject="Reintento de Timbrado CFDI con Fecha Actual (AS)",
+            #     message_type='comment',
+            #     subtype_xmlid='mail.mt_note',
+            #     body_is_html=True
+            # )
             
             return {
                 'type': 'ir.actions.client',
@@ -1588,18 +1574,18 @@ class AsAccountInvoice(models.Model):
             _logger.error(error_details)
             
             # Postear el error en el chatter para diagnóstico
-            self.message_post(
-                body=f"""<p><b>⚠️ Error al reintentar timbrado CFDI con fecha actual</b></p>
-                    <p>Detalles del error:</p>
-                    <pre>{str(e)}</pre>
-                    <p>Traza completa (para debug):</p>
-                    <pre>{error_details}</pre>
-                """,
-                subject="ERROR en Reintento de Timbrado CFDI (AS)",
-                message_type='comment',
-                subtype_xmlid='mail.mt_note',
-                body_is_html=True
-            )
+            # self.message_post(
+            #     body=f"""<p><b>⚠️ Error al reintentar timbrado CFDI con fecha actual</b></p>
+            #         <p>Detalles del error:</p>
+            #         <pre>{str(e)}</pre>
+            #         <p>Traza completa (para debug):</p>
+            #         <pre>{error_details}</pre>
+            #     """,
+            #     subject="ERROR en Reintento de Timbrado CFDI (AS)",
+            #     message_type='comment',
+            #     subtype_xmlid='mail.mt_note',
+            #     body_is_html=True
+            # )
             
             return {
                 'type': 'ir.actions.client',
@@ -1641,14 +1627,14 @@ class AsAccountInvoice(models.Model):
 --------------------------------------------------<br/>
 <b>Resultado Final (Necesita CFDI): {final_result}</b>
                 """
-                if move.move_type in ('out_invoice', 'out_refund') or is_payment:
-                     move.message_post(
-                        body=message,
-                        subject="Detalle Cálculo Necesidad CFDI (AS Modificado)",
-                        message_type='comment',
-                        subtype_xmlid='mail.mt_note',
-                        body_is_html=True
-                     )
+                # if move.move_type in ('out_invoice', 'out_refund') or is_payment:
+                #      move.message_post(
+                #         body=message,
+                #         subject="Detalle Cálculo Necesidad CFDI (AS Modificado)",
+                #         message_type='comment',
+                #         subtype_xmlid='mail.mt_note',
+                #         body_is_html=True
+                #      )
             except Exception as e:
                 _logger_compute.warning(f"No se pudo postear detalle de cálculo CFDI (AS Mod) para {move.name}: {e}", exc_info=False)
 
@@ -1896,11 +1882,11 @@ class AsAccountInvoice(models.Model):
 --------------------------------------------------<br/>
 <i>Revise estos datos con cuidado. Errores aquí impiden el timbrado.</i>
                 '''
-                move.message_post(body=message, subject="Check CFDI v4 (AS - DB)", message_type='comment', subtype_xmlid='mail.mt_note', body_is_html=True)
+                # move.message_post(body=message, subject="Check CFDI v4 (AS - DB)", message_type='comment', subtype_xmlid='mail.mt_note', body_is_html=True)
                 _logger.info(f"[AS_MX_INV_DEBUG] Posted check v4 (DB - PAC Omitted) to chatter for {move.name}")
             except Exception as e:
                 _logger.error(f"[AS_MX_INV_DEBUG] Failed DB query/post chatter v4 for {move.name}: {e}", exc_info=True)
-                move.message_post(body=f"Error check CFDI v4 (AS): {e}")
+                # move.message_post(body=f"Error check CFDI v4 (AS): {e}")
 
         return res 
 
@@ -1976,13 +1962,13 @@ class AsAccountInvoice(models.Model):
 <i>Nota: Se actualizará la fecha automáticamente para sincronizar con la hora actual de México.</i>
         """
         
-        self.message_post(
-            body=date_info,
-            subject="Análisis Fecha Timbrado CFDI",
-            message_type='comment',
-            subtype_xmlid='mail.mt_note',
-            body_is_html=True
-        )
+        # self.message_post(
+        #     body=date_info,
+        #     subject="Análisis Fecha Timbrado CFDI",
+        #     message_type='comment',
+        #     subtype_xmlid='mail.mt_note',
+        #     body_is_html=True
+        # )
         
         # FIX: Asegurar que l10n_mx_edi_post_time sea la hora actual para evitar problemas
         # de "Fecha y hora de generación fuera de rango"
@@ -2031,13 +2017,13 @@ class AsAccountInvoice(models.Model):
 <i>La fecha ha sido corregida explícitamente para coincidir con la zona horaria de México requerida por el SAT.</i>
         """
         
-        self.message_post(
-            body=tz_correction_info,
-            subject="Corrección de Zona Horaria para CFDI",
-            message_type='comment',
-            subtype_xmlid='mail.mt_note',
-            body_is_html=True
-        )
+        # self.message_post(
+        #     body=tz_correction_info,
+        #     subject="Corrección de Zona Horaria para CFDI",
+        #     message_type='comment',
+        #     subtype_xmlid='mail.mt_note',
+        #     body_is_html=True
+        # )
         
         self._as_debug_log(f"l10n_mx_edi_post_time actualizado a: {self.l10n_mx_edi_post_time}")
             
@@ -2138,16 +2124,16 @@ class AsAccountInvoice(models.Model):
         _logger.info(f"[AS_MX_INVOICE_DEBUG] Posteando datos CFDI en chatter para {self.name}")
         self._as_debug_log(f"FIN Procesamiento CFDI para factura {self.name} ({self.id})")
         
-        try:
-            self.message_post(
-                body=chatter_message,
-                subject=f"Datos CFDI Procesados para {self.name}",
-                message_type='comment',
-                subtype_xmlid='mail.mt_note',
-                body_is_html=True
-            )
-        except Exception as chatter_err:
-            _logger.error("[AS_MX_INVOICE_DEBUG] Fallo al postear datos CFDI en chatter: %s", chatter_err, exc_info=True)
+        # try:
+        #     # self.message_post(
+        #     #     body=chatter_message,
+        #     #     subject=f"Datos CFDI Procesados para {self.name}",
+        #     #     message_type='comment',
+        #     #     subtype_xmlid='mail.mt_note',
+        #     #     body_is_html=True
+        #     # )
+        # except Exception as chatter_err:
+        #     _logger.error("[AS_MX_INVOICE_DEBUG] Fallo al postear datos CFDI en chatter: %s", chatter_err, exc_info=True)
 
         _logger.info("[AS_MX_INVOICE_DEBUG] Saliendo de _l10n_mx_edi_add_invoice_cfdi_values heredado")
         # No necesitamos devolver nada explícitamente, super() ya modificó cfdi_values in-place

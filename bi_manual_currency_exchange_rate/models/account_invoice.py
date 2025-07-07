@@ -11,58 +11,58 @@ from collections import defaultdict
 class InheritProductProduct(models.Model):
     _inherit = 'product.product'
     
-    def _prepare_out_svl_vals(self, quantity, company):
-        """Prepare the values for a stock valuation layer created by a delivery.
+    # def _prepare_out_svl_vals(self, quantity, company):
+    #     """Prepare the values for a stock valuation layer created by a delivery.
 
-        :param quantity: the quantity to value, expressed in `self.uom_id`
-        :return: values to use in a call to create
-        :rtype: dict
-        """
-        self.ensure_one()
-        find_active = self._context.get('active_id')
-        find_sale_order = self.env['sale.order'].browse(find_active)
+    #     :param quantity: the quantity to value, expressed in `self.uom_id`
+    #     :return: values to use in a call to create
+    #     :rtype: dict
+    #     """
+    #     self.ensure_one()
+    #     find_active = self._context.get('active_id')
+    #     find_sale_order = self.env['sale.order'].sudo().browse(find_active)
        
-        if find_sale_order:
-            if find_sale_order.sale_manual_currency_rate_active:
-                manual_currency_rate = self.standard_price
-            else:
-                manual_currency_rate = self.standard_price
-        else:
-            manual_currency_rate = self.standard_price
+    #     if find_sale_order:
+    #         if find_sale_order.sudo().sale_manual_currency_rate_active:
+    #             manual_currency_rate = self.standard_price
+    #         else:
+    #             manual_currency_rate = self.standard_price
+    #     else:
+    #         manual_currency_rate = self.standard_price
 
         
-        # Quantity is negative for out valuation layers.
+    #     # Quantity is negative for out valuation layers.
         
-        company_id = self.env.context.get('force_company', self.env.company.id)
-        company = self.env['res.company'].browse(company_id)
-        currency = company.currency_id
-        quantity = -1 * quantity
-        vals = {
-            'product_id': self.id,
-            'value': currency.round(quantity * manual_currency_rate ),
-            'unit_cost': self.standard_price,
-            'quantity': quantity,
-        }
-        fifo_vals = self._run_fifo(abs(quantity), company)
-        vals['remaining_qty'] = fifo_vals.get('remaining_qty')
-        # In case of AVCO, fix rounding issue of standard price when needed.
-        if self.product_tmpl_id.cost_method == 'average' and not float_is_zero(self.quantity_svl, precision_rounding=self.uom_id.rounding):
-            rounding_error = currency.round(
-                (self.standard_price * self.quantity_svl - self.value_svl) * abs(quantity / self.quantity_svl)
-            )
-            if rounding_error:
-                # If it is bigger than the (smallest number of the currency * quantity) / 2,
-                # then it isn't a rounding error but a stock valuation error, we shouldn't fix it under the hood ...
-                if abs(rounding_error) <= max((abs(quantity) * currency.rounding) / 2, currency.rounding):
-                    vals['value'] += rounding_error
-                    vals['rounding_adjustment'] = '\nRounding Adjustment: %s%s %s' % (
-                        '+' if rounding_error > 0 else '',
-                        float_repr(rounding_error, precision_digits=currency.decimal_places),
-                        currency.symbol
-                    )
-        if self.product_tmpl_id.cost_method == 'fifo':
-            vals.update(fifo_vals)
-        return vals
+    #     company_id = self.env.context.get('force_company', self.env.company.id)
+    #     company = self.env['res.company'].browse(company_id)
+    #     currency = company.currency_id
+    #     quantity = -1 * quantity
+    #     vals = {
+    #         'product_id': self.id,
+    #         'value': currency.round(quantity * manual_currency_rate ),
+    #         'unit_cost': self.standard_price,
+    #         'quantity': quantity,
+    #     }
+    #     fifo_vals = self._run_fifo(abs(quantity), company)
+    #     vals['remaining_qty'] = fifo_vals.get('remaining_qty')
+    #     # In case of AVCO, fix rounding issue of standard price when needed.
+    #     if self.product_tmpl_id.cost_method == 'average' and not float_is_zero(self.quantity_svl, precision_rounding=self.uom_id.rounding):
+    #         rounding_error = currency.round(
+    #             (self.standard_price * self.quantity_svl - self.value_svl) * abs(quantity / self.quantity_svl)
+    #         )
+    #         if rounding_error:
+    #             # If it is bigger than the (smallest number of the currency * quantity) / 2,
+    #             # then it isn't a rounding error but a stock valuation error, we shouldn't fix it under the hood ...
+    #             if abs(rounding_error) <= max((abs(quantity) * currency.rounding) / 2, currency.rounding):
+    #                 vals['value'] += rounding_error
+    #                 vals['rounding_adjustment'] = '\nRounding Adjustment: %s%s %s' % (
+    #                     '+' if rounding_error > 0 else '',
+    #                     float_repr(rounding_error, precision_digits=currency.decimal_places),
+    #                     currency.symbol
+    #                 )
+    #     if self.product_tmpl_id.cost_method == 'fifo':
+    #         vals.update(fifo_vals)
+    #     return vals
 
 class stock_move(models.Model):
     _inherit = 'stock.move'

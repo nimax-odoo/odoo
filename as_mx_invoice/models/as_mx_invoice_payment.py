@@ -26,21 +26,21 @@ class AsAccountEdiFormatPayment(models.Model):
         _logger.info(f"[AS_MX_PAYMENT_DEBUG][{trace_id}] {message}")
         
         # Si se proporcionó un movimiento, registramos en su chatter
-        if move and hasattr(move, 'message_post'):
-            try:
-                # Usar una variable de contexto para prevenir recursión
-                if not self.env.context.get('skip_chatter_log'):
-                    # Evitar que se llene el chatter con logs repetitivos usando un contexto modificado
-                    ctx = dict(self.env.context, skip_chatter_log=True)
-                    move.with_context(ctx).sudo().message_post(
-                        body=f"<p><b>[CFDI Pago {trace_id}]:</b> {message}</p>",
-                        subject="CFDI Complemento de Pago",
-                        message_type='comment',
-                        subtype_xmlid='mail.mt_note',
-                        body_is_html=True
-                    )
-            except Exception as e:
-                _logger.error(f"Error al postear en chatter: {e}. Continúa el proceso.")
+        # if move and hasattr(move, 'message_post'):
+        #     try:
+        #         # Usar una variable de contexto para prevenir recursión
+        #         if not self.env.context.get('skip_chatter_log'):
+        #             # Evitar que se llene el chatter con logs repetitivos usando un contexto modificado
+        #             ctx = dict(self.env.context, skip_chatter_log=True)
+        #             move.with_context(ctx).sudo().message_post(
+        #                 body=f"<p><b>[CFDI Pago {trace_id}]:</b> {message}</p>",
+        #                 subject="CFDI Complemento de Pago",
+        #                 message_type='comment',
+        #                 subtype_xmlid='mail.mt_note',
+        #                 body_is_html=True
+        #             )
+        #     except Exception as e:
+        #         _logger.error(f"Error al postear en chatter: {e}. Continúa el proceso.")
         
     def _l10n_mx_edi_get_payment_cfdi_values(self, move):
         """
@@ -353,6 +353,32 @@ class AsAccountEdiFormatPayment(models.Model):
 class AccountPayment(models.Model):
     _inherit = 'account.payment'
 
+    sd_partner_bank_id = fields.Many2one(
+        comodel_name='res.partner.bank',
+        string="Cuenta Ordenante",
+        readonly=False,
+        store=True,
+        domain="[('id', 'in', ordenante_partner_bank_ids)]",
+    )
+    
+    ordenante_partner_bank_ids = fields.Many2many(
+        comodel_name='res.partner.bank',
+        compute='_compute_ordenante_partner_bank_ids',
+    )
+    
+    @api.depends('can_edit_wizard', 'journal_id')
+    def _compute_ordenante_partner_bank_ids(self):
+        for wizard in self:
+            batch = wizard.batches[0]
+            wizard.ordenante_partner_bank_ids = wizard._get_ordenante_partner_banks(batch, wizard.journal_id)
+
+
+    @api.model
+    def _get_ordenante_partner_banks(self, batch_result, journal):
+        company = min(batch_result['lines'].company_id, key=lambda c: len(c.sudo().parent_ids))
+        # Sending money to a bank account owned by a partner.
+        return batch_result['lines'].partner_id.bank_ids.filtered(lambda x: x.company_id.id in (False, company.id))._origin
+    
     def action_post(self):
         res = super().action_post()
         for payment in self:
