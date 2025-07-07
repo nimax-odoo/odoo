@@ -44,7 +44,7 @@ class asSaleOrderPromoWizard(models.TransientModel):
             log_msg.append(f"Total de promociones activas: {len(promos)}")
             log_msg.append("Filtros de búsqueda: [('active', '=', True), ('rule_date_to', '>', '%s')]" % hoy)
             
-            for promo in promos:
+            for promo in promos.filtered(lambda l: l.tf_balance > 0):
                 domain = safe_eval(promo.rule_products_domain)
                 log_msg.append(f"\nPromo: {promo.name} (ID: {promo.id})")
                 log_msg.append(f"Dominio de productos: {domain}")
@@ -159,11 +159,11 @@ class asSaleOrderPromoWizard(models.TransientModel):
             else:
                 log_msg.append("\n⚠️ No se encontraron promociones que coincidan con los criterios")
             
-            # Registrar toda la información en el chatter de la orden de venta
-            so_line_obj.order_id.message_post(body="<pre>" + "\n".join(log_msg) + "</pre>", 
-                                             subtype_xmlid='mail.mt_note',
-                                             message_type='comment',
-                                             body_is_html=True)
+            # # Registrar toda la información en el chatter de la orden de venta
+            # so_line_obj.order_id.message_post(body="<pre>" + "\n".join(log_msg) + "</pre>", 
+            #                                  subtype_xmlid='mail.mt_note',
+            #                                  message_type='comment',
+            #                                  body_is_html=True)
 
             # Filtro secundario para las promociones que ya pasaron el primer filtro de productos
             # Verifica las reglas de clientes, fechas y otros criterios adicionales
@@ -298,7 +298,7 @@ class as_SaleOrderPromoWizardLine(models.TransientModel):
             data_update = {
                 'price_unit': self.sh_unit_price,
                 'margin2': self.sh_margin,
-                # 'coupon_ids': [(4, self.sh_promo_id.id)]  # COMENTADO: Esto está causando el error
+                'coupon_ids': self.sh_promo_id.ids  # COMENTADO: Esto está causando el error
             }
             
             try:
