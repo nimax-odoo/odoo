@@ -26,7 +26,7 @@
 			
 			<!-- Reemplazar completamente el campo order_line -->
 			<xpath expr="//field[@name='order_line']" position="replace">
-				<field name="order_line" widget="section_and_note_one2many">
+				<field name="order_line" widget="sol_o2m" mode="list,kanban" readonly="state == 'cancel' or locked">
 					<list string="Sales Order Lines" editable="bottom">
 
 
