@@ -1162,7 +1162,7 @@ class AsAccountInvoice(models.Model):
 
         return impuestos
 
-    def get_product_lot(self, product_id):
+    def get_product_lot(self, product_id,line_id):
         """
         Propósito: Obtiene los lotes de un producto en la factura.
         Parámetros:
@@ -1170,17 +1170,24 @@ class AsAccountInvoice(models.Model):
         Retorno: String con nombres de lotes
         """
         names = ''
-        sale_order = self.env['sale.order'].search([('name', '=', self.invoice_origin)], limit=1)
-        
-        if not sale_order:
-            return names
-            
-        for pick in sale_order.picking_ids:
-            for move in pick.move_line_ids_without_package:
-                if product_id == move.product_id.id and move.lot_id.name:
-                    names += f"{move.lot_id.name}, "
+        for line in line_id.sale_line_ids:
+            lots = []
+            for move in line.move_ids:
+                for lot in move.move_line_ids.lot_id:
+                    if lot.id not in lots:
+                        lots.append(lot.id)
+                    else:
+                        lots.remove(lot.id)
+          
+            for move in self.depurar_lotes(lots):
+                names += f"{move[0].name}, "
                     
         return names
+    
+    def depurar_lotes(self,lotes):
+        lotes = self.env['stock.lot'].browse(lotes)
+        return lotes
+    
         
     def get_referencia_pedido(self):
         sale_order = self.env['sale.order'].search([('name','=',self.invoice_origin)],limit=1)

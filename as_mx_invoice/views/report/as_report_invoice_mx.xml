@@ -356,8 +356,8 @@
                                         t-att-class="'bg-200 font-weight-bold o_line_section' if line.display_type == 'line_section' else 'font-italic o_line_note' if line.display_type == 'line_note' else ''">
                                         <t  name="account_invoice_line_accountable">
                                             <td class='border' name="as_sku_numero"><span
-                                                    t-if="line.product_id.x_studio_sku_no_de_parte"
-                                                    t-field="line.product_id.x_studio_sku_no_de_parte" /></td>
+                                                    t-if="line.product_id.default_code"
+                                                    t-field="line.product_id.default_code" /></td>
                                             <td class='border' name="as_sat_code"><span
                                                     t-if="line.product_id.unspsc_code_id.code"
                                                     t-field="line.product_id.unspsc_code_id.code" /></td>
@@ -368,8 +368,8 @@
                                                     PED: <span t-esc="line.l10n_mx_edi_customs_number" />
                                                 </t>
                                                 <br />
-                                                <t t-if="o.get_product_lot(line.product_id.id)">
-                                                    <span t-esc="o.get_product_lot(line.product_id.id)" />
+                                                <t t-if="o.get_product_lot(line.product_id.id,line)">
+                                                    <span t-esc="o.get_product_lot(line.product_id.id,line)" />
 
                                                 </t>
 
@@ -521,8 +521,8 @@
                                         <td>
 
                                             <div>
-                                                <t t-set="sello" t-out="o.detalle_folio().get('sello')[-8:]" />
-                                                <img alt="Barcode" t-att-src="o.detalle_folio().get('barcode_src')"/>
+                                                <!-- <t t-set="sello" t-out="o.detalle_folio().get('sello')[-8:]" /> -->
+                                                <img alt="Barcode" t-att-src="o.detalle_folio().get('barcode_src')" width="160px" height="160px"/>
                                             </div>
 
                                         </td>

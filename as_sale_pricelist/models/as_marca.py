@@ -9,3 +9,11 @@ class as_marca(models.Model):
 
     name = fields.Char(string="Marca", tracking=True)
     active = fields.Boolean(default=True, tracking=True)    
+
+class StockMoveLine(models.Model):
+    _inherit = "stock.move.line"
+     
+    def _prepare_new_lot_vals(self):
+        vals = super()._prepare_new_lot_vals()
+        vals['company_id'] = self.company_id.id
+        return vals
