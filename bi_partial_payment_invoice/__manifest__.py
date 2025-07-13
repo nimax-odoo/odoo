@@ -31,7 +31,7 @@
     ],
     'assets': {
         'web.assets_backend': [
-            'bi_partial_payment_invoice/static/src/js/account_payment.js',
+            # 'bi_partial_payment_invoice/static/src/js/account_payment.js',
         ],
     },
     'qweb' : [],

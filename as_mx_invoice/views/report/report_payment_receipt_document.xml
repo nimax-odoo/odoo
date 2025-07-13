@@ -1,0 +1,11 @@
+<odoo>
+    <template inherit_id="account.report_payment_receipt_document" id="report_payment_receipt_document">
+        <xpath expr="//div[@name='date']" position="before">
+            <div name="date" class="row">
+                        <div class="col-6" t-if="o.tasa_cambio()">
+                            TC: <span t-esc="o.tasa_cambio()" >0.0</span>
+                        </div>
+                    </div>
+        </xpath>
+    </template>
+</odoo>

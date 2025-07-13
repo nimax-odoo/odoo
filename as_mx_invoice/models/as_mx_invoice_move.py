@@ -72,6 +72,7 @@ class AsAccountInvoice(models.Model):
         total_in_company_curr = sum(x['balance'] + x['payment_exchange_balance'] for x in pay_results['invoice_results'])
         # total_in_company_curr = self.converter_curr_mxn(total_in_company_curr)
         cambio = 1
+        is_usd = False
         if self.currency_id == company_curr:
             if self.company_id.currency_id.name == 'MXN':
                 cfdi_values['monto'] = total_in_company_curr
@@ -84,8 +85,13 @@ class AsAccountInvoice(models.Model):
             cfdi_values['monto'] = total_in_payment_curr
             if self.detectar_moneda(self.currency_id,  pay_results['invoices']):
                 cambio = 1
+                if self.currency_id.name == 'USD':
+                    is_usd = True
             else:
-                cambio = company_curr.rate
+                if self.origin_payment_id.manual_currency_rate_active:
+                    cambio = self.origin_payment_id.manual_currency_rate
+                else:
+                    cambio = company_curr.rate
             total_in_company_curr = total_in_company_curr * cambio
 
         # Exchange rate.
@@ -105,6 +111,13 @@ class AsAccountInvoice(models.Model):
             if cfdi_values['root_company'].l10n_mx_edi_pac in {'finkok', 'sw'}:
                 total_in_company_curr = company_curr.round(total_in_payment_curr * payment_rate)
 
+        if is_usd:
+            if self.origin_payment_id.manual_currency_rate_active:
+                inverse_change = self.origin_payment_id.manual_currency_rate
+            else:
+                inverse_change = company_curr.inverse_rate
+            payment_rate = float_round(inverse_change, precision_digits=cfdi_values['tipo_cambio_dp'])
+            total_in_company_curr = total_in_company_curr * payment_rate
         cfdi_values.update({
             'tipo_cambio': payment_rate,
             'monto_total_pagos': total_in_company_curr,
@@ -314,9 +327,13 @@ class AsAccountInvoice(models.Model):
                         update_tax_amount('total_traslados_base_iva8', base_amount_mxn)
                         update_tax_amount('total_traslados_impuesto_iva8', tax_amount_mxn)
                     elif check_transferred_tax_values(tax_values, '002', 'Tasa', 0.16):
-                        update_tax_amount('total_traslados_base_iva16', base_amount_mxn)
-                        update_tax_amount('total_traslados_impuesto_iva16', tax_amount_mxn)
-
+                        if is_usd:
+                            update_tax_amount('total_traslados_base_iva16', base_amount_mxn*to_mxn_rate)
+                            update_tax_amount('total_traslados_impuesto_iva16', tax_amount_mxn*to_mxn_rate)
+                        else:
+                            update_tax_amount('total_traslados_base_iva16', base_amount_mxn)
+                            update_tax_amount('total_traslados_impuesto_iva16', tax_amount_mxn)
+            
         # Rounding global tax amounts.
         for dictionary in (
             withholding_values_map,
@@ -2691,3 +2708,16 @@ class AccountPayment(models.Model):
     def button_as_manual_cfdi_sign(self):
         for payment in self:
             payment.move_id.as_action_manual_l10n_mx_edi_cfdi_try_send()
+            
+    def tasa_cambio(self):
+        for payment in self:
+            if payment.manual_currency_rate_active:
+                cambio = payment.manual_currency_rate
+            else:
+                cambio = payment.currency_id._get_conversion_rate(
+                    payment.company_currency_id, 
+                    payment.currency_id, 
+                    payment.company_id, 
+                    fields.Date.context_today(payment)
+                )
+            return cambio

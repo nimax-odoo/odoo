@@ -27,10 +27,12 @@
 			<!-- Reemplazar completamente el campo order_line -->
 			<xpath expr="//field[@name='order_line']" position="replace">
 				<field name="order_line" widget="sol_o2m" mode="list,kanban" readonly="state == 'cancel' or locked">
-					<list string="Sales Order Lines" editable="bottom">
+					<list string="Sales Order Lines"
+                                editable="bottom"
+                                limit="200"
+                                decoration-warning="state in ['draft', 'sent'] and is_product_archived">
 
-
-    <control>
+                                <control>
                                     <create name="add_product_control" string="Add a product"/>
                                     <create name="add_section_control" string="Add a section" context="{'default_display_type': 'line_section'}"/>
                                     <create name="add_note_control" string="Add a note" context="{'default_display_type': 'line_note'}"/>

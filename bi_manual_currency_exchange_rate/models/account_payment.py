@@ -5,7 +5,7 @@ from odoo import fields, models,api, _,Command
 from odoo.exceptions import UserError, ValidationError
 
 
-class account_payment(models.TransientModel):
+class account_payment_register(models.TransientModel):
     _inherit = 'account.payment.register'
 
     manual_currency_rate_active = fields.Boolean('Aplicar cambio manual')
@@ -15,118 +15,52 @@ class account_payment(models.TransientModel):
     def check_currency_id(self):
         for payment in self:
             if payment.manual_currency_rate_active:
-                if payment.currency_id == payment.company_id.currency_id:
+                company_curr = self.env['res.currency'].search([('name', '=', 'MXN')],limit=1)
+                if payment.currency_id == company_curr:
                     payment.manual_currency_rate_active = False
                     raise UserError(_('La moneda de la empresa y la moneda de pago son las mismas, no se puede agregar un tipo de cambio manual para la misma moneda.'))
-        
-     
-    @api.model
-    def default_get(self, fields_list):
-        # OVERRIDE
-        res = super().default_get(fields_list)
-        if 'line_ids' in res:
-            if self._context.get('active_model') == 'account.move':
-                    lines = self.env['account.move'].browse(self._context.get('active_ids', [])).line_ids
-            elif self._context.get('active_model') == 'account.move.line':
-                lines = self.env['account.move.line'].browse(self._context.get('active_ids', []))
-            
-            if lines:
-                res.update({
-                    'manual_currency_rate_active': lines[0].move_id.manual_currency_rate_active or False,
-                    'manual_currency_rate': lines[0].move_id.manual_currency_rate
-                })
-        return res
     
-    @api.model
-    def _create_payment_vals_from_batch(self, batch_result):
-        rec = super(account_payment, self)._create_payment_vals_from_batch(batch_result)
-        active_ids = self._context.get('active_ids') or self._context.get('active_id')
-        active_model = self._context.get('active_model')
-
-        # Check for selected invoices ids
-        if not active_ids or active_model != 'account.move':
-            return rec
-            
-        account_move = self.env['account.move'].search([('name','=',rec.get('ref'))]).ids
-        for active_id in active_ids:
-            if active_id in account_move:
-                invoices = self.env['account.move'].browse(active_id).filtered(
-                    lambda move: move.is_invoice(include_receipts=True))
-            
-                for invoice in invoices:
-                    rec.update({
-                        'manual_currency_rate_active': invoice.manual_currency_rate_active,
-                        'manual_currency_rate': invoice.manual_currency_rate
-                    })
-
-                return rec
-        return rec
-
-
-
-    @api.depends('source_amount', 'source_amount_currency', 'source_currency_id', 'company_id', 'currency_id', 'payment_date', 'manual_currency_rate','manual_currency_rate_active')
-    def _compute_amount(self):
-        for wizard in self:
-            if wizard.source_currency_id == wizard.currency_id:
-                # Same currency.
-                wizard.amount = wizard.source_amount_currency
-            else:
-                # Foreign currency on payment different than the one set on the journal entries.
-                if wizard.manual_currency_rate_active:
-                    is_inverted_rate = self.env['ir.config_parameter'].sudo().get_param("bi_manual_currency_exchange_rate.inverted_rate")
-                    if is_inverted_rate:
-                        if wizard.manual_currency_rate > 0:
-                            wizard.amount = wizard.source_amount / wizard.manual_currency_rate
-                        else:
-                            wizard.amount = 0
-                    else:
-                        wizard.amount = wizard.source_amount * wizard.manual_currency_rate
-                    # wizard.amount = wizard.source_amount * wizard.manual_currency_rate
-                else:
-                    amount_payment_currency = wizard.company_id.currency_id._convert(wizard.source_amount, wizard.currency_id, wizard.company_id, wizard.payment_date)
-                    wizard.amount = amount_payment_currency
-
-    @api.depends('amount','manual_currency_rate')
-    def _compute_payment_difference(self):
-        for payment in self:
-            if payment.currency_id == payment.company_id.currency_id:
-                # Same currency.
-                payment.payment_difference = payment.source_amount_currency - payment.amount
-                
-            else:
-                # Foreign currency on payment different than the one set on the journal entries.
-                if payment.manual_currency_rate_active:
-                    move_id = payment.line_ids.mapped('move_id')
-                    is_inverted_rate = self.env['ir.config_parameter'].sudo().get_param("bi_manual_currency_exchange_rate.inverted_rate")
-                    if is_inverted_rate:
-                        if move_id and move_id.manual_currency_rate == payment.manual_currency_rate and move_id.amount_residual == payment.amount:
-                            payment.payment_difference = payment.source_amount_currency - payment.amount
-                            
-                        else:
-                            amount_payment_currency =  payment.source_amount / payment.manual_currency_rate
-                            payment.payment_difference = amount_payment_currency - payment.amount
-                    else:
-                        amount_payment_currency =  payment.source_amount * payment.manual_currency_rate
-                        payment.payment_difference = amount_payment_currency - payment.amount
-                        
-                else:
-                    amount_payment_currency = payment.company_id.currency_id._convert(
-                        payment.source_amount,
-                        payment.currency_id,
-                        payment.company_id,
-                        payment.payment_date
-                    )
-                    payment.payment_difference = amount_payment_currency - payment.amount
-                    
-
-
     def _create_payment_vals_from_wizard(self,batch_result):
-        res = super(account_payment, self)._create_payment_vals_from_wizard(batch_result)
+        res = super(account_payment_register, self)._create_payment_vals_from_wizard(batch_result)
         if self.manual_currency_rate_active:
             res.update({'manual_currency_rate_active': self.manual_currency_rate_active, 'manual_currency_rate': self.manual_currency_rate,'check_active_currency':True})
         else: 
             res.update({'manual_currency_rate_active': False, 'manual_currency_rate': 0.0,'check_active_currency':False})
         return res
+      
+    @api.depends('source_amount', 'source_amount_currency', 'source_currency_id', 'company_id', 'currency_id', 'payment_date')
+    def _compute_amount(self):
+        for wizard in self:
+            if wizard.source_currency_id == wizard.currency_id:
+                # Same currency.
+                wizard.amount = wizard.source_amount_currency
+            elif wizard.currency_id == wizard.company_id.currency_id:
+                # Payment expressed on the company's currency.
+                wizard.amount = wizard.source_amount
+            else:
+                # Foreign currency on payment different than the one set on the journal entries.
+                if wizard.manual_currency_rate_active:
+                    amount_payment_currency = wizard.source_amount * wizard.manual_currency_rate
+                else:
+                    amount_payment_currency = wizard.company_id.currency_id._convert(wizard.source_amount, wizard.currency_id, wizard.company_id, wizard.payment_date)
+                wizard.amount = amount_payment_currency
+
+    @api.depends('amount')
+    def _compute_payment_difference(self):
+        for wizard in self:
+            if wizard.source_currency_id == wizard.currency_id:
+                # Same currency.
+                wizard.payment_difference = wizard.source_amount_currency - wizard.amount
+            elif wizard.currency_id == wizard.company_id.currency_id:
+                # Payment expressed on the company's currency.
+                wizard.payment_difference = wizard.source_amount - wizard.amount
+            else:
+                # Foreign currency on payment different than the one set on the journal entries.
+                if wizard.manual_currency_rate_active:
+                    amount_payment_currency = wizard.source_amount * wizard.manual_currency_rate
+                else:
+                    amount_payment_currency = wizard.company_id.currency_id._convert(wizard.source_amount, wizard.currency_id, wizard.company_id, wizard.payment_date)
+                wizard.payment_difference = amount_payment_currency - wizard.amount
 
 
 class AccountPayment(models.Model):
@@ -142,7 +76,8 @@ class AccountPayment(models.Model):
     def check_currency_id(self):
         for payment in self:
             if payment.manual_currency_rate_active:
-                if payment.currency_id == payment.company_id.currency_id:
+                company_curr = self.env['res.currency'].search([('name', '=', 'MXN')],limit=1)
+                if payment.currency_id == company_curr:
                     payment.manual_currency_rate_active = False
                     raise UserError(_('La moneda de la empresa y la moneda de pago son las mismas, no se puede agregar un tipo de cambio manual para la misma moneda.'))
 
@@ -222,8 +157,7 @@ class AccountPayment(models.Model):
         draft_payments = self.filtered(lambda p: p.invoice_ids and p.state == 'draft')
         for pay in draft_payments:
             payment_amount = -pay.amount if pay.payment_type == 'outbound' else pay.amount
-            pay.payment_difference = pay._compute_payment_amount(pay.invoice_ids, pay.currency_id, pay.journal_id,
-                                                                 pay.payment_date) - payment_amount
+            pay.payment_difference = pay._compute_payment_amount(pay.invoice_ids, pay.currency_id, pay.journal_id, pay.payment_date) - payment_amount
         (self - draft_payments).payment_difference = 0
 
     def _prepare_move_line_default_vals(self, write_off_line_vals=None,force_balance=None):
@@ -242,11 +176,11 @@ class AccountPayment(models.Model):
                             res['credit'] =  abs(amount_currency) * self.manual_currency_rate
                     else:
                         if res.get('debit'):
-                            res['amount_currency'] = amount_currency / self.manual_currency_rate
-                            res['debit'] = abs(amount_currency) / self.manual_currency_rate
+                            res['amount_currency'] = amount_currency 
+                            res['debit'] = abs(amount_currency) 
                         if res.get('credit'):
-                            res['amount_currency'] = amount_currency / self.manual_currency_rate
-                            res['credit'] =  abs(amount_currency) / self.manual_currency_rate
+                            res['amount_currency'] = amount_currency 
+                            res['credit'] =  abs(amount_currency) 
 
         return result
     

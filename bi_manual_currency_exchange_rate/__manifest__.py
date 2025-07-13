@@ -130,7 +130,7 @@
     'category': 'Accounting',
     "website" : "https://www.browseinfo.com/demo-request?app=bi_manual_currency_exchange_rate&version=18&edition=Community",
     "data" :[
-            # "views/res_config_inherit.xml",
+            "views/res_config_inherit.xml",
             #  "views/customer_invoice.xml",
              "views/account_payment_view.xml",
             #  "views/purchase_view.xml",
