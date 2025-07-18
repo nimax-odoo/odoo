@@ -11,14 +11,14 @@ class account_payment_register(models.TransientModel):
     manual_currency_rate_active = fields.Boolean('Aplicar cambio manual')
     manual_currency_rate = fields.Float('Tasa', digits=(12, 6))
 
-    @api.onchange('manual_currency_rate_active', 'currency_id')
-    def check_currency_id(self):
-        for payment in self:
-            if payment.manual_currency_rate_active:
-                company_curr = self.env['res.currency'].search([('name', '=', 'MXN')],limit=1)
-                if payment.currency_id == company_curr:
-                    payment.manual_currency_rate_active = False
-                    raise UserError(_('La moneda de la empresa y la moneda de pago son las mismas, no se puede agregar un tipo de cambio manual para la misma moneda.'))
+    # @api.onchange('manual_currency_rate_active', 'currency_id')
+    # def check_currency_id(self):
+    #     for payment in self:
+    #         if payment.manual_currency_rate_active:
+    #             company_curr = self.env['res.currency'].search([('name', '=', 'MXN')],limit=1)
+    #             if payment.currency_id == company_curr:
+    #                 payment.manual_currency_rate_active = False
+    #                 raise UserError(_('La moneda de la empresa y la moneda de pago son las mismas, no se puede agregar un tipo de cambio manual para la misma moneda.'))
     
     def _create_payment_vals_from_wizard(self,batch_result):
         res = super(account_payment_register, self)._create_payment_vals_from_wizard(batch_result)
@@ -72,14 +72,14 @@ class AccountPayment(models.Model):
     amount_currency = fields.Float('Amount Currency')
     check_active_currency = fields.Boolean('Check Active Currency')
 
-    @api.onchange('manual_currency_rate_active', 'currency_id')
-    def check_currency_id(self):
-        for payment in self:
-            if payment.manual_currency_rate_active:
-                company_curr = self.env['res.currency'].search([('name', '=', 'MXN')],limit=1)
-                if payment.currency_id == company_curr:
-                    payment.manual_currency_rate_active = False
-                    raise UserError(_('La moneda de la empresa y la moneda de pago son las mismas, no se puede agregar un tipo de cambio manual para la misma moneda.'))
+    # @api.onchange('manual_currency_rate_active', 'currency_id')
+    # def check_currency_id(self):
+    #     for payment in self:
+    #         if payment.manual_currency_rate_active:
+    #             company_curr = self.env['res.currency'].search([('name', '=', 'MXN')],limit=1)
+    #             if payment.currency_id == company_curr:
+    #                 payment.manual_currency_rate_active = False
+    #                 raise UserError(_('La moneda de la empresa y la moneda de pago son las mismas, no se puede agregar un tipo de cambio manual para la misma moneda.'))
 
     @api.model
     def default_get(self, default_fields):
@@ -181,7 +181,12 @@ class AccountPayment(models.Model):
                         if res.get('credit'):
                             res['amount_currency'] = amount_currency 
                             res['credit'] =  abs(amount_currency) 
-
+                else:
+                    amount_currency = res['amount_currency']
+                    if res.get('debit'):
+                        res['debit'] = abs(amount_currency) / self.manual_currency_rate
+                    if res.get('credit'):
+                        res['credit'] = abs(amount_currency) / self.manual_currency_rate
         return result
     
     def write(self,vals):

@@ -115,7 +115,7 @@ class AsAccountInvoice(models.Model):
             if self.origin_payment_id.manual_currency_rate_active:
                 inverse_change = self.origin_payment_id.manual_currency_rate
             else:
-                inverse_change = company_curr.inverse_rate
+                inverse_change = company_curr.rate
             payment_rate = float_round(inverse_change, precision_digits=cfdi_values['tipo_cambio_dp'])
             total_in_company_curr = total_in_company_curr * payment_rate
         cfdi_values.update({
