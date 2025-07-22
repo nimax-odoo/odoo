@@ -7,6 +7,7 @@ from werkzeug.urls import url_encode, url_quote_plus
 from markupsafe import escape as html_escape
 import traceback
 import time
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 import pytz
 from odoo.tools.float_utils import float_round
@@ -2714,10 +2715,30 @@ class AccountPayment(models.Model):
             if payment.manual_currency_rate_active:
                 cambio = payment.manual_currency_rate
             else:
-                cambio = payment.currency_id._get_conversion_rate(
-                    payment.company_currency_id, 
-                    payment.currency_id, 
-                    payment.company_id, 
-                    fields.Date.context_today(payment)
-                )
+                if payment.currency_id == payment.company_id.currency_id:
+                    cambio = self.compute_rate_xml()
+                else:
+                    cambio = payment.amount/payment.amount_company_currency_signed
             return cambio
+
+    def compute_rate_xml(self):
+        """
+        Extracts exchange rate from EDI XML document
+        Updated for CFDI 4.0 namespace handling
+        """
+        for payment in self:
+            rate = 1.0
+            if payment.l10n_mx_edi_payment_document_ids and payment.l10n_mx_edi_payment_document_ids[0].attachment_id:
+                try:
+                    xml_content = base64.b64decode(payment.l10n_mx_edi_payment_document_ids[0].attachment_id.datas).decode()
+                    root = ET.fromstring(xml_content)
+                    namespaces = {
+                        'cfdi': 'http://www.sat.gob.mx/cfd/4',
+                        'pago20': 'http://www.sat.gob.mx/Pagos20'
+                    }
+                    docto = root.find('.//pago20:Pago', namespaces)
+                    if docto is not None:
+                        rate = float(docto.get('TipoCambioP', '1.0'))
+                except Exception as e:
+                    rate = 1.0
+            return rate
