@@ -1023,7 +1023,7 @@ class AsAccountInvoice(models.Model):
                         
                 tf_partner_id = self.env['tf.res.partner']
                 for x in sale_order.partner_id.tf_vendor_parameter_ids:
-                    if x.category_id.id == line_sale.product_id.categ_id.id:
+                    if line_sale and x.category_id.id == line_sale.product_id.categ_id.id:
                         tf_partner_id = x
                         break
                         

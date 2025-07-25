@@ -878,7 +878,8 @@ class AsStockAPI(http.Controller):
             self._as_log_response('/nimax/stock_with_price', 200, response_data, user)
         
         # Construir dominio de búsqueda
-        domain = [('quantity', '>', 0)]  # Solo productos con stock positivo
+        # domain = [('quantity', '>', 0)]  # Solo productos con stock positivo
+        domain = []  # Solo productos con stock positivo
         
         # Filtrar por código de producto si se proporciona
         if default_code:
@@ -959,6 +960,7 @@ class AsStockAPI(http.Controller):
                     'product_id', 
                     'location_id', 
                     'quantity', 
+                    'lot_id', 
                     'reserved_quantity',
                     'write_date'
                 ],
@@ -979,6 +981,7 @@ class AsStockAPI(http.Controller):
                 location_name = quant['location_id'][1]
                 product_code = product.default_code or ''
                 product_name = quant['product_id'][1]
+                product_info_id = quant['product_id'][0]
                 key = f"{location_name}_{product_code}"
                 
                 # Calcular el precio NIMAX
@@ -1033,6 +1036,7 @@ class AsStockAPI(http.Controller):
                         'location': location_name,
                         'product_code': product_code,
                         'product_name': product_name,
+                        'product_id': product_info_id,
                         'stock': available_qty,
                         'reserved_quantity': quant['reserved_quantity'],
                         'nimax_price_usd': round(nimax_price_usd, 2),
