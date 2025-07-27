@@ -35,7 +35,80 @@ class AsAccountInvoice(models.Model):
         for inv in self:
             inv.l10n_mx_edi_cfdi_try_sat()
         
+    def _l10n_mx_edi_cfdi_payment_get_reconciled_invoice_values(self):
+        """ Compute the amounts to send to the PAC from the current payments.
 
+        :return: A mapping payment => dictionary containing:
+            * invoices:         The reconciled invoices.
+            * invoice_results:  A list of payment values, see '_l10n_mx_edi_cfdi_invoice_get_reconciled_payments_values'.
+        """
+        # Find all invoices linked to the current payments.
+        results = {}
+        payments = self.filtered(lambda x: x._l10n_mx_edi_is_cfdi_payment() and x.l10n_mx_edi_cfdi_state != 'cancel')
+        all_invoices = self.env['account.move']
+        exchange_move_map = {}
+        exchange_move_balances = defaultdict(lambda: defaultdict(lambda: 0.0))
+        for payment in payments:
+            # Only the fully reconciled payments need to be sent.
+            pay_rec_lines = payment.line_ids\
+                .filtered(lambda line: line.account_type in ('asset_receivable', 'liability_payable'))
+            if any(not x.reconciled for x in pay_rec_lines):
+                continue
+
+            # The payments must only be sent when all reconciled invoices are sent.
+            skip = False
+            invoices = self.env['account.move']
+            for field in ('debit', 'credit'):
+                for partial in pay_rec_lines[f'matched_{field}_ids'].sorted(lambda x: not x.exchange_move_id):
+                    counterpart_line = partial[f'{field}_move_id']
+                    counterpart_move = counterpart_line.move_id
+                    if counterpart_move.journal_id.type == 'sale':
+                        if counterpart_move in exchange_move_map:
+                            exchange_move_balances[payment][exchange_move_map[counterpart_move]] += partial.amount
+                            continue
+
+                        if not counterpart_move.is_invoice() or not counterpart_move.l10n_mx_edi_cfdi_state:
+                            skip = True
+                            break
+
+                        if partial.exchange_move_id:
+                            exchange_move_map[partial.exchange_move_id] = counterpart_move
+
+                        invoices |= counterpart_move
+
+            if skip:
+                continue
+
+            all_invoices |= invoices
+
+            reconciled_amls = pay_rec_lines.matched_debit_ids.debit_move_id \
+                              + pay_rec_lines.matched_credit_ids.credit_move_id
+            invoices = reconciled_amls.move_id.filtered(lambda x: x.l10n_mx_edi_is_cfdi_needed and x.is_invoice())
+            if any(
+                not invoice.l10n_mx_edi_cfdi_state
+                for invoice in invoices
+            ):
+                continue
+
+            all_invoices |= invoices
+            results[payment] = {
+                'invoices': invoices,
+                'invoice_results': [],
+            }
+
+        # Compute the amounts to send for each invoice.
+        reconciled_invoice_values = all_invoices._l10n_mx_edi_cfdi_invoice_get_reconciled_payments_values()
+        for invoice, pay_results_list in reconciled_invoice_values.items():
+            for pay_results in pay_results_list:
+                payment = pay_results['payment']
+                if payment not in results:
+                    continue
+
+                pay_results['payment_exchange_balance'] = exchange_move_balances[payment][invoice]
+
+                results[payment]['invoice_results'].append(pay_results)
+
+        return results
   
     def detectar_moneda(self,moneda, invoices):
         igual = True
