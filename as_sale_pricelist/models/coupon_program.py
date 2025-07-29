@@ -6,62 +6,63 @@ _logger = logging.getLogger(__name__)
 
 class CouponProgram(models.Model):
     _name = 'coupon.program'
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'image.mixin']
     _description = 'Coupon Program'
     _order = "sequence, id"
 
-    active = fields.Boolean('Active', default=True)
-    name = fields.Char('Coupon Program', required=True)
-    sequence = fields.Integer(copy=False)
-    rule_date_from = fields.Datetime('Start Date')
-    rule_date_to = fields.Datetime('End Date')
-    rule_partners_domain = fields.Char(string='Customer', default='[]')
-    rule_products_domain = fields.Char(string='Products', default='[]')
-    rule_min_quantity = fields.Integer(string='Minimum Quantity')
-    rule_minimum_amount = fields.Float('Minimum Purchase Amount')
+    active = fields.Boolean('Active', default=True,tracking=True)
+    name = fields.Char('Coupon Program', required=True,tracking=True)
+    sequence = fields.Integer(copy=False,tracking=True)
+    rule_date_from = fields.Datetime('Start Date',tracking=True)
+    rule_date_to = fields.Datetime('End Date',tracking=True)
+    rule_partners_domain = fields.Char(string='Customer', default='[]',tracking=True)
+    rule_products_domain = fields.Char(string='Products', default='[]',tracking=True)
+    rule_min_quantity = fields.Integer(string='Minimum Quantity',tracking=True)
+    rule_minimum_amount = fields.Float('Minimum Purchase Amount',tracking=True)
     rule_minimum_amount_tax_inclusion = fields.Selection([
         ('tax_included', 'Tax Included'),
         ('tax_excluded', 'Tax Excluded')
-    ], string="Tax Inclusion")
-    currency_id = fields.Many2one('res.currency', string='Currency')
-    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
+    ], string="Tax Inclusion",tracking=True)
+    currency_id = fields.Many2one('res.currency', string='Currency',tracking=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company,tracking=True)
     discount_type = fields.Selection([
         ('percentage', 'Percentage'),
         ('fixed_amount', 'Fixed Amount')
-    ], default='percentage', string='Discount Type', required=True)
-    discount_percentage = fields.Float('Discount')
-    discount_fixed_amount = fields.Float('Fixed Amount Discount')
+    ], default='percentage', string='Discount Type', required=True,tracking=True)
+    discount_percentage = fields.Float('Discount',tracking=True)
+    discount_fixed_amount = fields.Float('Fixed Amount Discount',tracking=True)
     discount_apply_on = fields.Selection([
         ('on_order', 'On Order'),
         ('specific_products', 'Specific Products')
-    ], default='on_order', string='Apply On')
-    discount_specific_product_ids = fields.Many2many('product.product', string='Products')
-    discount_max_amount = fields.Float('Maximum Amount')
-    promo_code = fields.Char('Promotion Code')
+    ], default='on_order', string='Apply On',tracking=True)
+    discount_specific_product_ids = fields.Many2many('product.product', string='Products',tracking=True)
+    discount_max_amount = fields.Float('Maximum Amount',tracking=True)
+    promo_code = fields.Char('Promotion Code',tracking=True)
     promo_code_usage = fields.Selection([
         ('no_code_needed', 'Automatically Applied'),
         ('code_needed', 'Use a code')
-    ], default='no_code_needed')
+    ], default='no_code_needed',tracking=True)
     program_type = fields.Selection([
         ('promotion_program', 'Promotional Program'),
         ('coupon_program', 'Coupon Program')
-    ], default='promotion_program', required=True)
-    maximum_use_number = fields.Integer('Maximum Use Number')
-    validity_duration = fields.Integer('Validity Duration (days)')
-    reward_description = fields.Text('Reward Description')
+    ], default='promotion_program', required=True,tracking=True)
+    maximum_use_number = fields.Integer('Maximum Use Number',tracking=True)
+    validity_duration = fields.Integer('Validity Duration (days)',tracking=True)
+    reward_description = fields.Text('Reward Description',tracking=True)
     reward_type = fields.Selection([
         ('discount', 'Discount'),
         ('product', 'Free Product')
-    ], default='discount', string='Reward Type', required=True)
-    reward_product_id = fields.Many2one('product.product', string='Free Product')
-    reward_product_quantity = fields.Integer('Quantity')
-    total_order_count = fields.Integer(compute='_compute_total_order_count', string='Total Order Count')
-    order_count = fields.Integer(compute='_compute_order_count', string='Order Count')
-    coupon_ids = fields.One2many('coupon.coupon', 'program_id', string='Cupones')
-    coupon_count = fields.Integer(compute='_compute_coupon_count', string='Cupones')
+    ], default='discount', string='Reward Type', required=True,tracking=True)
+    reward_product_id = fields.Many2one('product.product', string='Free Product',tracking=True)
+    reward_product_quantity = fields.Integer('Quantity',tracking=True)
+    total_order_count = fields.Integer(compute='_compute_total_order_count', string='Total Order Count',tracking=True)
+    order_count = fields.Integer(compute='_compute_order_count', string='Order Count',tracking=True)
+    coupon_ids = fields.One2many('coupon.coupon', 'program_id', string='Cupones',tracking=True)
+    coupon_count = fields.Integer(compute='_compute_coupon_count', string='Cupones',tracking=True)
     
     # Campo añadido para solucionar el error
     expected_earning = fields.Float(string='Expected Earning (%)', default=0.0,
-                                   help="Expected earning percentage for this pricelist")
+                                   help="Expected earning percentage for this pricelist",tracking=True)
     
     # Campos adicionales para los diferentes tipos de promociones
     as_type = fields.Selection([
@@ -70,16 +71,16 @@ class CouponProgram(models.Model):
         ('DEMO', 'Demo'),
         ('ESPECIAL', 'Precio Especial'),
         ('FABRICANTE', 'Rebate')
-    ], string='Tipo de Promoción', default='DEAL')
+    ], string='Tipo de Promoción', default='DEAL',tracking=True)
     
     # Campos específicos para diferentes tipos de promociones
-    PRICE_UNIT_USD = fields.Float('Precio Unitario USD', help='Para promociones tipo ESPECIAL')
-    COST_NIMAX_USD = fields.Float('Costo NIMAX USD', help='Para promociones tipo ESPECIAL')
-    DISCOUNT_AMOUNT_USD = fields.Float('Monto Descuento USD', help='Para promociones tipo FABRICANTE')
-    COSTO = fields.Float('Costo (%)', help='Porcentaje de costo para promociones tipo DEMO')
-    tf_gifted_qty = fields.Integer('Cantidad Regalada', default=0)
-    tf_max_gifted_qty = fields.Integer('Cantidad Máxima Regalada', default=999999)
-    tf_balance = fields.Float('Balance', compute='_compute_balance')
+    PRICE_UNIT_USD = fields.Float('Precio Unitario USD', help='Para promociones tipo ESPECIAL',tracking=True)
+    COST_NIMAX_USD = fields.Float('Costo NIMAX USD', help='Para promociones tipo ESPECIAL',tracking=True)
+    DISCOUNT_AMOUNT_USD = fields.Float('Monto Descuento USD', help='Para promociones tipo FABRICANTE',tracking=True)
+    COSTO = fields.Float('Costo (%)', help='Porcentaje de costo para promociones tipo DEMO',tracking=True)
+    tf_gifted_qty = fields.Integer('Cantidad Regalada', default=0,tracking=True)
+    tf_max_gifted_qty = fields.Integer('Cantidad Máxima Regalada', default=999999,tracking=True)
+    tf_balance = fields.Float('Balance', compute='_compute_balance',tracking=True)
 
     def _compute_balance(self):
         for rec in self:
