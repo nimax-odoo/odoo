@@ -3,7 +3,7 @@
         <xpath expr="//div[@name='date']" position="before">
             <div name="date" class="row">
                         <div class="col-6" t-if="o.tasa_cambio()">
-                            TC: <span t-esc="'{:.2f}'.format(o.tasa_cambio())" >0.0</span>
+                            TC: <span t-esc="'{:.6f}'.format(o.tasa_cambio())" >0.0</span>
                         </div>
                     </div>
         </xpath>

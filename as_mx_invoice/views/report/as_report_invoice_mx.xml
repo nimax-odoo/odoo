@@ -329,6 +329,9 @@
                             .class {
                                 text-align: left:
                             }
+                            thead {
+    display: table-row-group !important; /* ya no se repite */
+}
                         </style>
                         <table class="table table-borderless o_main_table" name="invoice_line_table">
                             <thead class="header_table">
