@@ -86,11 +86,28 @@ class LotsAttachment(models.TransientModel):
             for record in ws.iter_rows(min_row=2, values_only=True):
                 lot_name, product_name, quantity = record
                 if product_name == current_move_id.product_id.display_name:
-                    vals_list.append((0, 0, {
-                        'lot_name': lot_name,
-                        'quantity': min(quantity, current_move_id.product_qty),
-                        'move_id': current_move_id.id,
-                    }))
+                    if current_move_id.picking_type_id.code == 'outgoing':
+                        lote= self.env['stock.lot'].sudo().search([('name','=',lot_name)])
+                        if not lote:
+                            raise UserError(_('El Lote/Serie "%s" no existe en el sistema.') % lot_name)
+                        lote_stock= self.env['stock.quant'].search([
+                                                ('lot_id', '=', lote.id),
+                                                ('location_id', '=', current_move_id.location_id.id),
+                                                ('quantity', '>', 0),
+                                            ], limit=1)
+                        if not lote_stock:
+                            raise UserError(_('El Lote/Serie "%s" No tiene stock en esta ubicación') % lot_name)
+                        vals_list.append((0, 0, {
+                            'lot_id': lote.id,
+                            'quantity': min(quantity, current_move_id.product_qty),
+                            'move_id': current_move_id.id,
+                        }))
+                    else:
+                        vals_list.append((0, 0, {
+                            'lot_name': lot_name,
+                            'quantity': min(quantity, current_move_id.product_qty),
+                            'move_id': current_move_id.id,
+                        }))
             # Write move line values
             current_move_id.move_line_ids.unlink()
             current_move_id.write({'move_line_ids': vals_list})

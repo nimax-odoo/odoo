@@ -17,7 +17,18 @@
             <field name="model">tf.res.partner</field>
             <field name="arch" type="xml">
                 <form string="Vendor Parameter">
+                <header>
+                    <button name="process_file_contact" type="object" string="Procesar Archivo" class="oe_highlight" />
+                    <button name="action_download_sample" type="object" string="Descargar Plantilla" class="oe_highlight" />
+                </header>
                     <sheet>
+                    <div name="button_box" class="oe_button_box">
+                            <button type="object" name="action_open_orders"
+                              class="oe_stat_button" icon="fa-book">
+                                <field name="orders_count" string="Clientes" widget="statinfo"/>
+                            </button>
+                         
+                        </div>
                         <group>
                             <group id="header_left_group">
                                 <field name="name"/>
@@ -43,7 +54,14 @@
                             <group id="header_left_group">
                                 <field name="fulfillment_rebate"/>
                             </group>
+                            <group id="header_left_group">
+                                <field name="attachment"  widget="binary"
+                                            filename="attachment_name"/>
+                                <field name="attachment_name" invisible="1"/>
+                            </group>
                         </group>
+                                <field name="partner_ids"/>
+                        
                     </sheet>
                 </form>
             </field>
