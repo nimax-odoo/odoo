@@ -359,7 +359,7 @@ class account_invoice_line(models.Model):
         available_residual_per_currency = {}
         
         if not has_zero_residual:
-            if aml.move_id.manual_currency_rate_active and aml.move_id.manual_currency_rate:
+            if aml.move_id.manual_currency_rate_active and aml.move_id.manual_currency_rate and company_currency != currency:
                 new_rate = aml.move_id.manual_currency_rate or False
             else:
                 new_rate = 1
