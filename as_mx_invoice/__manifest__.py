@@ -29,6 +29,8 @@ Este módulo extiende la funcionalidad de facturación electrónica mexicana de 
         'views/report/as_report_invoice_mx.xml',
         'views/report/report_payment_receipt_document.xml',
         'views/account_payment_view.xml',
+        'data/payment20.xml',
+    
     ],
     'installable': True,
     'application': False,

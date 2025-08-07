@@ -10,6 +10,7 @@ import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 import pytz
+from odoo.tools.float_utils import float_is_zero, float_round
 from odoo.tools.float_utils import float_round
 _logger = logging.getLogger(__name__)
 from odoo.addons.l10n_mx_edi.models.l10n_mx_edi_document import (
@@ -260,7 +261,16 @@ class AsAccountInvoice(models.Model):
             else:
                 # Both are expressed in different currencies.
                 computed_rate = calculate_rate(invoice_values['invoice_amount_currency'], invoice_values['payment_amount_currency'])
-
+            currency_precision = company_curr.l10n_mx_edi_decimal_places
+            if self.currency_id == company_curr:
+                if self.company_id.currency_id.name != 'MXN':
+                    currency_precision = 6
+            def format_float_custom(amount, precision=currency_precision):
+                if amount is None or amount is False:
+                    return None
+                # Avoid things like -0.0, see: https://stackoverflow.com/a/11010869
+                amount = float_round(amount, precision_digits=precision)
+                return '%.*f' % (precision, amount if not float_is_zero(amount, precision_digits=precision) else 0.0)
             invoice_values_list.append({
                 **inv_cfdi_values,
                 'id_documento': invoice.l10n_mx_edi_cfdi_uuid,
@@ -270,9 +280,10 @@ class AsAccountInvoice(models.Model):
                 'imp_pagado': invoice_values['reconciled_amount'],
                 'imp_saldo_ant': invoice_values['amount_residual_before'],
                 'imp_saldo_insoluto': invoice_values['amount_residual_after'],
+                'format_float_custom': format_float_custom,
             })
         cfdi_values['docto_relationado_list'] = invoice_values_list
-
+        
         # Customer.
         rfcs = set(x['receptor']['rfc'] for x in invoice_values_list)
         if len(rfcs) > 1:
@@ -330,7 +341,7 @@ class AsAccountInvoice(models.Model):
                 and tax_values['tipo_factor'] == tax_class
                 and company_curr.compare_amounts(tax_values['tasa_o_cuota'] or 0.0, amount) == 0
             )
-
+        
         withholding_values_map = defaultdict(lambda: {'importe': 0.0})
         transferred_values_map = defaultdict(lambda: {'base': 0.0, 'importe': 0.0})
         local_retenciones_values_map = defaultdict(lambda: {'base': 0.0, 'importe': 0.0})
@@ -380,10 +391,14 @@ class AsAccountInvoice(models.Model):
                             base_amount_mxn = tax_values['base'] * to_mxn_rate
                             tax_amount_mxn = tax_amount * to_mxn_rate
                         else:
-                            result_dict[tax_key]['base'] += tax_values['base'] / inv_rate
-                            result_dict[tax_key]['importe'] += tax_amount / inv_rate
-                            base_amount_mxn = tax_values['base'] * to_mxn_rate
-                            tax_amount_mxn = tax_amount * to_mxn_rate
+                            montos = self.extraer_montos_decimales(tax_values)
+                            tax_values['base'] = montos[0]
+                            result_dict[tax_key]['base'] += montos[0] / inv_rate
+                            result_dict[tax_key]['importe'] += montos[1] / inv_rate
+                            base_amount_mxn = montos[0] * to_mxn_rate
+                            tax_amount_mxn = montos[1] * to_mxn_rate
+                            tax_values['importe'] = montos[1]
+                            
                             
                     else:
                         result_dict[tax_key]['base'] += tax_values['base'] / inv_rate
@@ -457,6 +472,13 @@ class AsAccountInvoice(models.Model):
                 if tax_values['tipo_factor'] == 'Exento':
                     tax_values['importe'] = None
 
+
+        
+    def extraer_montos_decimales(self,tax_values):
+        total = tax_values['base']+tax_values['importe']
+        base = round(total/(1+tax_values['tasa_o_cuota']),6)
+        impuesto = round(base*tax_values['tasa_o_cuota'],6)
+        return (base,impuesto)
 
     # def _l10n_mx_edi_add_payment_cfdi_values(self, cfdi_values, pay_results):
     #     """ Prepare the values to render the payment cfdi.
