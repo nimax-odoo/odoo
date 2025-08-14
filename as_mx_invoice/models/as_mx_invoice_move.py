@@ -348,7 +348,7 @@ class AsAccountInvoice(models.Model):
         local_traslados_values_map = defaultdict(lambda: {'base': 0.0, 'importe': 0.0})
         pay_rate = cfdi_values['tipo_cambio'] or 1.0
         for cfdi_inv_values in invoice_values_list:
-            inv_rate = cfdi_inv_values.pop('inv_rate', False) or 1.0
+            inv_rate = round(cfdi_inv_values.pop('inv_rate', False) or 1.0,10)
             to_mxn_rate = pay_rate / inv_rate
             for result_dict, key in (
                 (withholding_values_map, 'retenciones_list'),
@@ -393,10 +393,10 @@ class AsAccountInvoice(models.Model):
                         else:
                             montos = self.extraer_montos_decimales(tax_values)
                             tax_values['base'] = montos[0]
-                            result_dict[tax_key]['base'] += montos[0] / inv_rate
-                            result_dict[tax_key]['importe'] += montos[1] / inv_rate
-                            base_amount_mxn = montos[0] * to_mxn_rate
-                            tax_amount_mxn = montos[1] * to_mxn_rate
+                            result_dict[tax_key]['base'] += round(montos[0] / inv_rate,6)
+                            result_dict[tax_key]['importe'] += round(montos[1] / inv_rate,6)
+                            base_amount_mxn = round(montos[0] * to_mxn_rate,6)
+                            tax_amount_mxn = round(montos[1] * to_mxn_rate,6)
                             tax_values['importe'] = montos[1]
                             
                             
