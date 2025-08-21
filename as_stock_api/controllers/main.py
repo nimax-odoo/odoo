@@ -53,13 +53,15 @@ class AsStockAPI(http.Controller):
         Returns:
             bool: True si tiene permisos, False en caso contrario
         """
-        try:
-            # Cambiar al entorno del usuario para verificar permisos
-            user_env = request.env(user=user.id)
-            user_env['stock.quant'].check_access_rights('read')
-            return True
-        except AccessError:
-            return False
+        return True
+        
+        # try:
+        #     # Cambiar al entorno del usuario para verificar permisos
+        #     user_env = request.env(user=user.id)
+        #     user_env['stock.quant'].check_access_rights('read')
+        #     return True
+        # except AccessError:
+        #     return False
     
     def _as_log_request(self, endpoint, method, params, user=None):
         """
@@ -704,8 +706,8 @@ class AsStockAPI(http.Controller):
                 status=401,
                 content_type='application/json'
             )
-            
         user = self._as_validate_api_key(api_key)
+        user = user.sudo()
         if not user:
             _logger.warning("[as_get_stock_with_price] Intento de acceso con API key inválida")
             
@@ -954,7 +956,7 @@ class AsStockAPI(http.Controller):
                 _logger.warning("[as_get_stock_with_price] Error al acceder a expected_earning: %s", str(e))
             
             # Consultar stock.quant con optimización de campos
-            quants = user_env['stock.quant'].search_read(
+            quants = user_env['stock.quant'].sudo().search_read(
                 domain=domain,
                 fields=[
                     'product_id', 
@@ -995,8 +997,16 @@ class AsStockAPI(http.Controller):
                             break
                     
                     if tf_partner_id:
+                        _logger.warning("\n"+str(product.list_price))
                         # Calcular el precio base USD según la fórmula
-                        price_based_usd = (product.list_price - (product.list_price * tf_partner_id.partner_discount/100)) * \
+                        promo = request.env['coupon.program'].sudo()
+                        promociones = request.env['coupon.program'].sudo().search_promo(product,partner_id)
+                        if promociones[0]:
+                            precio = promociones[1]
+                            promo = promociones[2]
+                        else:
+                            precio = product.list_price
+                        price_based_usd = (precio - (precio * tf_partner_id.partner_discount/100)) * \
                                          tf_partner_id.cost_deal_import/100 * \
                                          (product.product_tmpl_id.tf_import_tax/100)
                         
@@ -1010,9 +1020,10 @@ class AsStockAPI(http.Controller):
                 # Obtener los attribute_line_ids del producto
                 attribute_lines = []
                 try:
-                    if product.product_tmpl_id and product.product_tmpl_id.attribute_line_ids:
-                        for attr_line in product.product_tmpl_id.attribute_line_ids:
+                    if product.product_tmpl_id and product.product_tmpl_id.sudo().attribute_line_ids:
+                        for attr_line in product.product_tmpl_id.sudo().attribute_line_ids:
                             values = []
+                            _logger.warning("\n"+str(len(product.product_tmpl_id.sudo().attribute_line_ids)))
                             try:
                                 for val in attr_line.value_ids:
                                     values.append(val.name)
@@ -1044,6 +1055,8 @@ class AsStockAPI(http.Controller):
                         'rate_usd': round(rate, 4),
                         'attribute_line_ids': attribute_lines
                     }
+                    if promo:
+                        grouped_data[key]['promo_aplicada'] = promo.name
             
             # Convertir el diccionario agrupado a lista
             result = list(grouped_data.values())

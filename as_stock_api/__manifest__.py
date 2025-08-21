@@ -8,10 +8,12 @@
     "depends": [
         "base",
         "stock",
+        "as_sale_pricelist",
     ],
     "data": [
         'security/ir.model.access.csv',
         "views/as_res_users_views.xml",
+        "views/custom_program.xml",
     ],
     'installable': True,
     'description': "API REST para consulta de stock en tiempo real",

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_product_template_add_inherit" model="ir.ui.view">
+            <field name="name">view.product.template.add.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='group_standard_price']/label[2]" position="before">
+                    <label for="list_price_mx" />
+                    <div>
+                        <field name="list_price_mx" class="oe_inline" />
+
+                    </div>
+                    <!-- <field name="list_price_mx" /> -->
+                    <!-- <field name="sd_update_price_mx" /> -->
+                </xpath>
+
+
+            </field>
+        </record>
+        <record id="view_product_product_add_inherit" model="ir.ui.view">
+            <field name="name">view.product.product.add.inherit</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='group_standard_price']/label[2]" position="before">
+                    <label for="list_price_mx" />
+                    <div>
+                        <field name="list_price_mx" class="oe_inline" />
+
+                    </div>
+                    <!-- <field name="list_price_mx" /> -->
+                    <!-- <field name="sd_update_price_mx" /> -->
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

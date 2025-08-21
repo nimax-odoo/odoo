@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="bi_view_coupon_program_add_inherit" model="ir.ui.view">
+            <field name="name">view.coupon.program.field.add.inherit</field>
+            <field name="model">coupon.program</field>
+            <field name="inherit_id" ref="as_sale_pricelist.view_coupon_program_form"/>
+            <field name="arch" type="xml">
+            	<xpath expr="//field[@name='promo_code_usage']" position="after">
+                    <field name="sd_apply_toprunner_ecommerce" />
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_update_price_mxn" model="ir.cron">
+        <field name="name">NIMAX: Actualizar precios de MXN a USD</field>
+        <field name="interval_number">12</field>
+        <field name="interval_type">hours</field>
+        <field name="model_id" ref="model_product_category"/>
+        <field name="code">model._cron_update_product_mx()</field>
+        <field name="state">code</field>
+    </record>
+
+
+</odoo>
