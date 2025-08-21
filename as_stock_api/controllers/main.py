@@ -974,7 +974,7 @@ class AsStockAPI(http.Controller):
             
             # Diccionario para agrupar por ubicación y código de producto
             grouped_data = {}
-            
+            promos_disponibles = request.env['coupon.program'].sudo().search_promo_disponibles()
             for quant in quants:
                 product = request.env['product.product'].sudo().browse(quant['product_id'][0])
                 available_qty = quant['quantity'] - quant['reserved_quantity']
@@ -995,23 +995,22 @@ class AsStockAPI(http.Controller):
                         if x.category_id.id == product.categ_id.id:
                             tf_partner_id = x
                             break
-                    
                     if tf_partner_id:
-                        _logger.warning("\n"+str(product.list_price))
                         # Calcular el precio base USD según la fórmula
                         promo = request.env['coupon.program'].sudo()
-                        promociones = request.env['coupon.program'].sudo().search_promo(product,partner_id)
+                        promociones = request.env['coupon.program'].sudo().search_promo(product,partner_id,promos_disponibles)
                         if promociones[0]:
                             precio = promociones[1]
                             promo = promociones[2]
+                            nimax_price_usd = precio
                         else:
                             precio = product.list_price
-                        price_based_usd = (precio - (precio * tf_partner_id.partner_discount/100)) * \
-                                         tf_partner_id.cost_deal_import/100 * \
-                                         (product.product_tmpl_id.tf_import_tax/100)
-                        
-                        # Calcular el precio NIMAX
-                        nimax_price_usd = price_based_usd / (1 - expected_earning/100) if expected_earning < 100 else 0
+                            price_based_usd = (precio - (precio * tf_partner_id.partner_discount/100)) * \
+                                            tf_partner_id.cost_deal_import/100 * \
+                                            (product.product_tmpl_id.tf_import_tax/100)
+                            
+                            # Calcular el precio NIMAX
+                            nimax_price_usd = price_based_usd / (1 - expected_earning/100) if expected_earning < 100 else 0
                 except Exception as e:
                     _logger.error("[as_get_stock_with_price] Error al calcular precio para producto %s: %s", 
                                  product_code, str(e))
@@ -1023,7 +1022,6 @@ class AsStockAPI(http.Controller):
                     if product.product_tmpl_id and product.product_tmpl_id.sudo().attribute_line_ids:
                         for attr_line in product.product_tmpl_id.sudo().attribute_line_ids:
                             values = []
-                            _logger.warning("\n"+str(len(product.product_tmpl_id.sudo().attribute_line_ids)))
                             try:
                                 for val in attr_line.value_ids:
                                     values.append(val.name)
@@ -1055,8 +1053,6 @@ class AsStockAPI(http.Controller):
                         'rate_usd': round(rate, 4),
                         'attribute_line_ids': attribute_lines
                     }
-                    if promo:
-                        grouped_data[key]['promo_aplicada'] = promo.name
             
             # Convertir el diccionario agrupado a lista
             result = list(grouped_data.values())
