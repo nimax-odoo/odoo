@@ -182,6 +182,7 @@ class AsStockAPI(http.Controller):
             )
             
         user = self._as_validate_api_key(api_key)
+        user = user.sudo()
         if not user:
             _logger.warning("[as_get_stock] Intento de acceso con API key inválida")
             
@@ -290,7 +291,7 @@ class AsStockAPI(http.Controller):
             user_env = request.env(user=user.id)
             
             # Consultar stock.quant con optimización de campos
-            quants = user_env['stock.quant'].search_read(
+            quants = user_env['stock.quant'].sudo().search_read(
                 domain=domain,
                 fields=[
                     'product_id', 
