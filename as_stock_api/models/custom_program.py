@@ -17,16 +17,22 @@ class CouponProgram(models.Model):
 
     def search_promo(self,product,partner,promos_disponibles):
         precio_usd = 0.0
-        cumple = False
         promo = self.env['coupon.program']
         for promo in promos_disponibles:
-            if product.id in promo['productos'] or partner in promo['clientes']:
+            cumple_producto = True
+            cumple_cliente = True
+            cumple = False
+            if promo['productos'] and product.id not in promo['productos']: 
+                cumple_producto = False
+            if promo['clientes'] and partner not in promo['clientes']:
+                cumple_cliente = False
+            if cumple_producto and cumple_cliente:
                 cumple = True
                 precio_usd = promo['price_unit_usd']
                 promo_obj = promo['promo']
                 return cumple, precio_usd, promo_obj
               
-        return cumple,precio_usd,promo   
+        return cumple,precio_usd,promo  
     
     def search_promo_disponibles(self):
         promos = []
