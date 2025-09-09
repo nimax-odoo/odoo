@@ -2,7 +2,7 @@
 # Part of BrowseInfo. See LICENSE file for full copyright and licensing details.
 {
     "name" : "Cambios en renovación de token l10n_cl_edi",
-    "version" : "18.0.0.1",
+    "version" : "1.0.1",
     "depends" : ['base','l10n_cl_edi','l10n_cl_edi_factoring'],
     "author": "Smartdoo",
     "summary": "Renovación de token para factura Chile Ajustes",
