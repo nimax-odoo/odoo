@@ -24,7 +24,11 @@ class CouponProgram(models.Model):
             cumple = False
             if promo['productos'] and product.id not in promo['productos']: 
                 cumple_producto = False
+            if not promo['productos']:
+                cumple_producto = False
             if promo['clientes'] and partner not in promo['clientes']:
+                cumple_cliente = False
+            if not promo['clientes']:
                 cumple_cliente = False
             if cumple_producto and cumple_cliente:
                 cumple = True
