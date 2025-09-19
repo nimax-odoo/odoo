@@ -3,7 +3,7 @@
 {
     "name" : "Cambios en el Modulo E-Commerce",
     "version" : "18.0.0.1",
-    "depends" : ['base','account','sale_management','sale','website_sale'],
+    "depends" : ['base','account','sale_management','sale','website_sale','website_sale_stock','bi_manual_currency_exchange_rate','as_sale_pricelist',],
     "author": "Smartdoo",
     "summary": "Cambios en modulo comercial de ventas para NIMAX",
     "description": """
@@ -12,8 +12,11 @@
     'category': 'Sales',
     "website" : "http://www.smartdoosolutions.com",
     "data" :[
-
-             "views/custom_program.xml",
+            'views/website_product_template.xml',
+            "views/custom_program.xml",
+            'views/res_users_views.xml',
+            "data/cron.xml",
+            "data/mail_template.xml",
         ],
     'qweb':[],
     "auto_install": False,

@@ -1,0 +1,96 @@
+<odoo>
+    <!--Filters-->
+    <template id="snippet_options_inherit" inherit_id="website_sale.snippet_options" name="e-commerce snippet options">
+        <xpath expr="//div[@data-js='WebsiteSaleGridLayout']/we-checkbox[1]" position="after">
+            <we-checkbox string="Show Availability Filter"
+                         data-customize-website-views="sd_sales_ecommerce.products_availability_filter,sd_sales_ecommerce.custom_product_stock_status"
+                         data-no-preview="true"
+                         data-reload="/"/>
+
+        </xpath>
+    </template>
+    <template id="products_availability_filter" inherit_id="website_sale.products_attributes" active="False"
+              name="Availability Filters">
+        <xpath expr="//form[hasclass('js_attributes')]" position="attributes">
+            <attribute name="t-if">attributes or all_tags or products</attribute>
+        </xpath>
+        <xpath expr="//form[hasclass('js_attributes')]" position="inside">
+            <h6 class="mb-3">
+                <b class="o_products_attributes_title d-none d-lg-block">Disponible</b>
+            </h6>
+            <div class="form-check my-2">
+                <input type="checkbox" id="show_only_in_stock" class="form-check-input" name="show_only_in_stock"
+                       t-att-checked="True if show_only_in_stock else None" />
+                <label class="form-check-label" for="show_only_in_stock">
+                    Productos en stock
+                </label>
+            </div>
+        </xpath>
+    </template>
+    <!--    Products-->
+    <template id="custom_product_stock_status" inherit_id="website_sale.products_item" active="False">
+        <xpath expr="//div[hasclass('product_price')]" position="after">
+            <t t-set="tmpl_id" t-value="product.id"/>
+            <t t-set="qty" t-value="(stock_map.get(tmpl_id) or 0) if stock_map else 0"/>
+            <div t-if="product.sudo().stock_status == 'in_stock'" class="text-success">
+                En Stock <t t-esc="int(qty or 0)"/> Unid.
+            </div>
+            <div t-if="product.sudo().stock_status == 'out_of_stock'" class="text-danger">
+                Agotado
+            </div>
+        </xpath>
+    </template>
+    <!--Notification For Filter-->
+    <template inherit_id="website_sale.products" id="products_inherit" name="Products">
+        <xpath expr="//span[@t-if='isFilteringByPrice or attrib_set or tags']" position="attributes">
+            <attribute name="t-if">isFilteringByPrice or attrib_set or tags or show_only_in_stock</attribute>
+        </xpath>
+    </template>
+
+    <!--Mobile Canvas-->
+    <template id="o_wsale_offcanvas_inherit" inherit_id="website_sale.o_wsale_offcanvas" name="Offcanvas">
+        <xpath expr="//div[hasclass('offcanvas-body')][2]" position="replace">
+            <div class="offcanvas-body d-flex justify-content-between flex-grow-0 border-top overflow-hidden">
+                <a t-attf-class="btn btn-{{navClass}} d-flex py-1 mb-2 {{(not attrib_values and not isFilteringByPrice and not tags and not show_only_in_stock) and 'disabled' }}"
+                   t-att-aria-disabled="(not attrib_values and not isFilteringByPrice and not tags and not show_only_in_stock) and 'true' or 'false'"
+                   href="/shop"
+                   title="Borrar filtros">
+                    Borrar filtros
+                </a>
+            </div>
+        </xpath>
+
+        <xpath expr="//form[contains(@t-attf-class, 'js_attributes')]" position="inside">
+            <div class="accordion-item border-bottom" t-if="is_view_active('sd_sales_ecommerce.products_availability_filter')">
+                <h2 id="o_wsale_offcanvas_categories_header" class="accordion-header mb-0">
+                    <button class="o_wsale_offcanvas_title accordion-button rounded-0 collapsed"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#o_wsale_offcanvas_stock"
+                            aria-expanded="false"
+                            aria-controls="o_wsale_offcanvas_stock">
+                        <b>Productos Disponible</b>
+                    </button>
+                </h2>
+                <div id="o_wsale_offcanvas_stock"
+                     class="accordion-collapse collapse"
+                     aria-labelledby="o_wsale_offcanvas_stock_header">
+                    <div class="accordion-body pt-0">
+                        <div>
+                            <div class="form-check my-2">
+                                <input type="checkbox" id="show_only_in_stock" class="form-check-input"
+                                       name="show_only_in_stock"
+                                       t-att-checked="True if show_only_in_stock else None"/>
+                                <label class="form-check-label" for="show_only_in_stock">
+                                    Productos en stock
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </xpath>
+    </template>
+</odoo>

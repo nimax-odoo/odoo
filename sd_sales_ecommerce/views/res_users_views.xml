@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extensión de la vista de formulario de res.users -->
+    <record id="sd_view_users_ecommerce_form" model="ir.ui.view">
+        <field name="name">sd.res.users.form</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Ecommerce" groups="base.group_system">
+                    <group>
+                        <field name="sd_desc_percentaje" widget="percentage"/>
+                        <div class="text-muted">
+                            Porcentaje del descuento real que se mostrará en el Ecommerce.
+                        </div>
+                        <field name="sd_pricelist"/>
+                        <div class="text-muted">
+                            Lista de precios que se utilizará por defecto en el ecommerce de Stock con precios.
+                        </div>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+    <record id="sd_view_partner_ecommerce_form" model="ir.ui.view">
+        <field name="name">sd.res.partner.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Ecommerce" groups="base.group_system">
+                    <group>
+                        <field name="sd_desc_percentaje" widget="percentage"/>
+                        <div class="text-muted">
+                            Porcentaje del descuento real que se mostrará en el Ecommerce.
+                        </div>
+                        <field name="sd_pricelist"/>
+                        <div class="text-muted">
+                            Lista de precios que se utilizará por defecto en el ecommerce de Stock con precios.
+                        </div>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+</odoo>
