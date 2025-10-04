@@ -3,7 +3,7 @@
 {
     "name" : "Cambios en el Modulo Comercial (Ventas)",
     "version" : "18.0.0.1",
-    "depends" : ['base','account','sale_management','sale'],
+    "depends" : ['base','account','sale_management','sale','stock'],
     "author": "Smartdoo",
     "summary": "Cambios en modulo comercial de ventas para NIMAX",
     "description": """
@@ -15,6 +15,7 @@
 
              "views/product_category.xml",
              "views/product_template.xml",
+             "views/sale_order.xml",
              "data/cron.xml",
         ],
     'qweb':[],

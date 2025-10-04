@@ -18,6 +18,12 @@ _logger = logging.getLogger(__name__)
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    def reservar_picking_stock(self):
+        for order in self:
+            for picking in order.picking_ids:
+                picking.action_assign()
+        return True
+
     def _cart_update(self, product_id, line_id=None, add_qty=0, set_qty=0, **kwargs):
         res = super()._cart_update(
             product_id, line_id=line_id, add_qty=add_qty, set_qty=set_qty, **kwargs

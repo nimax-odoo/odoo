@@ -8,6 +8,14 @@
         <field name="code">model._cron_update_product_mx()</field>
         <field name="state">code</field>
     </record>
+    <record id="ir_cron_notificar_salesman_mxn" model="ir.cron">
+        <field name="name">NIMAX: Notificar al vendedor que ya esta lista la mercaderia para entregar</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="model_id" ref="stock.model_stock_picking"/>
+        <field name="code">model._notificar_picking_assigned()</field>
+        <field name="state">code</field>
+    </record>
 
 
 </odoo>

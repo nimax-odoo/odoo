@@ -42,3 +42,15 @@ class WebsiteSaleInherit(WebsiteSale):
 
         q['stock_map'] = stock_map
         return response
+
+    @route()
+    def shop_payment_confirmation(self, **post):
+        response = super(WebsiteSaleInherit, self).shop_payment_confirmation(**post)
+        sale_order_id = request.session.get('sale_last_order_id')
+        if sale_order_id:
+            user_id = request.env.user
+            if not user_id.sd_reserva_stock:
+                order = request.env['sale.order'].sudo().browse(sale_order_id)
+                order._validate_order()
+                order.reservar_picking_stock()
+        return response
