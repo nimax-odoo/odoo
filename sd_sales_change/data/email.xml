@@ -10,7 +10,7 @@
             <field name="name">Notificación: Envio de notificacion de picking listos</field>
             <field name="model_id" ref="stock.model_stock_picking" />
             <field name="email_from">{{(object.company_id.email_formatted)}}</field>
-            <field name="partner_to">{{object.partner_id.id}}</field>
+            <field name="partner_to">{{object.user_id.partner_id.id}}</field>
             <field name="subject">Hay una Venta {{object.sale_id.name}} lista para entregar en {{object.company_id.name}}</field>
             <field name="description">Enviado a los clientes con sus facturas adjuntas</field>
             <field name="body_html" type="html">

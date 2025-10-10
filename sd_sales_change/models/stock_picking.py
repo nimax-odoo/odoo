@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    @api.depends('move_ids_without_package.product_uom_qty','move_ids_without_package.quantity','state','picking_type_code','write_date')
     def _compute_id_notify_assigned(self):
         for pick in self:
             igual = True
@@ -22,13 +23,16 @@ class StockPicking(models.Model):
             else:
                 pick.id_notify_assigned = False
 
-    id_notify_assigned = fields.Boolean('Notificado Picking Listo', default=False, compute='_compute_id_notify_assigned')
+    id_notify_assigned = fields.Boolean('Notificado Picking Listo', default=False, compute='_compute_id_notify_assigned',store=True)
 
 
 
     def _notificar_picking_assigned(self):
-        pickings = self.env['stock.picking'].search([('id_notify_assigned','=',True)])
-        
+        pickings2 = self.env['stock.picking'].search([('id_notify_assigned','=',False),('sale_id.is_picking_assigned','=',True)])
+        for pick2 in pickings2:
+            pick2.sale_id.is_picking_assigned = False
+        fecha = fields.Date.from_string('2025-01-01')
+        pickings = self.env['stock.picking'].search([('id_notify_assigned','=',True),('sale_id.date_order','>=',fecha)])
         for pick in pickings:
             pick.sale_id.is_picking_assigned = True
             template = self.env.ref('sd_sales_change.email_template_notificar_assigned', raise_if_not_found=False)
@@ -47,7 +51,4 @@ class StockPicking(models.Model):
             #     'res_model_id': model_id,
             # })
             # self.env['mail.activity'].create(activity_vals)
-        pickings2 = self.env['stock.picking'].search([('id_notify_assigned','=',False),('sale_id.is_picking_assigned','=',True)])
-        for pick2 in pickings2:
-            pick2.sale_id.is_picking_assigned = False
         return True
