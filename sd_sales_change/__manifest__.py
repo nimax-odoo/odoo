@@ -2,7 +2,7 @@
 # Part of BrowseInfo. See LICENSE file for full copyright and licensing details.
 {
     "name" : "Cambios en el Modulo Comercial (Ventas)",
-    "version" : "18.0.0.1",
+    "version" : "18.0.0.2",
     "depends" : ['base','account','sale_management','sale','stock'],
     "author": "Smartdoo",
     "summary": "Cambios en modulo comercial de ventas para NIMAX",
