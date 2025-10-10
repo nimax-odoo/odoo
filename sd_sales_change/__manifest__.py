@@ -17,6 +17,8 @@
              "views/product_template.xml",
              "views/sale_order.xml",
              "data/cron.xml",
+             "data/email.xml",
+             "views/stock_picking.xml",
         ],
     'qweb':[],
     "auto_install": False,

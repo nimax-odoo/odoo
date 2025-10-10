@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <!-- Mail template are declared in a NOUPDATE block
+         so users can freely customize/delete them -->
+
+    <data>
+
+        <record id="email_template_notificar_assigned" model="mail.template">
+            <field name="name">Notificación: Envio de notificacion de picking listos</field>
+            <field name="model_id" ref="stock.model_stock_picking" />
+            <field name="email_from">{{(object.company_id.email_formatted)}}</field>
+            <field name="partner_to">{{object.partner_id.id}}</field>
+            <field name="subject">Hay una Venta {{object.sale_id.name}} lista para entregar en {{object.company_id.name}}</field>
+            <field name="description">Enviado a los clientes con sus facturas adjuntas</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Estimado
+                       
+                            <t t-out="object.user_id.name or ''">Brandon Freeman</t>,
+                        <br /><br />
+                        Tienes una 
+                        <t t-if="object.sale_id.name">
+                            venta <span style="font-weight:bold;" t-out="object.sale_id.name or ''">INV/2021/05/0005</span>
+                        </t>
+                        <t t-else="">
+                            venta
+                        </t>
+                        <t t-if="object.name">
+                            (con referencia de entrega: <t t-out="object.name or ''">SUB003</t>)
+                        </t>
+                        <br />
+                        El cliente de la venta seria: <span style="font-weight:bold;"
+                            t-out="object.partner_id.name">Juana Perez</span>
+                        desde <t t-out="object.company_id.name or ''">YourCompany</t>.
+               
+                        <br /><br />
+                        Gracias.
+                    </p>
+                </div>
+            </field>
+            <field name="report_template_ids" eval="[]" />
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="True" />
+        </record>
+    </data>
+</odoo>
