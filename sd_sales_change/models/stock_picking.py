@@ -52,3 +52,43 @@ class StockPicking(models.Model):
             # })
             # self.env['mail.activity'].create(activity_vals)
         return True
+    
+class StockMoveLine(models.Model):
+    _inherit = "stock.move.line"
+
+    lot_id = fields.Many2one(
+        'stock.lot', 'Número de lote/serie',
+        domain="[('product_id', '=', product_id),('company_id', '=', company_id)]", check_company=True)
+
+class Stockquants(models.Model):
+    _inherit = 'stock.quant'
+
+    def _get_available_quantity(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False, allow_negative=False):
+        """ HEREDADA PARA FILTRAR LOTES POR COMPAÑIA, DADO QUE LA UBICACION DE QUANTS DEPENDE DE LA UBICACION, PERO ESTA PUEDE TENER LOTES DE OTRAS COMPAÑIAS
+        """
+        self = self.sudo()
+        quants = self._gather(product_id, location_id, lot_id=lot_id, package_id=package_id, owner_id=owner_id, strict=strict)
+        rounding = product_id.uom_id.rounding
+        if product_id.tracking == 'none':
+            available_quantity = sum(quants.mapped('quantity')) - sum(quants.mapped('reserved_quantity'))
+            if allow_negative:
+                return available_quantity
+            else:
+                return available_quantity if float_compare(available_quantity, 0.0, precision_rounding=rounding) >= 0.0 else 0.0
+        else:
+            #seleccionamos solo lotes d ela compañia del lote
+            for quant in quants:
+                if quant.lot_id and quant.lot_id.company_id != quant.company_id:
+                    quants -= quant
+            availaible_quantities = {lot_id: 0.0 for lot_id in list(set(quants.mapped('lot_id'))) + ['untracked']}
+            for quant in quants:
+                if not quant.lot_id and strict and lot_id:
+                    continue
+                if not quant.lot_id:
+                    availaible_quantities['untracked'] += quant.quantity - quant.reserved_quantity
+                else:
+                    availaible_quantities[quant.lot_id] += quant.quantity - quant.reserved_quantity
+            if allow_negative:
+                return sum(availaible_quantities.values())
+            else:
+                return sum([available_quantity for available_quantity in availaible_quantities.values() if float_compare(available_quantity, 0, precision_rounding=rounding) > 0])
