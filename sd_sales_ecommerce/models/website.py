@@ -10,6 +10,13 @@ _lt = LazyTranslate(__name__)
 class ProductTemplate(models.Model):
     _inherit = 'website'
 
+    def get_pricelist_available(self, show_visible=False):
+        res = super().get_pricelist_available(show_visible)
+        if self.env.user.sd_pricelist_ids:
+            res = self.env.user.sd_pricelist_ids
+
+        return res
+
     def _prepare_sale_order_values(self, partner_sudo):
         res = super()._prepare_sale_order_values(partner_sudo)
         self.ensure_one()
@@ -43,6 +50,9 @@ class ProductTemplate(models.Model):
         """
         self = self.with_company(self.company_id)
         ProductPricelist = self.env['product.pricelist']
+        # user_id = self.env.user
+        # if user_id.sd_pricelist:
+        #     pricelist = user_id.sd_pricelist
 
         pricelist = ProductPricelist
         if request and request.session.get('website_sale_current_pl'):
@@ -54,9 +64,6 @@ class ProductTemplate(models.Model):
             if not pricelist or not pricelist._is_available_on_website(self) or not pricelist._is_available_in_country(country_code):
                 request.session.pop('website_sale_current_pl')
                 pricelist = ProductPricelist
-        user_id = self.env.user
-        if user_id.sd_pricelist:
-            pricelist = user_id.sd_pricelist
         if not pricelist:
             partner_sudo = self.env.user.partner_id
 

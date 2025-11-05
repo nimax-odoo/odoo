@@ -34,14 +34,14 @@
         <field name="target">new</field>
     </record>
 
-    <report
+    <!-- <report
         id="comision_vendedor_xlsx"
         model="as.comisiones"
         string="Calculo de comisiones"
         report_type="xlsx"
         name="as_sale_pricelist.comision_report_xlsx.xlsx"
         file="as_sale_pricelist.comision_report_xlsx.xlsx"
-        attachment_use="False" />
+        attachment_use="False" /> -->
 
     <menuitem id="as_comision_vendedor" parent="sale.menu_sale_report" name="Calculo de Comisiones" action="action_comision_vendedor_qweb" sequence="11"  />
 

@@ -17,6 +17,10 @@
                         <div class="text-muted">
                             Lista de precios que se utilizará por defecto en el ecommerce de Stock con precios.
                         </div>
+                         <field name="sd_pricelist_ids"  widget="many2many_tags"/>
+                        <div class="text-muted">
+                             Lista de precios que se utilizará por defecto en el ecommerce de Stock con precios.
+                        </div>
                         <field name="sd_reserva_stock"/>
                         <div class="text-muted">
                             Permite reservar el stock de forma automatica en la e-commerce.
@@ -40,7 +44,11 @@
                         </div>
                         <field name="sd_pricelist"/>
                         <div class="text-muted">
-                            Lista de precios que se utilizará por defecto en el ecommerce de Stock con precios.
+                            Lista de precios predeterminada que se utilizará por defecto en el ecommerce de Stock con precios.
+                        </div>
+                        <field name="sd_pricelist_ids"  widget="many2many_tags"/>
+                        <div class="text-muted">
+                             Lista de precios que se utilizará por defecto en el ecommerce de Stock con precios.
                         </div>
                         <field name="sd_reserva_stock"/>
                         <div class="text-muted">

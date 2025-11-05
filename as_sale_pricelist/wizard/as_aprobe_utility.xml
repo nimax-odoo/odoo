@@ -28,7 +28,7 @@
     <record id="action_aprobe_sales_qweb" model="ir.actions.act_window">
         <field name="name">Aprobar Margen de utilidad</field>
         <field name="res_model">as.aprobe.sale</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="view_id" ref="view_aprobar_ventas_wiz"/>
         <field name="target">new</field>
     </record>

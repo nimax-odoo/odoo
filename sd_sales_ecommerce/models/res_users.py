@@ -28,7 +28,11 @@ class AsResUsers(models.Model):
         string='Lista de Precios E-commerce', related='partner_id.sd_pricelist',readonly=False,
         help='Lista de precios que se utilizará por defecto en la E-commerce de Stock con precios. Si se deja vacío, se usará la lista de precios del cliente.'
     )
-
+    sd_pricelist_ids = fields.Many2many(
+        'product.pricelist','partner_id',
+        string='Listas de Precios E-commerce',related='partner_id.sd_pricelist_ids',readonly=False,
+        help='Lista de precios que se utilizará por defecto en la E-commerce de Stock con precios. Si se deja vacío, se usará la lista de precios del cliente.'
+    )
     sd_reserva_stock = fields.Boolean(
         string='Reservar automaticamente stock E-commerce', related='partner_id.sd_reserva_stock',readonly=False,
         help='Permite reservar el stock de forma automatica en el e-commerce.'
@@ -45,10 +49,15 @@ class AsResPartner(models.Model):
     
     sd_pricelist = fields.Many2one(
         'product.pricelist',
-        string='Lista de Precios E-commerce',
+        string='Lista de Precios E-commerce Predeterminada',
         help='Lista de precios que se utilizará por defecto en la E-commerce de Stock con precios. Si se deja vacío, se usará la lista de precios del cliente.'
     )
 
+    sd_pricelist_ids = fields.Many2many(
+        'product.pricelist',
+        string='Listas de Precios E-commerce',
+        help='Lista de precios que se utilizará por defecto en la E-commerce de Stock con precios. Si se deja vacío, se usará la lista de precios del cliente.'
+    )
     sd_reserva_stock = fields.Boolean(
         string='No permitir reservar automaticamente stock E-commerce',
         help='No permite reservar stock de forma automatica en el e-commerce.',default=False

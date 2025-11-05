@@ -245,14 +245,9 @@ class SaleOrder(models.Model):
                     elif (float(line.as_margin_porcentaje) < float(margin_global)):
                         no_access = True
             if access:
-                action = self.env.ref('as_sale_pricelist.action_aprobe_sales_qweb').read()[0]
-                action.update({
-                    'context': {
-                        'default_as_sale': self.id,
-                    
-                    },
-                })
-                return action  
+                action = self.env['ir.actions.act_window']._for_xml_id('as_sale_pricelist.action_aprobe_sales_qweb')
+                action['context'] = {'default_as_sale': self.id}
+                return action
             elif no_access:
                 raise ValidationError('No se puede confirmar la venta, modifique sus precios')
         product=[]
