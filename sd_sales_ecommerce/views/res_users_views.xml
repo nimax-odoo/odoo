@@ -13,10 +13,6 @@
                         <div class="text-muted">
                             Porcentaje del descuento real que se mostrará en el Ecommerce.
                         </div>
-                        <field name="sd_pricelist"/>
-                        <div class="text-muted">
-                            Lista de precios que se utilizará por defecto en el ecommerce de Stock con precios.
-                        </div>
                          <field name="sd_pricelist_ids"  widget="many2many_tags"/>
                         <div class="text-muted">
                              Lista de precios que se utilizará por defecto en el ecommerce de Stock con precios.
@@ -41,10 +37,6 @@
                         <field name="sd_desc_percentaje" widget="percentage"/>
                         <div class="text-muted">
                             Porcentaje del descuento real que se mostrará en el Ecommerce.
-                        </div>
-                        <field name="sd_pricelist"/>
-                        <div class="text-muted">
-                            Lista de precios predeterminada que se utilizará por defecto en el ecommerce de Stock con precios.
                         </div>
                         <field name="sd_pricelist_ids"  widget="many2many_tags"/>
                         <div class="text-muted">

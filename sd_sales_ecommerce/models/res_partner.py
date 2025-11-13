@@ -27,6 +27,7 @@ class ResPartner(models.Model):
                         vandors_categ.append(vendor.id)
                 partner.sd_desc_percentaje = partner.parent_id.sd_desc_percentaje
                 partner.sd_pricelist = partner.parent_id.sd_pricelist
+                partner.sd_pricelist_ids = partner.parent_id.sd_pricelist_ids
                 partner.tf_vendor_parameter_ids = [(6, 0, vandors_categ)]
 
     def action_assigned_vendor(self):
@@ -65,4 +66,5 @@ class ResPartner(models.Model):
                 for chield in partner.child_ids:
                     chield.sd_desc_percentaje = partner.sd_desc_percentaje
                     chield.sd_pricelist = partner.sd_pricelist
+                    chield.sd_pricelist_ids = partner.sd_pricelist_ids
                     chield.tf_vendor_parameter_ids = [(6, 0, vandors_categ)]

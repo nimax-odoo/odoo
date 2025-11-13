@@ -10,13 +10,6 @@ _lt = LazyTranslate(__name__)
 class ProductTemplate(models.Model):
     _inherit = 'website'
 
-    def get_pricelist_available(self, show_visible=False):
-        res = super().get_pricelist_available(show_visible)
-        if self.env.user.sd_pricelist_ids:
-            res = self.env.user.sd_pricelist_ids
-
-        return res
-
     def _prepare_sale_order_values(self, partner_sudo):
         res = super()._prepare_sale_order_values(partner_sudo)
         self.ensure_one()
@@ -43,48 +36,34 @@ class ProductTemplate(models.Model):
             free_qty = round(free_qty * stock_factor)
         return free_qty
 
+    # This method is cached, must not return records! See also #8795
+    @tools.ormcache(
+        'country_code', 'show_visible',
+        'current_pl_id', 'website_pricelist_ids',
+        'partner_pl_id', 'order_pl_id',
+    )
+    def _get_pl_partner_order(
+        self, country_code, show_visible, current_pl_id, website_pricelist_ids,
+        partner_pl_id=False, order_pl_id=False
+    ):
+        """ Return the list of pricelists that can be used on website for the current user.
 
-    def _get_current_pricelist(self):
+        :param str country_code: code iso or False, If set, we search only price list available for this country
+        :param bool show_visible: if True, we don't display pricelist where selectable is False (Eg: Code promo)
+        :param int current_pl_id: The current pricelist used on the website
+            (If not selectable but currently used anyway, e.g. pricelist with promo code)
+        :param tuple website_pricelist_ids: List of ids of pricelists available for this website
+        :param int partner_pl_id: the partner pricelist
+        :param int order_pl_id: the current cart pricelist
+        :returns: list of product.pricelist ids
+        :rtype: list
         """
-        :returns: The current pricelist record
-        """
-        self = self.with_company(self.company_id)
-        ProductPricelist = self.env['product.pricelist']
-        # user_id = self.env.user
-        # if user_id.sd_pricelist:
-        #     pricelist = user_id.sd_pricelist
-
-        pricelist = ProductPricelist
-        if request and request.session.get('website_sale_current_pl'):
-            # `website_sale_current_pl` is set only if the user specifically chose it:
-            #  - Either, he chose it from the pricelist selection
-            #  - Either, he entered a coupon code
-            pricelist = ProductPricelist.browse(request.session['website_sale_current_pl']).exists().sudo()
-            country_code = self._get_geoip_country_code()
-            if not pricelist or not pricelist._is_available_on_website(self) or not pricelist._is_available_in_country(country_code):
-                request.session.pop('website_sale_current_pl')
-                pricelist = ProductPricelist
-        if not pricelist:
-            partner_sudo = self.env.user.partner_id
-
-            # If the user has a saved cart, it take the pricelist of this last unconfirmed cart
-            pricelist = partner_sudo.last_website_so_id.pricelist_id
-            if not pricelist:
-                # The pricelist of the user set on its partner form.
-                # If the user is not signed in, it's the public user pricelist
-                pricelist = partner_sudo.property_product_pricelist
-
-            # The list of available pricelists for this user.
-            # If the user is signed in, and has a pricelist set different than the public user pricelist
-            # then this pricelist will always be considered as available
-            available_pricelists = self.get_pricelist_available()
-            if available_pricelists and pricelist not in available_pricelists:
-                # If there is at least one pricelist in the available pricelists
-                # and the chosen pricelist is not within them
-                # it then choose the first available pricelist.
-                # This can only happen when the pricelist is the public user pricelist and this pricelist is not in the available pricelist for this localization
-                # If the user is signed in, and has a special pricelist (different than the public user pricelist),
-                # then this special pricelist is amongs these available pricelists, and therefore it won't fall in this case.
-                pricelist = available_pricelists[0]
-
-        return pricelist
+        self.ensure_one()
+        res = super()._get_pl_partner_order(
+            country_code, show_visible, current_pl_id, website_pricelist_ids,
+            partner_pl_id, order_pl_id
+        )
+        if self.env.user.sd_pricelist_ids:
+            return self.env.user.sd_pricelist_ids.sudo().ids
+        return res
+    
