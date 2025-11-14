@@ -8,6 +8,7 @@
         <field name="arch" type="xml">
             <notebook position="inside">
                 <page string="Ecommerce" groups="base.group_system">
+                <header><button name="action_cleaner_cache" type="object" string="Actualizar Cache" class="oe_highlight" /></header>
                     <group>
                         <field name="sd_desc_percentaje" widget="percentage"/>
                         <div class="text-muted">
@@ -33,6 +34,7 @@
         <field name="arch" type="xml">
             <notebook position="inside">
                 <page string="Ecommerce" groups="base.group_system">
+                <header><button name="action_cleaner_cache" type="object" string="Actualizar Cache" class="oe_highlight" /></header>
                     <group>
                         <field name="sd_desc_percentaje" widget="percentage"/>
                         <div class="text-muted">

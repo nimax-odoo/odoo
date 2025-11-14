@@ -38,6 +38,9 @@ class AsResUsers(models.Model):
         help='Permite reservar el stock de forma automatica en el e-commerce.'
     )
 
+    def action_cleaner_cache(self):
+        self and self.env.registry.clear_cache()
+
 class AsResPartner(models.Model):
     _inherit = 'res.partner'
 
@@ -62,6 +65,9 @@ class AsResPartner(models.Model):
         string='No permitir reservar automaticamente stock E-commerce',
         help='No permite reservar stock de forma automatica en el e-commerce.',default=False
     )
+
+    def action_cleaner_cache(self):
+        self and self.env.registry.clear_cache()
 
 class PortalWizardUser(models.TransientModel):
     _inherit = 'portal.wizard.user'
