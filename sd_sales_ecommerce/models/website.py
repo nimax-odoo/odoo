@@ -13,9 +13,9 @@ class ProductTemplate(models.Model):
     def _prepare_sale_order_values(self, partner_sudo):
         res = super()._prepare_sale_order_values(partner_sudo)
         self.ensure_one()
-        if self.env.user.sd_pricelist:
-            res['pricelist_id'] = self.env.user.sd_pricelist.id
-            res['currency_aux_id'] = self.env.user.sd_pricelist.currency_id.id
+        if self.pricelist_id:
+            res['pricelist_id'] = self.pricelist_id.id
+            res['currency_aux_id'] = self.pricelist_id.currency_id.id
             res['x_studio_orden_de_compra'] = 'N/A'
             res['as_usuario_final'] = 'N/A'
             if self.env.user.partner_id.parent_id:

@@ -121,7 +121,7 @@ class PricelistItem(models.Model):
 
     def _compute_price(self, product, quantity, uom, date, currency=None):
         price = super()._compute_price(product, quantity, uom, date, currency=None)
-        if 'website_id' in self.env.context and self.env.user.sd_pricelist:
+        if 'website_id' in self.env.context and self.env.user.sd_pricelist_ids:
             pricelist = self.pricelist_id
             price_new = pricelist.get_price_pricelist_nimax(product.id, price, quantity)
             if price_new:

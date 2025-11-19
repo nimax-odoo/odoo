@@ -31,8 +31,8 @@ class SaleOrder(models.Model):
         line = self.env['sale.order.line'].sudo().browse(res['line_id'])
         website = self.env['website'].get_current_website()
         so = website and request and website.sale_get_order()
-        so.pricelist_id = self.env.user.sd_pricelist or so.pricelist_id
-        so.currency_aux_id = self.env.user.sd_pricelist.currency_id or so.pricelist_id.currency_id
+        so.pricelist_id = so.pricelist_id
+        so.currency_aux_id = so.pricelist_id.currency_id
         if line and line.product_id:
             pricelist = line.order_id.pricelist_id
             line.as_pricelist_id = pricelist
