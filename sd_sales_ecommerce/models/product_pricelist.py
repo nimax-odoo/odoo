@@ -119,14 +119,22 @@ class Pricelist(models.Model):
 class PricelistItem(models.Model):
     _inherit = 'product.pricelist.item'
 
+    def selected_product(self,product):
+        if product._name == 'product.product':
+            return product
+        else:
+            return self.env['product.product'].search([('product_tmpl_id','=',product.id)],limit=1)
+
     def _compute_price(self, product, quantity, uom, date, currency=None):
         price = super()._compute_price(product, quantity, uom, date, currency=None)
         if 'website_id' in self.env.context and self.env.user.sd_pricelist_ids:
+            product = self.selected_product(product)
             pricelist = self.pricelist_id
             price_new = pricelist.get_price_pricelist_nimax(product.id, price, quantity)
             if price_new:
                 price = price_new
         if 'website_id' in self.env.context:
+            product = self.selected_product(product)
             pricelist = self.pricelist_id
             promos_disponibles = request.env['coupon.program'].sudo().search_promo_disponibles_ecommerce()
             partner_id = self.env.user.partner_id.id
