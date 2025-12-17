@@ -50,6 +50,13 @@ Lista de precios por linea de producto en ventas.
               'views/as_tabla_comisiones.xml',
               'views/as_res_config.xml',
               'views/tf_promotions_gift.xml',
+              'views/sd_stock_quant.xml',
+              'wizard/sd_sale_order_wiz.xml',
+              # 'wizard/sd_free_owner_wiz.xml',
+
+
+              'data/mail_template_ajust.xml',
+              'security/security.xml',
               # 'views/report_sale_proforma.xml',
             #   'views/assets.xml',
               

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="view_change_quantity_wiz" model="ir.ui.view">
+        <field name="name">Cambiar Cantidades</field>
+        <field name="model">sd.sale.order.wiz</field>
+        <field name="arch" type="xml">
+            <form string="Cambiar Cantidades">
+                <group col="4">
+                    <field name="sale_id" readonly="True" force_save="1"/>
+                  
+                </group>
+                    <field name="sale_product_ids">
+                        <list editable="bottom">
+                            <field name="line_sale_id" readonly="1" force_save="1"/>
+                            <field name="product_id" readonly="1" force_save="1"/>
+                            <field name="qty_order" readonly="1" force_save="1"/>
+                            <field name="qty"/>
+                        </list>
+
+                    </field>
+                <footer>
+                    <button name="as_aprobe_sale" 
+                        default_focus="1"
+                        string="Guardar" 
+                        type="object" 
+                        class="oe_highlight"
+                        icon="fa-download"/>
+                    <button string="Cancel" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_aprobe_sales_qweb" model="ir.actions.act_window">
+        <field name="name">Cambiar Cantidades</field>
+        <field name="res_model">sd.sale.order.wiz</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_change_quantity_wiz"/>
+        <field name="target">new</field>
+    </record>
+
+    <record id="action_aprobe_utility" model="ir.actions.act_window">
+        <field name="name">Aprobar Utilidad</field>
+        <field name="res_model">as.aprobe.utility</field>
+        <field name="view_mode">list,form</field>
+        <field name="target">new</field>
+    </record>
+
+
+              
+</data>
+</odoo>

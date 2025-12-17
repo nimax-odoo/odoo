@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="view_change_owner_wiz" model="ir.ui.view">
+        <field name="name">Modificar propietarios de Cantidades</field>
+        <field name="model">sd.free.owner.wiz</field>
+        <field name="arch" type="xml">
+            <form string="Modificar propietarios de Cantidades">
+                <group col="4">
+                    <field name="quant_id"/>
+                    <field name="owner_id"/>
+                </group>
+                   
+                <footer>
+                    <button name="as_aprobe_sale" 
+                        default_focus="1"
+                        string="Guardar" 
+                        type="object" 
+                        class="oe_highlight"
+                        icon="fa-download"/>
+                    <button string="Cancel" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_free_owner_qweb" model="ir.actions.act_window">
+        <field name="name">Modificar propietarios de Cantidades</field>
+        <field name="res_model">sd.free.owner.wiz</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_change_owner_wiz"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_action_free_owner_qweb"
+              name="Modificar propietario de Cantidades"
+              action="action_free_owner_qweb"
+              parent="stock.menu_stock_adjustments"
+              sequence="12"/>
+
+
+</data>
+</odoo>

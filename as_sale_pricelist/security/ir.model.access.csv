@@ -23,3 +23,5 @@ access_as_partner_type_sale_user,as.partner.type.sale.user,model_as_partner_type
 access_as_partner_type_sale_manager,as.partner.type.sale.manager,model_as_partner_type,sales_team.group_sale_manager,1,1,1,1
 access_as_marca_sale_user,as.marca.sale.user,model_as_marca,sales_team.group_sale_salesman,1,0,0,0
 access_as_marca_sale_manager,as.marca.sale.manager,model_as_marca,sales_team.group_sale_manager,1,1,1,1
+access_sd_sale_order_wiz,sd_sale_order_wiz,model_sd_sale_order_wiz,sales_team.group_sale_manager,1,1,1,1
+access_sd_sale_order_line_wiz,sd_sale_order_line_wiz,model_sd_sale_order_line_wiz,sales_team.group_sale_manager,1,1,1,1

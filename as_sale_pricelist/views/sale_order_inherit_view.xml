@@ -23,7 +23,11 @@
 				<field name="as_zebra_sale" />
 				<field name="as_usuario_final" invisible="as_zebra_sale == False" required="as_zebra_sale == True"/>
 			</xpath>
-			
+
+			<xpath expr="//button[@name='action_unlock']" position="after">
+                <button name="action_update_quantity" type="object" string="Ajustar Cantidades" invisible="state != 'sale'" groups="sales_team.group_sale_manager"/> 
+			</xpath>
+	
 			<!-- Reemplazar completamente el campo order_line -->
 			<xpath expr="//field[@name='order_line']" position="replace">
 				<field name="order_line" widget="sol_o2m" mode="list,kanban" readonly="state == 'cancel' or locked">

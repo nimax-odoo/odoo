@@ -175,7 +175,15 @@ class SaleOrder(models.Model):
     as_usuario_final = fields.Char(string="Usuario Final")
     invoice_ids = fields.Many2many("account.move", string='Invoices', compute="_get_invoiced", readonly=True, copy=False,store=True)
 
-
+    def action_update_quantity(self):
+        return {
+                'name': _('Ajustar Cantidades'),
+                'view_mode': 'form',
+                'res_model': 'sd.sale.order.wiz',
+                'type': 'ir.actions.act_window',
+                'target': 'new',
+                'context': {'active_id': self.id, 'active_model': 'sale.order'},
+            }
         
     @api.depends('order_line.price_unit','order_line.COST_NIMAX_USD')
     def _amount_all_marigin(self):
@@ -245,9 +253,14 @@ class SaleOrder(models.Model):
                     elif (float(line.as_margin_porcentaje) < float(margin_global)):
                         no_access = True
             if access:
-                action = self.env['ir.actions.act_window']._for_xml_id('as_sale_pricelist.action_aprobe_sales_qweb')
-                action['context'] = {'default_as_sale': self.id}
-                return action
+                action = self.env.ref('as_sale_pricelist.action_aprobe_sales_qweb').read()[0]
+                action.update({
+                    'context': {
+                        'default_as_sale': self.id,
+                    
+                    },
+                })
+                return action  
             elif no_access:
                 raise ValidationError('No se puede confirmar la venta, modifique sus precios')
         product=[]
