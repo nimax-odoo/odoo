@@ -31,6 +31,10 @@ class SaleOrderLine(models.Model):
             if record.COST_NIMAX_USD and record.RECALCULATED_PRICE_UNIT:
                 record.as_margin_porcentaje = ((record.RECALCULATED_PRICE_UNIT - record.COST_NIMAX_USD)/record.RECALCULATED_PRICE_UNIT)*100
 
+    def _get_protected_fields(self):
+        return [
+            'product_id', 'name', 'price_unit', 'product_uom','tax_id', 'analytic_distribution'
+        ]
         
     # apply pricelist
     def pricelist_apply(self):
