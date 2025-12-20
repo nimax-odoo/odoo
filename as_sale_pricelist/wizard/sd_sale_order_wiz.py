@@ -41,8 +41,10 @@ class sdSaleOrderWiz(models.Model):
     
     def as_aprobe_sale(self):
         for wiz in self:
+            wiz.sudo().sale_id.action_unlock()
             for line in wiz.sale_product_ids:
                 line.line_sale_id.product_uom_qty = line.qty
+            wiz.sudo().sale_id.action_lock()
         return {'type': 'ir.actions.act_window_close'}
 
 
