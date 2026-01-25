@@ -291,7 +291,7 @@ class AsStockAPI(http.Controller):
             user_env = request.env(user=user.id)
             
             # Consultar stock.quant con optimización de campos
-            quants = user_env['stock.quant'].sudo().search_read(
+            quants = user_env['stock.quant'].sudo().with_context(lang='es_MX').search_read(
                 domain=domain,
                 fields=[
                     'product_id', 
@@ -957,7 +957,7 @@ class AsStockAPI(http.Controller):
                 _logger.warning("[as_get_stock_with_price] Error al acceder a expected_earning: %s", str(e))
             
             # Consultar stock.quant con optimización de campos
-            quants = user_env['stock.quant'].sudo().search_read(
+            quants = user_env['stock.quant'].sudo().with_context(lang='es_MX').search_read(
                 domain=domain,
                 fields=[
                     'product_id', 
