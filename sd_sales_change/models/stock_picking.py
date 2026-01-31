@@ -11,17 +11,10 @@ from datetime import datetime, timedelta
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
-    @api.depends('move_ids_without_package.product_uom_qty','move_ids_without_package.quantity','state','picking_type_code','write_date')
+    @api.depends('move_ids.product_uom_qty','move_ids.quantity','state','picking_type_code','write_date')
     def _compute_id_notify_assigned(self):
         for pick in self:
-            igual = True
-            for move_line in pick.move_ids_without_package:
-                if move_line.product_uom_qty != move_line.quantity:
-                    igual = False
-            if pick.state == 'assigned' and pick.picking_type_code == 'outgoing' and igual:
-                pick.id_notify_assigned = True
-            else:
-                pick.id_notify_assigned = False
+            pick.id_notify_assigned = False
 
     id_notify_assigned = fields.Boolean('Notificado Picking Listo', default=False, compute='_compute_id_notify_assigned',store=True)
 

@@ -88,7 +88,7 @@ class WebsiteSaleInherit(WebsiteSale):
                     redirect_url = decoded_url.replace(query=url_encode(args)).to_url()
             request.session['website_sale_current_pl'] = pricelist.id
             request.session['website_sale_selected_pl_id'] = pricelist.id
-            order_sudo = request.website.sale_get_order()
+            order_sudo = request.env['website'].get_current_website()
             if order_sudo:
                 order_sudo._cart_update_pricelist(pricelist_id=pricelist.id)
         return request.redirect(redirect_url or '/shop')

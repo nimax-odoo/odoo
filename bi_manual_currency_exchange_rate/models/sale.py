@@ -59,7 +59,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
 class PricelistItem(models.Model):
     _inherit = 'product.pricelist.item'
 
-    def _compute_price(self, product, quantity, uom, date, currency=None):
+    def _compute_price(self, product, quantity, uom, date, currency=None, **kwargs):
         """Compute the unit price of a product in the context of a pricelist application.
 
         :param product: recordset of product (product.product/product.template)

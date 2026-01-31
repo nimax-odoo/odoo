@@ -125,8 +125,8 @@ class PricelistItem(models.Model):
         else:
             return self.env['product.product'].search([('product_tmpl_id','=',product.id)],limit=1)
 
-    def _compute_price(self, product, quantity, uom, date, currency=None):
-        price = super()._compute_price(product, quantity, uom, date, currency=None)
+    def _compute_price(self, product, quantity, uom, date, currency=None, **kwargs):
+        price = super()._compute_price(product, quantity, uom, date, currency, **kwargs)
         if 'website_id' in self.env.context and self.env.user.sd_pricelist_ids:
             product = self.selected_product(product)
             pricelist = self.pricelist_id

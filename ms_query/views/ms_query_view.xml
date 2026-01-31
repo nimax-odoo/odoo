@@ -1,7 +1,7 @@
 <odoo>
 	<data>
 
-		<!-- <record model="ir.ui.view" id="ms_query_search_view">
+		<record model="ir.ui.view" id="ms_query_search_view">
 		    <field name="name">ms.query.search</field>
 		    <field name="model">ms.query</field>
 		    <field name="arch" type="xml">
@@ -10,7 +10,7 @@
 					<field name="query"/>
 		        </search>
 		     </field>
-		</record> -->
+		</record>
 
 		<record model="ir.ui.view" id="ms_query_list_view">
 		    <field name="name">ms_query_list</field>

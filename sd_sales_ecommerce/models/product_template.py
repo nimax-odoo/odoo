@@ -98,7 +98,7 @@ class ProductTemplate(models.Model):
     #     # currency = pricelist.currency_id or self.env.company.currency_id
     #     # date = fields.Date.context_today(self)
     #     # website = self.env['website'].get_current_website()
-    #     # so = website and request and website.sale_get_order()
+    #     # so = website and request.env['website'].get_current_website()
     #     # for template in self:
     #     #     unit_price = template.get_price_pricelist_nimax(pricelist,so,1)
     #     #     if unit_price:
@@ -134,7 +134,7 @@ class ProductTemplate(models.Model):
     #     currency = pricelist.currency_id or self.env.company.currency_id
     #     date = fields.Date.context_today(self)
     #     website = self.env['website'].get_current_website()
-    #     so = website and request and website.sale_get_order()
+    #     so = website and request.env['website'].get_current_website()
     #     for template in self:
     #         unit_price = template.get_price_pricelist_nimax(pricelist,so,1)
     #         if unit_price:

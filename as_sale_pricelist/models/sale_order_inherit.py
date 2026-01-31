@@ -251,6 +251,8 @@ class SaleOrder(models.Model):
             access = False
             no_access = False
             for line in self.order_line:
+                if not line.as_pricelist_id:
+                    raise ValidationError('No se puede confirmar la venta, faltan tarifas en las lineas')
                 if not line.as_product_comisionable:
                     if (line.as_margin_porcentaje  > 0) and (line.as_margin_porcentaje  < float(margin_minimo)):
                         access= True

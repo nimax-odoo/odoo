@@ -117,7 +117,7 @@ class SaleOrderPricelistWizard(models.TransientModel):
                             wz_line_id = self.env['sale.order.pricelist.wizard.line'].create({
                                 'sh_pricelist_id': pricelist.id,
                                 'sh_unit_price': price_unit,
-                                'sh_unit_measure': line.product_uom.id,
+                                'sh_unit_measure': line.product_uom_id.id,
                                 'sh_unit_cost': list_price,
                                 'sh_margin': margin2,
                                 'sh_margin_per': margin_per,

@@ -1,6 +1,6 @@
 <odoo>
     <!--Filters-->
-    <template id="snippet_options_inherit" inherit_id="website_sale.snippet_options" name="e-commerce snippet options">
+    <!-- <template id="snippet_options_inherit" inherit_id="website_sale.snippet_options" name="e-commerce snippet options">
         <xpath expr="//div[@data-js='WebsiteSaleGridLayout']/we-checkbox[1]" position="after">
             <we-checkbox string="Show Availability Filter"
                          data-customize-website-views="sd_sales_ecommerce.products_availability_filter,sd_sales_ecommerce.custom_product_stock_status"
@@ -8,8 +8,8 @@
                          data-reload="/"/>
 
         </xpath>
-    </template>
-        <template id="pricelist_list_inherit" inherit_id="website_sale.pricelist_list" name="Pricelists Dropdown">
+    </template> -->
+        <!-- <template id="pricelist_list_inherit" inherit_id="website_sale.pricelist_list" name="Pricelists Dropdown">
          <xpath expr="//t[@t-cache='pricelist,website_sale_pricelists,navClass']" position="replace">
             <t t-cache="pricelist,website_sale_pricelists,navClass">
                 <a role="button" href="#" t-attf-class="dropdown-toggle btn btn-{{navClass}}" data-bs-toggle="dropdown">
@@ -24,8 +24,8 @@
                 </div>
             </t>
         </xpath>
-    </template>
-    <template id="products_availability_filter" inherit_id="website_sale.products_attributes" active="False"
+    </template> -->
+    <!-- <template id="products_availability_filter" inherit_id="website_sale.products_attributes" active="False"
               name="Availability Filters">
         <xpath expr="//form[hasclass('js_attributes')]" position="attributes">
             <attribute name="t-if">attributes or all_tags or products</attribute>
@@ -42,7 +42,7 @@
                 </label>
             </div>
         </xpath>
-    </template>
+    </template> -->
     <!--    Products-->
     <template id="custom_product_stock_status" inherit_id="website_sale.products_item" active="False">
         <xpath expr="//div[hasclass('product_price')]" position="after">
@@ -77,7 +77,7 @@
             </div>
         </xpath>
 
-        <xpath expr="//form[contains(@t-attf-class, 'js_attributes')]" position="inside">
+        <!-- <xpath expr="//form[contains(@t-attf-class, 'js_attributes')]" position="inside">
             <div class="accordion-item border-bottom" t-if="is_view_active('sd_sales_ecommerce.products_availability_filter')">
                 <h2 id="o_wsale_offcanvas_categories_header" class="accordion-header mb-0">
                     <button class="o_wsale_offcanvas_title accordion-button rounded-0 collapsed"
@@ -108,6 +108,6 @@
                 </div>
             </div>
 
-        </xpath>
+        </xpath> -->
     </template>
 </odoo>

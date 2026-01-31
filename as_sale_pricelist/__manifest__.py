@@ -10,7 +10,7 @@
     "description": """
 Lista de precios por linea de producto en ventas.
 """,    
-    "version":"18.0.1.0.49",
+    "version":"19.0.1.0.49",
     "depends" : [
         "base",
         "sale_management",
@@ -66,7 +66,15 @@ Lista de precios por linea de producto en ventas.
               'wizard/as_report_comisiones.xml',
               'wizard/as_aprobe_utility.xml',
               'wizard/as_aprobe_utility.xml',
-            ],            
+              
+            ],   
+    'assets': {
+        'web.assets_backend': [
+            'as_sale_pricelist/static/src/**/*.xml',
+            
+        ],
+        
+    },         
     # "icon": "static/description/icon.png",
     "auto_install":False,
     "installable" : True,

@@ -3,7 +3,7 @@
 
 {
     'name': 'Website Shop Advanced Product Filter in Odoo',
-    'version': '18.0.0.0',
+    'version': '19.0.0.0',
     'category': 'Website',
     'summary': 'Advanced Product Filter on webshop Product Filter ecommerce Product Filter ecommarce advance product filter on website Product Filter store Product Filter setting custom product filter shop website category filter website attributes search webshop filter',
     'description': '''

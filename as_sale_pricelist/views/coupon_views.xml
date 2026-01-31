@@ -153,11 +153,16 @@
                 <field name="name" />
                 <filter string="Activos" name="active" domain="[('active', '=', True)]" />
                 <filter string="Inactivos" name="inactive" domain="[('active', '=', False)]" />
-                <filter string="Válidos hoy" name="valid_today"
-                    domain="[('rule_date_from', '&lt;=', context_today().strftime('%Y-%m-%d')), '|', ('rule_date_to', '&gt;=', context_today().strftime('%Y-%m-%d')), ('rule_date_to', '=', False)]" />
-                <group expand="0" string="Agrupar por">
-                    <filter string="Tipo" name="group_by_type" context="{'group_by': 'as_type'}" />
-                    <filter string="Programa" name="group_by_program" context="{'group_by': 'program_type'}" />
+                 <filter string="Válidos hoy" name="valid_today"
+                    domain="[
+                            ('rule_date_from', '&lt;=', context_today()),
+                            '|',
+                            ('rule_date_to', '&gt;=', context_today()),
+                            ('rule_date_to', '=', False)
+                        ]" />
+               <group>
+                    <filter string="Tipo" name="group_by_type" domain="[]" context="{'group_by': 'as_type'}" />
+                    <filter string="Programa" name="group_by_program" domain="[]" context="{'group_by': 'program_type'}" />
                 </group>
             </search>
         </field>
@@ -226,7 +231,7 @@
     </record>
 
     <!-- Vista búsqueda de cupones -->
-    <record id="view_coupon_coupon_search" model="ir.ui.view">
+     <record id="view_coupon_coupon_search" model="ir.ui.view">
         <field name="name">coupon.coupon.search</field>
         <field name="model">coupon.coupon</field>
         <field name="arch" type="xml">
@@ -241,14 +246,14 @@
                 <filter string="Cancelado" name="cancelled" domain="[('state', '=', 'cancelled')]" />
                 <filter string="Activos" name="active" domain="[('active', '=', True)]" />
                 <filter string="Inactivos" name="inactive" domain="[('active', '=', False)]" />
-                <group expand="0" string="Agrupar por">
+                <group>
                     <filter string="Programa" name="group_by_program" context="{'group_by': 'program_id'}" />
                     <filter string="Estado" name="group_by_state" context="{'group_by': 'state'}" />
                     <filter string="Cliente" name="group_by_partner" context="{'group_by': 'partner_id'}" />
                 </group>
             </search>
         </field>
-    </record>
+    </record> <!---->
 
     <!-- Acciones de ventana -->
     <record id="action_coupon_program" model="ir.actions.act_window">

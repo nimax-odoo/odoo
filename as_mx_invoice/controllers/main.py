@@ -5,7 +5,7 @@ import os
 import logging
 from datetime import datetime
 from odoo import http
-from odoo.modules.module import get_module_resource
+from odoo.modules.module import get_module_path
 
 _logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class AsMxInvoiceController(http.Controller):
         
         try:
             # Obtener la ruta del archivo
-            file_path = get_module_resource('as_mx_invoice', 'cancelacion_SAT.md')
+            file_path = get_module_path('as_mx_invoice', 'cancelacion_SAT.md')
             
             if not file_path or not os.path.exists(file_path):
                 _logger.error("[as_view_cancelacion_sat] Archivo de cancelación SAT no encontrado: %s", file_path)

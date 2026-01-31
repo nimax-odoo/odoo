@@ -32,6 +32,12 @@ _debug_logger.setLevel(logging.DEBUG)
 class AsAccountInvoice(models.Model):
     _inherit = "account.move"
 
+    def _l10n_mx_edi_is_cfdi_document(self):
+        """ reemplazada porque la compania no tiene la moneda en MXN
+        """
+        self.ensure_one()
+        return self.country_code == 'MX' 
+    
     def sd_l10n_mx_edi_cfdi_try_sat(self):
         for inv in self:
             inv.l10n_mx_edi_cfdi_try_sat()
@@ -271,8 +277,14 @@ class AsAccountInvoice(models.Model):
                 # Avoid things like -0.0, see: https://stackoverflow.com/a/11010869
                 amount = float_round(amount, precision_digits=precision)
                 return '%.*f' % (precision, amount if not float_is_zero(amount, precision_digits=precision) else 0.0)
+            # 'objeto_imp' has to be set on the invoice but is computed for each lines.
+            all_tax_objected = {line['objeto_imp'] for line in inv_cfdi_values['conceptos_list']}
+            all_tax_objected.discard('04')
+            objeto_imp = all_tax_objected.pop() if len(all_tax_objected) == 1 else '02'
+            
             invoice_values_list.append({
                 **inv_cfdi_values,
+                'objeto_imp': objeto_imp,
                 'id_documento': invoice.l10n_mx_edi_cfdi_uuid,
                 'equivalencia': computed_rate,
                 'inv_rate': computed_rate,
@@ -359,7 +371,7 @@ class AsAccountInvoice(models.Model):
                         'impuesto': tax_values['impuesto'],
                         'tipo_factor': tax_values['tipo_factor'],
                         'tasa_o_cuota': tax_values['tasa_o_cuota'],
-                        'local_tax_name': tax_values['local_tax_name'],
+                        # 'local_tax_name': tax_values['local_tax_name'],
                     })
                     result_dict[tax_key]['importe'] += tax_values['importe'] / inv_rate
 
@@ -380,7 +392,7 @@ class AsAccountInvoice(models.Model):
                         'impuesto': tax_values['impuesto'],
                         'tipo_factor': tax_values['tipo_factor'],
                         'tasa_o_cuota': tax_values['tasa_o_cuota'],
-                        'local_tax_name': tax_values['local_tax_name'],
+                        # 'local_tax_name': tax_values['local_tax_name'],
                     })
                     tax_amount = tax_values['importe'] or 0.0
 

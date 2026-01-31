@@ -4,12 +4,28 @@ from odoo import SUPERUSER_ID, api, fields, models, tools
 from odoo.http import request
 from odoo.osv import expression
 from odoo.tools.translate import _, LazyTranslate
-
+from odoo.tools import file_open, ormcache
 _lt = LazyTranslate(__name__)
 
 class ProductTemplate(models.Model):
     _inherit = 'website'
+    
+    def cart_quantity(self):
+        if 'website_sale_cart_quantity' not in request.session:
+            return request.website.sale_get_order().cart_quantity
+        return request.session['website_sale_cart_quantity']
 
+    def sale_get_order(self):
+        """ Return the current sale order for the session's user and
+        create one if none is found. Only one sale order can be created
+        per session.
+
+        :return: the current sale order
+        :rtype: recordset of sale.order
+        """
+        order = self.env['website'].get_current_website()
+        return order
+    
     def _prepare_sale_order_values(self, partner_sudo):
         res = super()._prepare_sale_order_values(partner_sudo)
         self.ensure_one()
@@ -37,14 +53,11 @@ class ProductTemplate(models.Model):
         return free_qty
 
     # This method is cached, must not return records! See also #8795
-    @tools.ormcache(
-        'country_code', 'show_visible',
-        'current_pl_id', 'website_pricelist_ids',
-        'partner_pl_id', 'order_pl_id',
+    @ormcache(
+        'country_code', 'show_visible', 'current_pl_id', 'website_pricelist_ids', 'partner_pl_id',
     )
     def _get_pl_partner_order(
-        self, country_code, show_visible, current_pl_id, website_pricelist_ids,
-        partner_pl_id=False, order_pl_id=False
+        self, country_code, show_visible, current_pl_id, website_pricelist_ids, partner_pl_id=False
     ):
         """ Return the list of pricelists that can be used on website for the current user.
 
@@ -60,8 +73,7 @@ class ProductTemplate(models.Model):
         """
         self.ensure_one()
         res = super()._get_pl_partner_order(
-            country_code, show_visible, current_pl_id, website_pricelist_ids,
-            partner_pl_id, order_pl_id
+            country_code, show_visible, current_pl_id, website_pricelist_ids, partner_pl_id=False
         )
         if self.env.user.sd_pricelist_ids:
             return self.env.user.sd_pricelist_ids.sudo().ids

@@ -10,7 +10,7 @@ from datetime import datetime
 from odoo import http, _
 from odoo.http import request, Response
 from odoo.exceptions import AccessError, ValidationError
-from odoo.modules.module import get_module_resource
+from odoo.modules.module import get_module_path
 from odoo.fields import Date
 
 _logger = logging.getLogger(__name__)
@@ -415,7 +415,7 @@ class AsStockAPI(http.Controller):
             
         try:
             # Obtener la ruta del archivo
-            file_path = get_module_resource('as_stock_api', 'static/postman', 'as_stock_api_collection.json')
+            file_path = get_module_path('as_stock_api', 'static/postman', 'as_stock_api_collection.json')
             
             if not file_path or not os.path.exists(file_path):
                 _logger.error("[as_download_postman_collection] Archivo no encontrado: %s", file_path)
@@ -519,7 +519,7 @@ class AsStockAPI(http.Controller):
         
         try:
             # Obtener la ruta del archivo
-            file_path = get_module_resource('as_stock_api', 'MANUAL_USUARIO.md')
+            file_path = get_module_path('as_stock_api', 'MANUAL_USUARIO.md')
             
             if not file_path or not os.path.exists(file_path):
                 _logger.error("[as_view_manual] Archivo de manual no encontrado: %s", file_path)

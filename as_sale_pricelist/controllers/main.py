@@ -5,7 +5,7 @@ import os
 import logging
 from datetime import datetime
 from odoo import http
-from odoo.modules.module import get_module_resource
+from odoo.modules.module import get_module_path
 
 _logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class AsSalePricelistController(http.Controller):
         
         try:
             # Obtener la ruta del archivo
-            file_path = get_module_resource('as_sale_pricelist', 'pruebas.md')
+            file_path = get_module_path('as_sale_pricelist', 'pruebas.md')
             
             if not file_path or not os.path.exists(file_path):
                 _logger.error("[as_view_pruebas] Archivo de pruebas no encontrado: %s", file_path)

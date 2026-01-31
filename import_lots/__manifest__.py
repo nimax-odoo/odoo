@@ -21,7 +21,7 @@
 ###############################################################################
 {
     'name': 'Import Lot from Excel',
-    'version': '18.0.1.0.0',
+    'version': '19.0.1.0.0',
     'category': 'Warehouse',
     'summary': """Import/add lots while validating a purchase order picking.""",
     'description': """This module helps to import lots and add to products in

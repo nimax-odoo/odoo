@@ -30,7 +30,7 @@ class SaleOrder(models.Model):
         )
         line = self.env['sale.order.line'].sudo().browse(res['line_id'])
         website = self.env['website'].get_current_website()
-        so = website and request and website.sale_get_order()
+        so = website and request.env['website'].get_current_website()
         so.pricelist_id = so.pricelist_id
         so.currency_aux_id = so.pricelist_id.currency_id
         if line and line.product_id:

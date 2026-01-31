@@ -13,7 +13,7 @@ class as_product_template(models.Model):
     @tools.ormcache()
     def _get_default_category_id(self):
         # Deletion forbidden (at least through unlink)
-        return self.env.ref('product.product_category_all')
+        return self.env.ref('product.product_category_services')
     
     as_proveedor = fields.Many2one(comodel_name='res.partner', string='Cliente - Proveedor')
     tf_import_tax = fields.Float('IMPORT TAX')
