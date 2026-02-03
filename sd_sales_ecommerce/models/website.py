@@ -10,6 +10,9 @@ _lt = LazyTranslate(__name__)
 class ProductTemplate(models.Model):
     _inherit = 'website'
     
+    def _get_current_pricelist(self):
+        return self._get_and_cache_current_pricelist()
+    
     def cart_quantity(self):
         if 'website_sale_cart_quantity' not in request.session:
             return request.website.sale_get_order().cart_quantity
@@ -79,3 +82,25 @@ class ProductTemplate(models.Model):
             return self.env.user.sd_pricelist_ids.sudo().ids
         return res
     
+
+class ProductRibbon(models.Model):
+    _inherit = 'product.ribbon'
+
+    def _get_position_class(self):
+        """
+        Return the CSS classes for this ribbon based on style and position.
+        rtype: str
+        """
+        css_classes = ""
+        match self.style:
+            case 'ribbon':
+                css_classes += "o_wsale_ribbon"
+            case 'tag':
+                css_classes += "o_wsale_badge"
+
+        match self.position:
+            case 'left':
+                css_classes += " o_left"
+            case 'right':
+                css_classes += " o_right"
+        return css_classes
