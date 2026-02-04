@@ -74,7 +74,7 @@ class PurchaseOrderLine(models.Model):
 				price_unit = line.env['account.tax']._fix_tax_included_price_company(
 					line.product_id.uom_id._compute_price(line.product_id.standard_price, po_line_uom),
 					line.product_id.supplier_taxes_id,
-					line.taxes_id,
+					line.tax_ids,
 					line.company_id,
 				)
 				if line.order_id.purchase_manual_currency_rate_active:
@@ -96,7 +96,7 @@ class PurchaseOrderLine(models.Model):
 				line.price_unit = float_round(price_unit, precision_digits=max(line.currency_id.decimal_places, self.env['decimal.precision'].precision_get('Product Price')))
 				continue
 
-			price_unit = line.env['account.tax']._fix_tax_included_price_company(seller.price, line.product_id.supplier_taxes_id, line.taxes_id, line.company_id) if seller else 0.0
+			price_unit = line.env['account.tax']._fix_tax_included_price_company(seller.price, line.product_id.supplier_taxes_id, line.tax_ids, line.company_id) if seller else 0.0
 			if line.order_id.purchase_manual_currency_rate_active:
 				is_inverted_rate = self.env['ir.config_parameter'].sudo().get_param("bi_manual_currency_exchange_rate.inverted_rate")
 				if is_inverted_rate:

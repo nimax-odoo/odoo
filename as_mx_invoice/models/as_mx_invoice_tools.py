@@ -121,50 +121,7 @@ class AsUIView(models.Model):
         trace_id = f"VIEW-{int(time.time())}"
         _debug_logger.info(f"[{trace_id}] {message}")
         
-    def _get_view_id(self, xml_id):
-        """
-        Sobrescrito para añadir logueo de debugging
-        """
-        self._as_debug_log(f"_get_view_id - xml_id: {xml_id}")
-        try:
-            # Verificar si es un ID técnico (módulo.nombre)
-            if isinstance(xml_id, str) and '.' in xml_id:
-                module, name = xml_id.split('.')
-                self._as_debug_log(f"Buscando vista con módulo={module}, nombre={name}")
 
-                # Verificar si existe como record
-                self.env.cr.execute("""
-                    SELECT v.id
-                    FROM ir_ui_view v
-                    JOIN ir_model_data d ON (d.model = 'ir.ui.view' AND d.res_id = v.id)
-                    WHERE d.module = %s AND d.name = %s
-                """, (module, name))
-                result = self.env.cr.fetchone()
-                if result:
-                    view_id = result[0]
-                    self._as_debug_log(f"Vista encontrada en la BD con ID: {view_id}")
-                else:
-                    self._as_debug_log(f"¡ALERTA! Vista NO encontrada en la BD: {xml_id}")
-                    
-                    # Intentar buscar un reporte con este nombre
-                    self.env.cr.execute("""
-                        SELECT r.id, r.name, r.report_name
-                        FROM ir_act_report_xml r
-                        JOIN ir_model_data d ON (d.model = 'ir.actions.report' AND d.res_id = r.id)
-                        WHERE d.module = %s AND d.name = %s
-                    """, (module, name))
-                    report_result = self.env.cr.fetchone()
-                    if report_result:
-                        self._as_debug_log(f"Encontrado un reporte (NO UNA VISTA) con ID: {report_result[0]}, name: {report_result[1]}")
-                        
-            result = super(AsUIView, self)._get_view_id(xml_id)
-            self._as_debug_log(f"_get_view_id completado exitosamente: {result}")
-            return result
-        except Exception as e:
-            error_msg = f"Error en _get_view_id: {e}\n{traceback.format_exc()}"
-            self._as_debug_log(error_msg)
-            _logger.error(error_msg)
-            raise
 
 class AsActionsReport(models.Model):
     _inherit = 'ir.actions.report'
