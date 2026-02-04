@@ -16,7 +16,7 @@ class StockQuant(models.Model):
         for quant in self:
             template = self.env.ref('as_sale_pricelist.email_template_ajustment_stock')
             emails = ''
-            for user in self.env.ref("as_sale_pricelist.group_send_mail_ajust").users:
+            for user in self.env.ref("as_sale_pricelist.group_send_mail_ajust").user_ids:
                 if user.partner_id.email:
                     emails += user.partner_id.email + ','
             if not emails:

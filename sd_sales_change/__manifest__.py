@@ -19,6 +19,7 @@
              "data/cron.xml",
              "data/email.xml",
              "views/stock_picking.xml",
+             "views/sale_ir_actions_report_templates.xml",
         ],
     'qweb':[],
     "auto_install": False,

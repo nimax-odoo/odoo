@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_saleorder_document" inherit_id="sale.report_saleorder_document">
+        <div name="delivery_date" position="after">
+            <div t-if="doc.x_studio_orden_de_compra" class="col" name="x_studio_orden_de_compra_id">
+                <strong>Orden de Compra</strong>
+                <div t-field="doc.x_studio_orden_de_compra">
+                    111522
+                </div>
+            </div>
+             <div t-if="doc.partner_id.x_studio_field_bCAGN" class="col" name="x_studio_field_bCAGN_id">
+                <strong>Clave Nimax</strong>
+                <div t-field="doc.partner_id.x_studio_field_bCAGN">
+                    111522
+                </div>
+            </div>
+        </div>
+    </template>
+
+
+
+</odoo>
