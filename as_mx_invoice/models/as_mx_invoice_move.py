@@ -284,7 +284,7 @@ class AsAccountInvoice(models.Model):
             
             invoice_values_list.append({
                 **inv_cfdi_values,
-                'objeto_imp': objeto_imp,
+                'objeto_imp': objeto_imp or '02',
                 'id_documento': invoice.l10n_mx_edi_cfdi_uuid,
                 'equivalencia': computed_rate,
                 'inv_rate': computed_rate,
@@ -1230,7 +1230,7 @@ class AsAccountInvoice(models.Model):
         xml = self._l10n_mx_edi_get_extra_invoice_report_values()
         return {
             'payment_method': xml.get('payment_method', ''),
-            'forma_pago': self.l10n_mx_edi_payment_method_id.code,
+            'forma_pago': self.l10n_mx_edi_payment_method_id.code or '99',
             'uso_cfdi': xml.get('cfdi_node', {}).get('Receptor', {}).get('UsoCFDI', ''),
             'currency_name': self.currency_id.name,
 

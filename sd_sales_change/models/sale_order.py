@@ -12,3 +12,9 @@ class SaleOrder(models.Model):
     _inherit = 'sale.order'
     
     is_picking_assigned = fields.Boolean('Picking Asignado', default=False)
+
+    def action_cancel(self):
+        """ Heredada para evitar que impida cancelar la orden si esta bloqueado. """
+        # if any(order.locked for order in self):
+        #     raise UserError(_("You cannot cancel a locked order. Please unlock it first."))
+        return self._action_cancel()
