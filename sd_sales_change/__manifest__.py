@@ -3,7 +3,7 @@
 {
     "name" : "Cambios en el Modulo Comercial (Ventas)",
     "version" : "19.0.0.2",
-    "depends" : ['base','account','sale_management','sale','stock'],
+    "depends" : ['base','account','sale_management','sale','stock','stock_landed_costs'],
     "author": "Smartdoo",
     "summary": "Cambios en modulo comercial de ventas para NIMAX",
     "description": """
@@ -20,6 +20,7 @@
              "data/email.xml",
              "views/stock_picking.xml",
              "views/sale_ir_actions_report_templates.xml",
+             "views/stock_landed_cost.xml",
         ],
     'qweb':[],
     "auto_install": False,

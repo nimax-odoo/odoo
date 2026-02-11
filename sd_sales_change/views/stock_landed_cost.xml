@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_update_pedimentos_lots" model="ir.actions.server">
+        <field name="name">Actualizar Pedimentos a lotes</field>
+        <field name="state">code</field>
+        <field name="binding_view_types">form,list</field>
+        <field name="model_id" ref="stock_landed_costs.model_stock_landed_cost" />
+        <field name="binding_model_id" ref="stock_landed_costs.model_stock_landed_cost" />
+        <field name="code">
+            if records:
+            action = records.sd_update_pedimentos_a_lotes()
+        </field>
+    </record>
+    <record id="view_stock_landed_cost_tree_inherit" model="ir.ui.view">
+        <field name="name">view.order.tree.inherit.view</field>
+        <field name="model">stock.landed.cost</field>
+        <field name="inherit_id" ref="stock_landed_costs.view_stock_landed_cost_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='button_cancel']" position="after">
+                <button name="sd_update_pedimentos_a_lotes" string="Cargar" type="object" />
+            </xpath>
+        </field>
+    </record>
+</odoo>
