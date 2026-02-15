@@ -18,26 +18,15 @@ _logger = logging.getLogger(__name__)
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    def write(self, vals):
+        res = super().write(vals)
+        return res
+    
     def reservar_picking_stock(self):
         for order in self:
             for picking in order.picking_ids:
                 picking.action_assign()
         return True
-
-    def _cart_update(self, product_id, line_id=None, add_qty=0, set_qty=0, **kwargs):
-        res = super()._cart_update(
-            product_id, line_id=line_id, add_qty=add_qty, set_qty=set_qty, **kwargs
-        )
-        line = self.env['sale.order.line'].sudo().browse(res['line_id'])
-        website = self.env['website'].get_current_website()
-        so = website and request.env['website'].get_current_website()
-        so.pricelist_id = so.pricelist_id
-        so.currency_aux_id = so.pricelist_id.currency_id
-        if line and line.product_id:
-            pricelist = line.order_id.pricelist_id
-            line.as_pricelist_id = pricelist
-
-        return res
     
     def _cron_update_sales_ecoomerce(self):
         orders = self.env['sale.order'].sudo().search([('state','=','draft'),('website_id','!=',False)])
@@ -51,6 +40,17 @@ class SaleOrder(models.Model):
             _logger.info('CANCELO LA VENTA %s POR CRON',order.name)
             
         return True
+
+
+    def _prepare_order_line_update_values(
+        self, order_line, quantity, *, event_booth_pending_ids=False, registration_values=None,
+        **kwargs
+    ):
+        values = super()._prepare_order_line_update_values(order_line, quantity, **kwargs)
+
+        values['as_pricelist_id'] = order_line.order_id.pricelist_id.id
+
+        return values
     
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
@@ -68,12 +68,3 @@ class SaleOrderLine(models.Model):
         # price = self.pricelist_item_id.pricelist_id.get_price_pricelist_nimax(self.product_id.with_context(**self._get_product_price_context()).id, price, self.product_uom_qty or 1.0)
 
         return price
-
-    def _prepare_order_line_update_values(
-        self, order_line, quantity, linked_line_id=False, **kwargs
-    ):
-        values = super()._prepare_order_line_update_values(order_line, quantity, linked_line_id=False, **kwargs)
-
-        values['as_pricelist_id'] = self.order_id.pricelist_id.id
-
-        return values

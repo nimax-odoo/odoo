@@ -1,6 +1,53 @@
 <odoo>
     <!--Filters-->
-   <!-- <template id="snippet_options_inherit" inherit_id="website.snippets" name="e-commerce snippet options">
+  <template id="pricelist_list_inherit2" inherit_id="website_sale.pricelist_list" name="Pricelists Dropdown">
+         <xpath expr="//span[@class='switcher_pricelist']" position="replace">
+         <span
+                            class="switcher_pricelist"
+                            t-att-data-pl_id="pl.id"
+                            t-out="pl.name"
+                        />
+                        (<t t-if="pl.currency_id" class="ms-1" t-out="pl.currency_id.name"/>)
+        </xpath>
+          <xpath expr="//a[@role='button']" position="replace">
+        <a
+                role="button"
+                href="#"
+                t-attf-class="dropdown-toggle btn px-2"
+                data-bs-toggle="dropdown"
+            >
+                <small class="d-none d-md-inline opacity-75"><t t-out="pricelist_label"/>:</small>
+                <span class="d-none d-md-inline" t-out="pricelist and pricelist.name or ' - '" />
+                (<t t-if="pricelist and pricelist.currency_id" class="ms-1 d-none d-md-inline" t-out="pricelist.currency_id.name"/>)
+                <span class="d-md-none"><t t-out="pricelist_label"/></span>
+            </a>
+        </xpath>
+    </template>  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!--   <template id="products_attributes2" inherit_id="website_sale.products" active="True" name="Attributes &amp; Variants filters">
+        <xpath expr="//div[contains(@t-attf-class, 'products_attributes_filters')]" position="inside">
+            <we-checkbox string="Show Availability Filter"
+                         data-customize-website-views="sd_sales_ecommerce.products_availability_filter,sd_sales_ecommerce.custom_product_stock_status"
+                         data-no-preview="true"
+                         data-reload="/"/>
+        </xpath>
+    </template>
+    <template id="snippet_options_inherit" inherit_id="website.snippets" name="e-commerce snippet options">
         <xpath expr="//div[@class='products_attributes_filters']" position="after">
             <we-checkbox string="Show Availability Filter"
                          data-customize-website-views="sd_sales_ecommerce.products_availability_filter,sd_sales_ecommerce.custom_product_stock_status"

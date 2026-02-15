@@ -41,6 +41,11 @@ class WebsiteSaleInherit(WebsiteSale):
         response = super(WebsiteSaleInherit, self).shop_payment_confirmation(**post)
         sale_order_id = request.session.get('sale_last_order_id')
         if sale_order_id:
+            price_list_id = request.website._get_current_pricelist()
+            order = request.env['sale.order'].sudo().browse(sale_order_id)
+            order.pricelist_id = price_list_id
+            for line in order.order_line:
+                line.as_pricelist_id = price_list_id
             user_id = request.env.user
             if not user_id.sd_reserva_stock:
                 order = request.env['sale.order'].sudo().browse(sale_order_id)
@@ -48,39 +53,89 @@ class WebsiteSaleInherit(WebsiteSale):
                 order.reservar_picking_stock()
         return response
 
-
-    @route(['/shop/change_pricelist/<model("product.pricelist"):pricelist>'], type='http', auth="public", website=True, sitemap=False)
+    @route(
+        '/shop/change_pricelist/<model("product.pricelist"):pricelist>',
+        type='http',
+        auth='public',
+        website=True,
+        sitemap=False,
+    )
     def pricelist_change(self, pricelist, **post):
         website = request.env['website'].get_current_website()
         redirect_url = request.httprequest.referrer
+        prev_pricelist = request.pricelist
         if (
-                pricelist in request.env.user.sd_pricelist_ids
+            self._apply_selectable_pricelist(pricelist.id)
+            and redirect_url
+            and website.is_view_active('website_sale.filter_products_price')
+            and prev_pricelist != pricelist
         ):
-            if redirect_url and request.website.is_view_active('website_sale.filter_products_price'):
-                decoded_url = url_parse(redirect_url)
-                args = url_decode(decoded_url.query)
-                min_price = args.get('min_price')
-                max_price = args.get('max_price')
-                if min_price or max_price:
-                    previous_price_list = request.website.pricelist_id
-                    try:
-                        min_price = float(min_price)
-                        args['min_price'] = min_price and str(
-                            previous_price_list.currency_id._convert(min_price, pricelist.currency_id, request.website.company_id, fields.Date.today(), round=False)
-                        )
-                    except (ValueError, TypeError):
-                        pass
-                    try:
-                        max_price = float(max_price)
-                        args['max_price'] = max_price and str(
-                            previous_price_list.currency_id._convert(max_price, pricelist.currency_id, request.website.company_id, fields.Date.today(), round=False)
-                        )
-                    except (ValueError, TypeError):
-                        pass
-                    redirect_url = decoded_url.replace(query=url_encode(args)).to_url()
+            # Convert prices to the new priceslist currency in the query params of the referrer
+            decoded_url = url_parse(redirect_url)
+            args = url_decode(decoded_url.query)
+            min_price = args.get('min_price')
+            max_price = args.get('max_price')
+            if min_price or max_price:
+                try:
+                    min_price = float(min_price)
+                    args['min_price'] = min_price and str(prev_pricelist.currency_id._convert(
+                        min_price,
+                        pricelist.currency_id,
+                        request.website.company_id,
+                        fields.Date.today(),
+                        round=False,
+                    ))
+                except (ValueError, TypeError):
+                    pass
+                try:
+                    max_price = float(max_price)
+                    args['max_price'] = max_price and str(prev_pricelist.currency_id._convert(
+                        max_price,
+                        pricelist.currency_id,
+                        request.website.company_id,
+                        fields.Date.today(),
+                        round=False,
+                    ))
+                except (ValueError, TypeError):
+                    pass
+            redirect_url = decoded_url.replace(query=url_encode(args)).to_url()
             request.session['website_sale_current_pl'] = pricelist.id
             request.session['website_sale_selected_pl_id'] = pricelist.id
-            order_sudo = request.env['website'].get_current_website()
-            if order_sudo:
-                order_sudo._cart_update_pricelist(pricelist_id=pricelist.id)
-        return request.redirect(redirect_url or '/shop')
+        return request.redirect(redirect_url or self._get_shop_path())
+
+
+    # @route(['/shop/change_pricelist/<model("product.pricelist"):pricelist>'], type='http', auth="public", website=True, sitemap=False)
+    # def pricelist_change(self, pricelist, **post):
+    #     website = request.env['website'].get_current_website()
+    #     redirect_url = request.httprequest.referrer
+    #     if (
+    #             pricelist in request.env.user.sd_pricelist_ids
+    #     ):
+    #         if redirect_url and request.website.is_view_active('website_sale.filter_products_price'):
+    #             decoded_url = url_parse(redirect_url)
+    #             args = url_decode(decoded_url.query)
+    #             min_price = args.get('min_price')
+    #             max_price = args.get('max_price')
+    #             if min_price or max_price:
+    #                 previous_price_list = request.website.pricelist_id
+    #                 try:
+    #                     min_price = float(min_price)
+    #                     args['min_price'] = min_price and str(
+    #                         previous_price_list.currency_id._convert(min_price, pricelist.currency_id, request.website.company_id, fields.Date.today(), round=False)
+    #                     )
+    #                 except (ValueError, TypeError):
+    #                     pass
+    #                 try:
+    #                     max_price = float(max_price)
+    #                     args['max_price'] = max_price and str(
+    #                         previous_price_list.currency_id._convert(max_price, pricelist.currency_id, request.website.company_id, fields.Date.today(), round=False)
+    #                     )
+    #                 except (ValueError, TypeError):
+    #                     pass
+    #                 redirect_url = decoded_url.replace(query=url_encode(args)).to_url()
+    #         request.session['website_sale_current_pl'] = pricelist.id
+    #         request.session['website_sale_selected_pl_id'] = pricelist.id
+    #         order_sudo = request.env['website'].get_current_website()
+    #         if order_sudo:
+    #             order_sudo._cart_update_pricelist(pricelist_id=pricelist.id)
+    #     return request.redirect(redirect_url or '/shop')

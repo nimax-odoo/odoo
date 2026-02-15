@@ -11,17 +11,8 @@
                 <header><button name="action_cleaner_cache" type="object" string="Actualizar Cache" class="oe_highlight" /></header>
                     <group>
                         <field name="sd_desc_percentaje" widget="percentage"/>
-                        <div class="text-muted">
-                            Porcentaje del descuento real que se mostrará en el Ecommerce.
-                        </div>
                          <field name="sd_pricelist_ids"  widget="many2many_tags"/>
-                        <div class="text-muted">
-                             Lista de precios que se utilizará por defecto en el ecommerce de Stock con precios.
-                        </div>
                         <field name="sd_reserva_stock"/>
-                        <div class="text-muted">
-                            Permite reservar el stock de forma automatica en la e-commerce.
-                        </div>
                     </group>
                 </page>
             </notebook>
@@ -37,17 +28,8 @@
                 <header><button name="action_cleaner_cache" type="object" string="Actualizar Cache" class="oe_highlight" /></header>
                     <group>
                         <field name="sd_desc_percentaje" widget="percentage"/>
-                        <div class="text-muted">
-                            Porcentaje del descuento real que se mostrará en el Ecommerce.
-                        </div>
                         <field name="sd_pricelist_ids"  widget="many2many_tags"/>
-                        <div class="text-muted">
-                             Lista de precios que se utilizará por defecto en el ecommerce de Stock con precios.
-                        </div>
                         <field name="sd_reserva_stock"/>
-                        <div class="text-muted">
-                            Permite reservar el stock de forma automatica en la e-commerce.
-                        </div>
                     </group>
                 </page>
             </notebook>

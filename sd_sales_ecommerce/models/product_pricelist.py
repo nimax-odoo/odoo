@@ -10,7 +10,7 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.http import request
 from odoo.tools import format_amount
 import operator as py_operator
-
+import time
 #from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 class Pricelist(models.Model):
@@ -30,12 +30,12 @@ class Pricelist(models.Model):
         product = self.env['product.product'].browse(product)
         if pricelist:
             item_pricelist = False
-            for item in pricelist.item_ids:
+            for item in pricelist.item_ids.filtered(lambda a: a.categ_id and a.categ_id == self.categ_id):
                 if item.categ_id and item.categ_id == self.categ_id:
                     item_pricelist = item
                     
             tf_partner_id = self.env['tf.res.partner']
-            for x in self.env.user.partner_id.tf_vendor_parameter_ids:
+            for x in self.env.user.partner_id.tf_vendor_parameter_ids.filtered(lambda a: a.category_id == product.categ_id):
                 if x.category_id.id == product.categ_id.id:
                     tf_partner_id = x
                     
@@ -125,28 +125,29 @@ class PricelistItem(models.Model):
         else:
             return self.env['product.product'].search([('product_tmpl_id','=',product.id)],limit=1)
 
-    # def _compute_price(self, product, quantity, uom, date, currency=None, **kwargs):
-    #     price = super()._compute_price(product, quantity, uom, date, currency, **kwargs)
-    #     if 'website_id' in self.env.context and self.env.user.sd_pricelist_ids:
-    #         product = self.selected_product(product)
-    #         pricelist = self.pricelist_id
-    #         price_new = pricelist.get_price_pricelist_nimax(product.id, price, quantity)
-    #         if price_new:
-    #             price = price_new
-    #     if 'website_id' in self.env.context:
-    #         product = self.selected_product(product)
-    #         pricelist = self.pricelist_id
-    #         promos_disponibles = request.env['coupon.program'].sudo().search_promo_disponibles_ecommerce()
-    #         partner_id = self.env.user.partner_id.id
-    #         if promos_disponibles and partner_id:
-    #             promociones = request.env['coupon.program'].sudo().search_promo_ecommerce(product,partner_id,promos_disponibles)
-    #             if promociones[0]:
-    #                 price = promociones[1]
-    #                 moneda_usd = self.env.ref('base.USD', raise_if_not_found=False) or self.env['res.currency'].search([('name','=','USD')], limit=1)
-    #                 if moneda_usd != pricelist.currency_id:
-    #                     price = moneda_usd._convert(
-    #                         from_amount=promociones[1],
-    #                         to_currency=pricelist.currency_id,
-    #                         company=self.env.company
-    #                     )
-    #     return price
+    def _compute_price(self, product, quantity, uom, date, currency=None, **kwargs):
+        price = super()._compute_price(product, quantity, uom, date, currency, **kwargs)
+        if 'website_id' in self.env.context and self.env.user.sd_pricelist_ids:
+            product = self.selected_product(product)
+            pricelist = self.pricelist_id
+            price_new = pricelist.get_price_pricelist_nimax(product.id, price, quantity)
+            # time.sleep(10)
+            if price_new:
+                price = price_new
+        if 'website_id' in self.env.context:
+            product = self.selected_product(product)
+            pricelist = self.pricelist_id
+            promos_disponibles = request.env['coupon.program'].sudo().search_promo_disponibles_ecommerce()
+            partner_id = self.env.user.partner_id.id
+            if promos_disponibles and partner_id:
+                promociones = request.env['coupon.program'].sudo().search_promo_ecommerce(product,partner_id,promos_disponibles)
+                if promociones[0]:
+                    price = promociones[1]
+                    moneda_usd = self.env.ref('base.USD', raise_if_not_found=False) or self.env['res.currency'].search([('name','=','USD')], limit=1)
+                    if moneda_usd != pricelist.currency_id:
+                        price = moneda_usd._convert(
+                            from_amount=promociones[1],
+                            to_currency=pricelist.currency_id,
+                            company=self.env.company
+                        )
+        return price
