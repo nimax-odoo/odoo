@@ -55,7 +55,7 @@ class SaleOrderPricelistWizard(models.TransientModel):
                                 products=line.product_id,
                                 quantity=line.product_uom_qty,
                                 currency=order.currency_id,
-                                uom=line.product_uom,
+                                uom=line.product_uom_id,
                                 date=date.today()
                             )
                             price_unit = price_result[line.product_id.id][0]
