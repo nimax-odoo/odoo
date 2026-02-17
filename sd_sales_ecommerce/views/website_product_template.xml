@@ -1,103 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!--Filters-->
-  <template id="pricelist_list_inherit2" inherit_id="website_sale.pricelist_list" name="Pricelists Dropdown">
-         <xpath expr="//span[@class='switcher_pricelist']" position="replace">
-         <span
-                            class="switcher_pricelist"
-                            t-att-data-pl_id="pl.id"
-                            t-out="pl.name"
-                        />
-                        (<t t-if="pl.currency_id" class="ms-1" t-out="pl.currency_id.name"/>)
+
+
+    <!-- Notification For Filter -->
+    <template inherit_id="website_sale.products" id="products_inherit2" name="Products">
+
+        <xpath expr="//span[@t-if='isFilteringByPrice or attrib_set or tags']" position="attributes">
+            <attribute name="t-if">
+                isFilteringByPrice or attrib_set or tags or show_only_in_stock
+            </attribute>
         </xpath>
-          <xpath expr="//a[@role='button']" position="replace">
-        <a
-                role="button"
-                href="#"
-                t-attf-class="dropdown-toggle btn px-2"
-                data-bs-toggle="dropdown"
-            >
-                <small class="d-none d-md-inline opacity-75"><t t-out="pricelist_label"/>:</small>
-                <span class="d-none d-md-inline" t-out="pricelist and pricelist.name or ' - '" />
-                (<t t-if="pricelist and pricelist.currency_id" class="ms-1 d-none d-md-inline" t-out="pricelist.currency_id.name"/>)
-                <span class="d-md-none"><t t-out="pricelist_label"/></span>
-            </a>
-        </xpath>
-    </template>  
+        <xpath expr="//div[hasclass('o_wsale_products_grid_before_rail')]//div[hasclass('border-bottom')]" position="replace">
+           <div t-if="attrib_values or  tags or show_only_in_stock or (
+                                        show_price_filter and isFilteringByPrice
+                                    )" class="py-3 border-bottom">
+                    <a t-att-href="keep(attribute_values=0, tags=0, min_price=0, max_price=0, show_only_in_stock=0)"
+                        t-attf-class="btn btn-{{navClass}} d-flex align-items-center py-1" title="Clear Filters">
+                        <small class="mx-auto"><b>Borrar filtros</b></small>
+                        <i class="oi oi-close" role="presentation" />
+                    </a>
+                </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  <!--   <template id="products_attributes2" inherit_id="website_sale.products" active="True" name="Attributes &amp; Variants filters">
-        <xpath expr="//div[contains(@t-attf-class, 'products_attributes_filters')]" position="inside">
-            <we-checkbox string="Show Availability Filter"
-                         data-customize-website-views="sd_sales_ecommerce.products_availability_filter,sd_sales_ecommerce.custom_product_stock_status"
-                         data-no-preview="true"
-                         data-reload="/"/>
         </xpath>
     </template>
-    <template id="snippet_options_inherit" inherit_id="website.snippets" name="e-commerce snippet options">
-        <xpath expr="//div[@class='products_attributes_filters']" position="after">
-            <we-checkbox string="Show Availability Filter"
-                         data-customize-website-views="sd_sales_ecommerce.products_availability_filter,sd_sales_ecommerce.custom_product_stock_status"
-                         data-no-preview="true"
-                         data-reload="/"/>
+    <template id="pricelist_list_inherit2" inherit_id="website_sale.pricelist_list" name="Pricelists Dropdown">
+        <xpath expr="//span[@class='switcher_pricelist']" position="replace">
+            <span class="switcher_pricelist" t-att-data-pl_id="pl.id" t-out="pl.name" />
+            (
+            <t t-if="pl.currency_id" class="ms-1" t-out="pl.currency_id.name" />)
+        </xpath>
+        <xpath expr="//a[@role='button']" position="replace">
+            <a role="button" href="#" t-attf-class="dropdown-toggle btn px-2" data-bs-toggle="dropdown">
+                <small class="d-none d-md-inline opacity-75">
+                    <t t-out="pricelist_label" />:</small>
+                <span class="d-none d-md-inline" t-out="pricelist and pricelist.name or ' - '" />
+                (
+                <t t-if="pricelist and pricelist.currency_id" class="ms-1 d-none d-md-inline"
+                    t-out="pricelist.currency_id.name" />)
+                <span class="d-md-none">
+                    <t t-out="pricelist_label" /></span>
+            </a>
+        </xpath>
+    </template>
 
-        </xpath>
-    </template>  
-       <template id="pricelist_list_inherit" inherit_id="website_sale.pricelist_list" name="Pricelists Dropdown">
-         <xpath expr="//t[@t-cache='pricelist,website_sale_pricelists,navClass']" position="replace">
-            <t t-cache="pricelist,website_sale_pricelists,navClass">
-                <a role="button" href="#" t-attf-class="dropdown-toggle btn btn-{{navClass}}" data-bs-toggle="dropdown">
-                    <t t-esc="pricelist and pricelist.display_name or ' - '" />
-                </a>
-                <div class="dropdown-menu" role="menu">
-                    <t t-foreach="website_sale_pricelists" t-as="pl">
-                        <a role="menuitem" t-att-href="'/shop/change_pricelist/%s' % pl.id" class="dropdown-item">
-                            <span class="switcher_pricelist small" t-att-data-pl_id="pl.id" t-esc="pl.display_name"/>
-                        </a>
-                    </t>
-                </div>
-            </t>
-        </xpath>
-    </template>  
-     <template id="products_availability_filter" inherit_id="website_sale.products_attributes" active="False"
-              name="Availability Filters">
-        <xpath expr="//form[hasclass('js_attributes')]" position="attributes">
-            <attribute name="t-if">attributes or all_tags or products</attribute>
-        </xpath>
-        <xpath expr="//form[hasclass('js_attributes')]" position="inside">
-            <h6 class="mb-3">
-                <b class="o_products_attributes_title d-none d-lg-block">Disponible</b>
-            </h6>
-            <div class="form-check my-2">
-                <input type="checkbox" id="show_only_in_stock" class="form-check-input" name="show_only_in_stock"
-                       t-att-checked="True if show_only_in_stock else None" />
-                <label class="form-check-label" for="show_only_in_stock">
-                    Productos en stock
-                </label>
-            </div>
-        </xpath>
-    </template> -->
     <!--    Products-->
     <template id="custom_product_stock_status" inherit_id="website_sale.products_item" active="False">
         <xpath expr="//div[hasclass('product_price')]" position="after">
-            <b><t t-esc="website._get_current_pricelist().currency_id.name"/></b>
-            <t t-set="tmpl_id" t-value="product.id"/>
-            <t t-set="qty" t-value="(stock_map.get(tmpl_id) or 0) if stock_map else 0"/>
+            <b>
+                <t t-esc="website._get_current_pricelist().currency_id.name" /></b>
+            <t t-set="tmpl_id" t-value="product.id" />
+            <t t-set="qty" t-value="(stock_map.get(tmpl_id) or 0) if stock_map else 0" />
             <div t-if="product.sudo().stock_status == 'in_stock'" class="text-success">
-                En Stock <t t-esc="int(qty or 0)"/> Unid.
+                En Stock
+                <t t-esc="int(qty or 0)" /> Unid.
             </div>
             <div t-if="product.sudo().stock_status == 'out_of_stock'" class="text-danger">
                 Agotado
@@ -105,56 +61,51 @@
         </xpath>
     </template>
     <!--Notification For Filter-->
-    <template inherit_id="website_sale.products" id="products_inherit" name="Products">
+    <template inherit_id="website_sale.floating_bar" id="products_inherit" name="Products">
         <xpath expr="//span[@t-if='isFilteringByPrice or attrib_set or tags']" position="attributes">
             <attribute name="t-if">isFilteringByPrice or attrib_set or tags or show_only_in_stock</attribute>
         </xpath>
     </template>
 
     <!--Mobile Canvas-->
-    <template id="o_wsale_offcanvas_inherit" inherit_id="website_sale.o_wsale_offcanvas" name="Offcanvas">
-        <xpath expr="//div[hasclass('offcanvas-body')][2]" position="replace">
+    <template id="o_wsale_offcanvas_clear_filters_inherit" inherit_id="website_sale.o_wsale_offcanvas">
+
+        <xpath expr="//div[contains(@class,'offcanvas-body') and contains(@class,'border-top')]/a" position="replace">
+
             <div class="offcanvas-body d-flex justify-content-between flex-grow-0 border-top overflow-hidden">
                 <a t-attf-class="btn btn-{{navClass}} d-flex py-1 mb-2 {{(not attrib_values and not isFilteringByPrice and not tags and not show_only_in_stock) and 'disabled' }}"
-                   t-att-aria-disabled="(not attrib_values and not isFilteringByPrice and not tags and not show_only_in_stock) and 'true' or 'false'"
-                   href="/shop"
-                   title="Borrar filtros">
+                    t-att-aria-disabled="(not attrib_values and not isFilteringByPrice and not tags and not show_only_in_stock) and 'true' or 'false'"
+                    t-att-href="keep(attribute_values=0, tags=0, min_price=0, max_price=0, show_only_in_stock=0)"
+                    title="Clear Filters">
                     Borrar filtros
                 </a>
             </div>
+
         </xpath>
 
-        <!-- <xpath expr="//form[contains(@t-attf-class, 'js_attributes')]" position="inside">
-            <div class="accordion-item border-bottom" t-if="is_view_active('sd_sales_ecommerce.products_availability_filter')">
-                <h2 id="o_wsale_offcanvas_categories_header" class="accordion-header mb-0">
-                    <button class="o_wsale_offcanvas_title accordion-button rounded-0 collapsed"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#o_wsale_offcanvas_stock"
-                            aria-expanded="false"
-                            aria-controls="o_wsale_offcanvas_stock">
+    </template>
+
+    <template id="o_wsale_offcanvas_inherit" inherit_id="website_sale.product_attribute_filters_form" name="Offcanvas">
+
+        <xpath expr="//form[contains(@t-attf-class, 'js_attributes')]" position="inside">
+            <div class="accordion-item">
+                <div class="accordion-header h6 mb-0">
+                    <button class="accordion-button px-0 bg-transparent shadow-none" type="button"
+                        data-bs-toggle="collapse" t-attf-data-bs-target="#o_wsale_offcanvas_stock"
+                        t-attf-aria-controls="o_wsale_offcanvas_stock" aria-expanded="true">
                         <b>Productos Disponible</b>
                     </button>
-                </h2>
-                <div id="o_wsale_offcanvas_stock"
-                     class="accordion-collapse collapse"
-                     aria-labelledby="o_wsale_offcanvas_stock_header">
-                    <div class="accordion-body pt-0">
-                        <div>
-                            <div class="form-check my-2">
-                                <input type="checkbox" id="show_only_in_stock" class="form-check-input"
-                                       name="show_only_in_stock"
-                                       t-att-checked="True if show_only_in_stock else None"/>
-                                <label class="form-check-label" for="show_only_in_stock">
-                                    Productos en stock
-                                </label>
-                            </div>
-                        </div>
-
-                    </div>
+                </div>
+                <div id="o_wsale_offcanvas_stock" class="accordion-collapse collapse show">
+                    <input type="checkbox" name="show_only_in_stock" class="form-check-input o_wsale_filter"
+                        id="show_only_in_stock" t-att-checked="'checked' if show_only_in_stock else None" />
+                    <label class="form-check-label fw-normal" for="show_only_in_stock">Productos en stock
+                    </label>
                 </div>
             </div>
 
-        </xpath> -->
+
+
+        </xpath>
     </template>
 </odoo>

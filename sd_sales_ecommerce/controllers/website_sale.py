@@ -6,8 +6,14 @@ from werkzeug.urls import url_decode, url_encode, url_parse
 
 class WebsiteSaleInherit(WebsiteSale):
 
-    def _shop_get_query_url_kwargs(self, search, min_price, max_price, **kwargs):
-        res = super()._shop_get_query_url_kwargs(search, min_price, max_price, **kwargs)
+    def _get_additional_shop_values(self, values, **kwargs):
+        """ Hook to update values used for rendering website_sale.products template """
+        vals = super()._get_additional_shop_values(values, **kwargs)
+        # vals['show_only_in_stock'] = True
+        return vals
+    
+    def _shop_get_query_url_kwargs(self, search, min_price, max_price, order=None, tags=None, **kwargs):
+        res = super()._shop_get_query_url_kwargs(search, min_price, max_price, order, tags, **kwargs)
         if kwargs.get('show_only_in_stock'):
             res.update({'show_only_in_stock': kwargs.get('show_only_in_stock')})
         return res
@@ -25,6 +31,10 @@ class WebsiteSaleInherit(WebsiteSale):
                                                         tags=tags,**post)
         q = response.qcontext
         if post.get('show_only_in_stock'):
+            # if attribute_values:
+            #     request.session['attribute_values'] = attribute_values
+            # else:
+            #     request.session.pop('attribute_values', None)
             response.qcontext.update({
                 'show_only_in_stock': True
             })
