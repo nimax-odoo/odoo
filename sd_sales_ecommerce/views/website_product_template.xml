@@ -5,11 +5,11 @@
     <!-- Notification For Filter -->
     <template inherit_id="website_sale.products" id="products_inherit2" name="Products">
 
-        <xpath expr="//span[@t-if='isFilteringByPrice or attrib_set or tags']" position="attributes">
+        <!-- <xpath expr="//span[@t-if='isFilteringByPrice or attrib_set or tags']" position="attributes">
             <attribute name="t-if">
                 isFilteringByPrice or attrib_set or tags or show_only_in_stock
             </attribute>
-        </xpath>
+        </xpath> -->
         <xpath expr="//div[hasclass('o_wsale_products_grid_before_rail')]//div[hasclass('border-bottom')]" position="replace">
            <div t-if="attrib_values or  tags or show_only_in_stock or (
                                         show_price_filter and isFilteringByPrice
