@@ -3,7 +3,7 @@
 
 
     <!-- Notification For Filter -->
-   <!-- <template inherit_id="website_sale.products" id="products_inherit2" name="Products">
+   <!-- --><template inherit_id="website_sale.products" id="products_inherit2" name="Products">
 
          <xpath expr="//span[@t-if='isFilteringByPrice or attrib_set or tags']" position="attributes">
             <attribute name="t-if">
@@ -23,7 +23,7 @@
 
 
         </xpath>
-    </template>-->
+    </template>
     <template id="pricelist_list_inherit2" inherit_id="website_sale.pricelist_list" name="Pricelists Dropdown">
         <xpath expr="//span[@class='switcher_pricelist']" position="replace">
             <span class="switcher_pricelist" t-att-data-pl_id="pl.id" t-out="pl.name" />
@@ -86,7 +86,9 @@
     </template>
 
     <template id="o_wsale_offcanvas_inherit" inherit_id="website_sale.product_attribute_filters_form" name="Offcanvas">
-
+    <xpath expr="//form[contains(@t-attf-class, 'js_attributes')]" position="attributes">
+        <attribute name="t-att-action">keep(attribute_values=0, tags=0,show_only_in_stock=show_only_in_stock)</attribute>
+    </xpath>
         <xpath expr="//form[contains(@t-attf-class, 'js_attributes')]" position="inside">
             <div class="accordion-item">
                 <div class="accordion-header h6 mb-0">
