@@ -61,11 +61,11 @@
         </xpath>
     </template>
     <!--Notification For Filter-->
-    <template inherit_id="website_sale.floating_bar" id="products_inherit" name="Products">
+    <!-- <template inherit_id="website_sale.floating_bar" id="products_inherit" name="Products">
         <xpath expr="//span[@t-if='isFilteringByPrice or attrib_set or tags']" position="attributes">
             <attribute name="t-if">isFilteringByPrice or attrib_set or tags or show_only_in_stock</attribute>
         </xpath>
-    </template>
+    </template> -->
 
     <!--Mobile Canvas-->
     <template id="o_wsale_offcanvas_clear_filters_inherit" inherit_id="website_sale.o_wsale_offcanvas">
