@@ -163,9 +163,9 @@ class AccountPayment(models.Model):
 
     def _prepare_move_line_default_vals(self, write_off_line_vals=None,force_balance=None):
         result = super()._prepare_move_line_default_vals(write_off_line_vals,force_balance)
-        _logger.debug("\n\n\n Aplicando tasa de cambio manual en el método _prepare_move_line_default_vals 2\n\n\n")
+        _logger.info("\n\n\n Aplicando tasa de cambio manual en el método _prepare_move_line_default_vals 2\n\n\n")
         if self.manual_currency_rate_active and self.manual_currency_rate > 0:
-            _logger.debug("\n\n\n Aplicando tasa de cambio manual en el método _prepare_move_line_default_vals 1\n\n\n")
+            _logger.info("\n\n\n Aplicando tasa de cambio manual en el método _prepare_move_line_default_vals 1\n\n\n")
             for res in result:
                 if self.company_id.currency_id.id == self.currency_id.id:
                     amount_currency = res['amount_currency']
