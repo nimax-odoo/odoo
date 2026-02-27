@@ -186,6 +186,8 @@ class AccountPayment(models.Model):
                     _logger.info("\n\n\n Aplicando tasa de cambio manual en el método _prepare_move_line_default_vals 1 %s\n\n\n",str(res))
                 else:
                     amount_currency = res['amount_currency']
+                    if res.get('balance'):
+                        res['balance'] = amount_currency / self.manual_currency_rate
                     if res.get('debit'):
                         res['debit'] = abs(amount_currency) / self.manual_currency_rate
                     if res.get('credit'):
