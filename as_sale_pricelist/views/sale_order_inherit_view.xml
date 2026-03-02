@@ -9,6 +9,7 @@
 		<field name="arch" type="xml">
 			<!-- Campos en el formulario principal -->
 			<field name="payment_term_id" position="after">
+				<field name="sd_block_user"/>
 				<field name="last_promo_id" invisible="1"/>
 				<field name="currency_aux_id" options="{'no_create': True}"/>
 				<field name="as_margin"/>

@@ -8,3 +8,4 @@ class as_res_partner(models.Model):
     as_partner_type = fields.Many2one('as.partner.type', string='Tipo de Cliente')
 
     tf_vendor_parameter_ids = fields.Many2many('tf.res.partner', string='Vendor Parameter')
+    sd_block_user = fields.Selection([('False', 'Disponible'),('True', 'Bloqueado')], default = "False", string = 'Estado del Usuario')

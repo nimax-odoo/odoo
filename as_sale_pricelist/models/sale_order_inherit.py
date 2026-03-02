@@ -178,7 +178,27 @@ class SaleOrder(models.Model):
     as_zebra_sale = fields.Boolean(string="Es Zebra")
     as_usuario_final = fields.Char(string="Usuario Final")
     invoice_ids = fields.Many2many("account.move", string='Invoices', compute="_get_invoiced", readonly=True, copy=False,store=True)
+    sd_block_user = fields.Selection([], related = "partner_id.sd_block_user", string = "Estado del Usuario", readonly=True )
 
+
+    @api.onchange('partner_id')
+    def _onchange_partner_id_warning(self):
+        if not self.partner_id:
+            return
+        partner = self.partner_id
+
+        if partner.sd_block_user == 'True':
+
+            for rec in self:
+                rec.write({'partner_id': ''})
+
+            return {
+                'warning': {
+                    'title': _("Contacto bloqueado"),
+                    'message': _("No se puede crear una cotización de un contacto bloqueado. Por favor, seleccione otro contacto."),
+                }
+            }
+            
     def action_update_quantity(self):
         return {
                 'name': _('Ajustar Cantidades'),
@@ -286,6 +306,8 @@ class SaleOrder(models.Model):
                 tf_history_id = self.env['tf.history.promo'].search([('id', 'in', history_table)])
                 if tf_history_id:
                     tf_history_id.last_applied_promo = True
+            if rec.sd_block_user == 'True':
+                raise ValidationError('No se puede confirmar la venta del cliente bloqueado : %s' % str(rec.partner_id.name))
         if product != []:
             raise ValidationError('EXISTEN LINEAS PRODUCTO SIN PRECIO BASE : %s' % str(product))
                 

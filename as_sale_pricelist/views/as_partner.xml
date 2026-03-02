@@ -22,6 +22,29 @@
             </page>
         </field>
     </record>
+    <record id="sd_view_partner_form" model="ir.ui.view">
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
 
+                <field name="sd_block_user" widget="statusbar"/>
+            </xpath>
+            <xpath expr="//field[@name='followup_responsible_id']" position="after">
+
+                <field name="sd_block_user"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sd_view_partner_tree" model="ir.ui.view">
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="after">
+                <field name="sd_block_user" widget="badge" decoration-success="sd_block_user == 'False'" decoration-danger="sd_block_user == 'True'"/>
+            </xpath>
+        </field>
+    </record>
 
 </odoo>
