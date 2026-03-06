@@ -179,6 +179,7 @@ class SaleOrder(models.Model):
     as_usuario_final = fields.Char(string="Usuario Final")
     invoice_ids = fields.Many2many("account.move", string='Invoices', compute="_get_invoiced", readonly=True, copy=False,store=True)
     sd_block_user = fields.Selection([], related = "partner_id.sd_block_user", string = "Estado del Usuario", readonly=True )
+    sale_warn_msg = fields.Text('Mensaje para orden de venta', tracking = True)
 
 
     @api.onchange('partner_id')

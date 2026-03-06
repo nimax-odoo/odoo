@@ -18,6 +18,37 @@ _logger = logging.getLogger(__name__)
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
+    
+    lot_ped_ids = fields.Many2many('stock.lot', string='Lotes', compute='_compute_lot_ids')
+    
+    def _compute_lot_ids(self):
+        for line in self:
+
+            invoice_lines = line.sale_line_ids.mapped('invoice_lines')
+            # Inicializar SIEMPRE el campo (muy importante en campos compute)
+            for inv_line in invoice_lines:
+                inv_line.lot_ped_ids = [(6, 0, [])]
+            # Si no hay lineas de venta salir
+            if not line.sale_line_ids:
+                continue
+            # Obtener todos los lotes
+            all_lots = line.sale_line_ids.move_ids.mapped('lot_ids')
+            # Si no hay lotes salir (pero ya quedó vacío correctamente)
+            if not all_lots:
+                continue
+            # ordenar para estabilidad
+            all_lots = all_lots.sorted('id')
+            lot_ids = all_lots.ids
+            index = 0
+            total_lots = len(lot_ids)
+            for inv_line in invoice_lines:
+                qty = int(inv_line.quantity)
+                if index >= total_lots:
+                    break
+                assigned = lot_ids[index:index + qty]
+                inv_line.lot_ped_ids = [(6, 0, assigned)]
+                index += qty
+                
 
     @api.model
     def _create_exchange_difference_moves(self, exchange_diff_values_list):

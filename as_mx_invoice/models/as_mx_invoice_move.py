@@ -1295,17 +1295,9 @@ class AsAccountInvoice(models.Model):
         Retorno: String con nombres de lotes
         """
         names = ''
-        for line in line_id.sale_line_ids:
-            lots = []
-            for move in line.move_ids:
-                for lot in move.move_line_ids.lot_id:
-                    if lot.id not in lots:
-                        lots.append(lot.id)
-                    else:
-                        lots.remove(lot.id)
-          
-            for move in self.depurar_lotes(lots):
-                names += f"{move[0].name}, "
+        for move in line_id.lot_ped_ids:
+            name = move.name.split(' / ')[0] if len(move.name.split(' / ')) > 1 else move.name
+            names += f"{name}, "
                     
         return names
     
