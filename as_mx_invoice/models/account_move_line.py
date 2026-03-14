@@ -23,7 +23,7 @@ class AccountMoveLine(models.Model):
     
     def _compute_lot_ids(self):
         for line in self:
-
+            line.lot_ped_ids = [(6, 0, [])]
             invoice_lines = line.sale_line_ids.mapped('invoice_lines')
             # Inicializar SIEMPRE el campo (muy importante en campos compute)
             for inv_line in invoice_lines:
