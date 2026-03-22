@@ -188,6 +188,7 @@ class SaleOrderPricelistWizardLine(models.TransientModel):
                 'TOTAL_USD': TOTAL_USD,
                 'TOTAL_MXP': TOTAL_MXP,
                 'as_log_price': True,
+                'is_copy':  True,
                                 })
         
             try:

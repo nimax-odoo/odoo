@@ -345,6 +345,7 @@ class as_SaleOrderPromoWizardLine(models.TransientModel):
                     'COST_NIMAX_MXP':  COST_NIMAX_MXP,
                     'MARGIN_MXP':  MARGIN_MXP,
                     'TOTAL_MXP':  TOTAL_MXP,
+                    'is_copy':  True,
                 })
                 self.get_sentinel_qty_promotion(self.sh_promo_id,self.line_id.product_uom_qty)
             elif self.sh_promo_id.as_type == 'DEMO':
@@ -371,6 +372,7 @@ class as_SaleOrderPromoWizardLine(models.TransientModel):
                     'COST_NIMAX_MXP':  COST_NIMAX_MXP,
                     'MARGIN_MXP':  MARGIN_MXP,
                     'TOTAL_MXP':  TOTAL_MXP,
+                    'is_copy':  True,
                 })
                 self.get_sentinel_qty_promotion(self.sh_promo_id,self.line_id.product_uom_qty)
             elif self.sh_promo_id.as_type == 'ESPECIAL':
@@ -397,6 +399,7 @@ class as_SaleOrderPromoWizardLine(models.TransientModel):
                     'COST_NIMAX_MXP':  COST_NIMAX_MXP,
                     'MARGIN_MXP':  MARGIN_MXP,
                     'TOTAL_MXP':  TOTAL_MXP,
+                    'is_copy':  True,
                 })
                 self.get_sentinel_qty_promotion(self.sh_promo_id,self.line_id.product_uom_qty)
             elif self.sh_promo_id.as_type == 'FABRICANTE':
@@ -422,6 +425,7 @@ class as_SaleOrderPromoWizardLine(models.TransientModel):
                     'COST_NIMAX_MXP':  COST_NIMAX_MXP,
                     'MARGIN_MXP':  MARGIN_MXP,
                     'TOTAL_MXP':  TOTAL_MXP,
+                    'is_copy':  True,
                 })
                 self.get_sentinel_qty_promotion(self.sh_promo_id,self.line_id.product_uom_qty)
             precio_nimax= self.env.company.currency_id._convert_nimax(self.RECALCULATED_PRICE_UNIT, self.line_id.currency_id, self.env.company, self.line_id.order_id.date_order,self.line_id.id)

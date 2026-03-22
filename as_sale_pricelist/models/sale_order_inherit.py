@@ -5,7 +5,8 @@ import re
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from odoo.exceptions import UserError, ValidationError
-    
+from markupsafe import Markup
+
 class SaleOrderLine(models.Model):
     _inherit="sale.order.line"
     
@@ -24,7 +25,8 @@ class SaleOrderLine(models.Model):
     as_product_comisionable = fields.Boolean(related="product_id.as_product_comisionable")
     coupon_ids = fields.Many2many('coupon.program', string='Programas de Cupones', copy=False)
     RECALCULATED_COST_NIMAX_USD = fields.Float('RECALCULATED COST NIMAX USD')
-
+    is_copy = fields.Boolean(string="Es copia")
+    
     @api.depends('COST_NIMAX_USD','RECALCULATED_PRICE_UNIT')
     def get_margin_porcentaje(self):
         for record in self:
@@ -174,13 +176,34 @@ class SaleOrder(models.Model):
 
             
     as_margin = fields.Float(string='Margen(en %)', store=True, readonly=True, compute='_amount_all_marigin', tracking=4)
-    as_aprobe = fields.Boolean(string='Aporbar Venta',default=False)
+    as_aprobe = fields.Boolean(string='Aprobar Venta',default=False)
     as_zebra_sale = fields.Boolean(string="Es Zebra")
     as_usuario_final = fields.Char(string="Usuario Final")
     invoice_ids = fields.Many2many("account.move", string='Invoices', compute="_get_invoiced", readonly=True, copy=False,store=True)
     sd_block_user = fields.Selection([], related = "partner_id.sd_block_user", string = "Estado del Usuario", readonly=True )
     sale_warn_msg = fields.Text('Mensaje para orden de venta', tracking = True)
+    is_copy = fields.Boolean(string="Es copia",default=False)
+    sale_copy_id = fields.Many2one('sale.order', string='Venda copiada')
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        # OVERRIDE
+        res = super(SaleOrder, self).create(vals_list)
+        for vals in vals_list:
+            if 'is_copy' in vals and vals['is_copy']:
+                sales_copy = res.sale_copy_id
+                refs = [sales_copy._get_html_link() for sale in sales_copy]
+                message = _("Esta venta se copio a partir de: ") + Markup(',').join(refs)
+                res.message_post(body=message)
+        return res
+
+    
+    def copy_data(self, default=None):
+        vals_list = super().copy_data(default)
+        for sale, vals in zip(self, vals_list):
+            vals['is_copy'] = True
+            vals['sale_copy_id'] = sale.id
+        return vals_list
 
     @api.onchange('partner_id')
     def _onchange_partner_id_warning(self):
@@ -311,7 +334,10 @@ class SaleOrder(models.Model):
                 raise ValidationError('No se puede confirmar la venta del cliente bloqueado : %s' % str(rec.partner_id.name))
         if product != []:
             raise ValidationError('EXISTEN LINEAS PRODUCTO SIN PRECIO BASE : %s' % str(product))
-                
+        if self.is_copy and self.sale_copy_id:
+            for line in self.order_line:
+                if not line.is_copy:
+                    raise ValidationError('No ha actualizar precio al producto : %s' % str(line.name))   
 
         return res
 

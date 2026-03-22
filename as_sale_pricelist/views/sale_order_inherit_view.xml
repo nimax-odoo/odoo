@@ -13,6 +13,7 @@
 				<field name="last_promo_id" invisible="1"/>
 				<field name="currency_aux_id" options="{'no_create': True}"/>
 				<field name="as_margin"/>
+				<field name="is_copy" invisible="1"/>
 				<field name="as_aprobe" invisible="1"/>
 			</field>
 			
