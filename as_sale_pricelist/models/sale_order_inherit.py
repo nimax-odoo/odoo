@@ -337,7 +337,7 @@ class SaleOrder(models.Model):
         if self.is_copy and self.sale_copy_id:
             for line in self.order_line:
                 if not line.is_copy:
-                    raise ValidationError('No ha actualizar precio al producto : %s' % str(line.name))   
+                    raise ValidationError('No ha actualizado precio al producto : %s' % str(line.name))   
 
         return res
 
