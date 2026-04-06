@@ -9,3 +9,5 @@ class as_res_partner(models.Model):
 
     tf_vendor_parameter_ids = fields.Many2many('tf.res.partner', string='Vendor Parameter')
     sd_block_user = fields.Selection([('False', 'Cliente Disponible'),('True', 'Cliente Bloqueado')], default = "False", string = 'Estado del Usuario',tracking=True)
+    sale_warn_msg = fields.Text('Mensaje para orden de venta', tracking = True)
+    purchase_warn_msg = fields.Text('Mensaje para orden de compra', tracking = True)
