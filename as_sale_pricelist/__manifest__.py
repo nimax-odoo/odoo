@@ -56,6 +56,7 @@ Lista de precios por linea de producto en ventas.
 
 
               'data/mail_template_ajust.xml',
+              'data/ir_cron.xml',
               'security/security.xml',
               # 'views/report_sale_proforma.xml',
             #   'views/assets.xml',
