@@ -31,3 +31,62 @@ class as_product_template(models.Model):
         'product.category', 'Categoría',
         change_default=True, default=_get_default_category_id, group_expand='_read_group_categ_id',
         required=True,tracking=True)
+    #campos para el historial de ingresos
+    sd_partner_id = fields.Many2one('res.partner', string='Cliente - Proveedor')
+    sd_fecha = fields.Datetime('Fecha ultimo ingreso')
+    sd_picking_id = fields.Many2one('stock.picking', string='Picking')
+    sd_purchase_id = fields.Many2one('purchase.order', string='Orden de Compra')
+
+
+    def _actualizar_data_productos_compra(self):
+        _logger.info('Iniciando actualización de data de productos de compra...')
+
+        StockMove = self.env['stock.move']
+        ProductTmpl = self.env['product.template']
+
+        products = ProductTmpl.search([
+            ('type', '=', 'consu'),
+            ('is_storable', '=', True)
+        ])
+        # products = ProductTmpl.search([('type', '=', 'consu'),('is_storable', '=', True),('id', 'in', (19295
+        #     ,5514
+        #     ,5545
+        #     ))])
+        # 🔹 Buscar todos los movimientos relevantes
+        moves = StockMove.search([
+            ('product_id.product_tmpl_id', '=', products.ids),
+            ('purchase_line_id', '!=', False),
+            ('state', '=', 'done'),('location_usage', 'in', ('supplier'))
+        ], order='date desc')
+
+        last_moves = {}
+
+        for move in moves:
+            tmpl_id = move.product_id.product_tmpl_id.id
+
+            # 🔹 Obtener devoluciones relacionadas
+            returned_moves = move.returned_move_ids.filtered(lambda m: m.state == 'done')
+
+            qty_returned = sum(returned_moves.mapped('product_uom_qty'))
+            qty_original = move.product_uom_qty
+
+            # 🔹 Validar devolución total
+            if qty_returned >= qty_original:
+                continue  # ❌ ignorar este movimiento
+
+            # 🔹 Si aún no tengo uno válido, lo guardo
+            if tmpl_id not in last_moves:
+                last_moves[tmpl_id] = move
+
+        # 🔹 Asignar valores
+        for product in products:
+            move = last_moves.get(product.id)
+            if move:
+                po = move.purchase_line_id.order_id
+
+                product.sd_partner_id = po.partner_id.id
+                product.sd_fecha = po.date_order
+                product.sd_picking_id = po.picking_ids[:1].id if po.picking_ids else False
+                product.sd_purchase_id = po.id
+
+        _logger.info('Actualización de data de productos de compra completada.')
