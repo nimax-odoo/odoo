@@ -36,6 +36,8 @@ class as_product_template(models.Model):
     sd_fecha = fields.Datetime('Fecha ultimo ingreso')
     sd_picking_id = fields.Many2one('stock.picking', string='Picking')
     sd_purchase_id = fields.Many2one('purchase.order', string='Orden de Compra')
+    sd_fecha_invoice = fields.Date('Fecha Factura')
+    sd_invoice_id = fields.Many2one('account.move', string='Factura de Compra')
 
 
     def _actualizar_data_productos_compra(self):
@@ -85,8 +87,11 @@ class as_product_template(models.Model):
                 po = move.purchase_line_id.order_id
 
                 product.sd_partner_id = po.partner_id.id
-                product.sd_fecha = po.date_order
+                product.sd_fecha = po.picking_ids[:1].date_done if po.picking_ids else False
                 product.sd_picking_id = po.picking_ids[:1].id if po.picking_ids else False
                 product.sd_purchase_id = po.id
+                sd_fecha_invoice = po.invoice_ids[:1].date if po.invoice_ids else False
+                product.sd_fecha_invoice = sd_fecha_invoice
+                product.sd_invoice_id = po.invoice_ids[:1].id if po.invoice_ids else False
 
         _logger.info('Actualización de data de productos de compra completada.')

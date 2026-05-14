@@ -4,31 +4,31 @@
 
         <record id="product_last_prices_form_view" model="ir.ui.view">
             <field name="model">product.template</field>
-            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="inherit_id" ref="product.product_template_only_form_view" />
             <field name="arch" type="xml">
                 <xpath expr="//group[@name='purchase']" position="before">
                     <group>
-                        <field name="as_proveedor"/>
+                        <field name="as_proveedor" />
                     </group>
                 </xpath>
                 <field name="categ_id" position="after">
-                  <field name="tf_import_tax"/>
-                   <field name="as_product_comisionable"/>
-                   <field name="as_zebra"/>
+                    <field name="tf_import_tax" />
+                    <field name="as_product_comisionable" />
+                    <field name="as_zebra" />
                 </field>
             </field>
 
         </record>
         <record id="product_normal_form_view_view" model="ir.ui.view">
             <field name="model">product.template</field>
-            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="inherit_id" ref="product.product_template_form_view" />
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='type']" position="before">
-                   <field name="default_code" string="SKU ó No. de Parte"/>
-                   <field name="x_studio_sku_no_de_parte"/>
-                   <field name="x_studio_marca_gp"/>
-                   <field name="x_studio_registro_nom"/>
-                    
+                    <field name="default_code" string="SKU ó No. de Parte" />
+                    <field name="x_studio_sku_no_de_parte" />
+                    <field name="x_studio_marca_gp" />
+                    <field name="x_studio_registro_nom" />
+
                 </xpath>
             </field>
 
@@ -36,15 +36,19 @@
         <record id="product_normal_form2_view" model="ir.ui.view">
             <field name="name">product.template.tree.inherit</field>
             <field name="model">product.template</field>
-            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="inherit_id" ref="product.product_template_form_view" />
             <field name="arch" type="xml">
-                 <xpath expr="//page[@name='general_information']" position="inside">
+                <xpath expr="//page[@name='general_information']" position="inside">
                     <group name="inventory2" string="Información Producto">
-                    <field name="sd_partner_id"  readonly="1" force_save="1"/>
-                    <field name="sd_fecha" readonly="1" force_save="1"/>
-                    <field name="sd_picking_id" readonly="1" force_save="1"/>
-                    <field name="sd_purchase_id" readonly="1" force_save="1"/>
+                        <field name="sd_partner_id" readonly="1" force_save="1" />
+                        <field name="sd_fecha" readonly="1" force_save="1" />
+                        <field name="sd_picking_id" readonly="1" force_save="1" />
+                        <field name="sd_purchase_id" readonly="1" force_save="1" />
+                        <field name="sd_fecha_invoice" readonly="1" force_save="1" />
+                        <field name="sd_invoice_id" readonly="1" force_save="1" />
                     </group>
+
+
                 </xpath>
             </field>
         </record>
