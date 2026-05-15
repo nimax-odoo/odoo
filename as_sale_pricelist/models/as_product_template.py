@@ -90,7 +90,7 @@ class as_product_template(models.Model):
                 product.sd_fecha = po.picking_ids[:1].date_done if po.picking_ids else False
                 product.sd_picking_id = po.picking_ids[:1].id if po.picking_ids else False
                 product.sd_purchase_id = po.id
-                sd_fecha_invoice = po.invoice_ids[:1].date if po.invoice_ids else False
+                sd_fecha_invoice = po.invoice_ids[:1].invoice_date if po.invoice_ids else False
                 product.sd_fecha_invoice = sd_fecha_invoice
                 product.sd_invoice_id = po.invoice_ids[:1].id if po.invoice_ids else False
 
