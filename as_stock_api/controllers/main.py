@@ -421,13 +421,13 @@ class AsStockAPI(http.Controller):
             result = list(grouped_data.values())
             
             # Aplicar el porcentaje de stock configurado por el usuario
-            if user.as_stock_percentaje and user.as_stock_percentaje != 1.0:
-                stock_factor = user.as_stock_percentaje
-                for item in result:
-                    item['stock'] = round(item['stock'] * stock_factor, 2)
-                    # La cantidad reservada no se modifica por el factor de stock
-                _logger.info("[as_get_stock] Aplicando porcentaje de stock %s%% configurado por el usuario %s", 
-                             user.as_stock_percentaje * 100, user.name)
+            # if user.as_stock_percentaje and user.as_stock_percentaje != 1.0:
+            stock_factor = user.as_stock_percentaje
+            for item in result:
+                item['stock'] = round(item['stock'] * stock_factor, 2)
+                # La cantidad reservada no se modifica por el factor de stock
+            _logger.info("[as_get_stock] Aplicando porcentaje de stock %s%% configurado por el usuario %s", 
+                            user.as_stock_percentaje * 100, user.name)
             
             # Convertir stock a entero para todas las entradas
             for item in result:
@@ -1220,13 +1220,13 @@ class AsStockAPI(http.Controller):
             result = list(grouped_data.values())
             
             # Aplicar el porcentaje de stock configurado por el usuario
-            if user.as_stock_percentaje and user.as_stock_percentaje != 1.0:
-                stock_factor = user.as_stock_percentaje
-                for item in result:
-                    item['stock'] = round(item['stock'] * stock_factor, 2)
-                    # La cantidad reservada no se modifica por el factor de stock
-                _logger.info("[as_get_stock_with_price] Aplicando porcentaje de stock %s%% configurado por el usuario %s", 
-                             user.as_stock_percentaje * 100, user.name)
+            # if user.as_stock_percentaje and user.as_stock_percentaje != 1.0:
+            stock_factor = user.as_stock_percentaje
+            for item in result:
+                item['stock'] = round(item['stock'] * stock_factor, 2)
+                # La cantidad reservada no se modifica por el factor de stock
+            _logger.info("[as_get_stock_with_price] Aplicando porcentaje de stock %s%% configurado por el usuario %s", 
+                            user.as_stock_percentaje * 100, user.name)
             
             # Convertir stock a entero para todas las entradas
             for item in result:
