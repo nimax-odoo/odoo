@@ -225,6 +225,7 @@ class AsStockAPI(http.Controller):
         
         # Construir dominio de búsqueda
         domain = [('quantity', '>', 0)]  # Solo productos con stock positivo
+        domain_alternativo = [('quantity', '>', 0)]  # Solo productos con stock positivo
         
         # Filtrar por código de producto si se proporciona
         if default_code:
@@ -243,6 +244,7 @@ class AsStockAPI(http.Controller):
                 )
                 
             domain.append(('product_id', '=', product.id))
+            domain_alternativo.append(('product_id', '=', product.id))
         # Compatibilidad con versiones anteriores
         elif product_id:
             try:
@@ -278,6 +280,7 @@ class AsStockAPI(http.Controller):
         
         # Solo considerar ubicaciones internas (tipo = internal)
         domain.append(('location_id.usage', '=', 'internal'))
+        domain_alternativo.append(('location_id.usage', '=', 'internal'))
         
         # Filtrar por almacenes si el usuario tiene configurados almacenes específicos
         if user.as_warehouse_ids:
@@ -285,7 +288,11 @@ class AsStockAPI(http.Controller):
                          ", ".join(user.as_warehouse_ids.mapped('name')))
             warehouse_locations = user.as_warehouse_ids.mapped('view_location_id').ids
             domain.append(('location_id', 'child_of', warehouse_locations))
-        
+            location_alter = []
+            location_alternative = self.env['match.locations'].sudo().search([('name_to', '=', user.company_id.id)])
+            for loc in location_alternative:
+                location_alter.append(loc.location_id.id)
+            domain_alternativo.append(('location_id', 'child_of', location_alter))
         try:
             # Cambiar al entorno del usuario para la consulta
             user_env = request.env(user=user.id)
@@ -302,7 +309,19 @@ class AsStockAPI(http.Controller):
                 ],
                 order='write_date desc'
             )
-            
+            if domain_alternativo:
+                quants_alternativo = user_env['stock.quant'].sudo().with_context(lang='es_MX').search_read(
+                    domain=domain_alternativo,
+                    fields=[
+                        'product_id', 
+                        'location_id', 
+                        'quantity', 
+                        'lot_id', 
+                        'reserved_quantity',
+                        'write_date'
+                    ],
+                    order='write_date desc'
+                )
             # Preparar respuesta simplificada
             result = []
             
@@ -353,7 +372,51 @@ class AsStockAPI(http.Controller):
                         'nimax_price_usd': round(nimax_price_usd, 2),
                         'attribute_line_ids': attribute_lines
                     }
-            
+            for quant in quants_alternativo:
+                product = request.env['product.product'].sudo().browse(quant['product_id'][0])
+                available_qty = quant['quantity'] - quant['reserved_quantity']
+                location_id = product.get_location_alternative(quant['location_id'][0])
+                
+                # Crear clave única para agrupar
+                location_name = location_id.complete_name
+                product_code = product.default_code or ''
+                product_name = quant['product_id'][1]
+                key = f"{location_name}_{product_code}"
+                nimax_price_usd = 0
+                # Obtener los attribute_line_ids del producto
+                attribute_lines = []
+                try:
+                    if product.product_tmpl_id and product.product_tmpl_id.attribute_line_ids:
+                        for attr_line in product.product_tmpl_id.attribute_line_ids:
+                            values = []
+                            try:
+                                for val in attr_line.value_ids:
+                                    values.append(val.name)
+                            except Exception as e:
+                                _logger.warning("[as_get_stock] Error al procesar los valores de attribute_line_id: %s", str(e))
+                                
+                            attribute_lines.append({
+                                "attribute_name": attr_line.attribute_id.name,
+                                "values": values
+                            })
+                except Exception as e:
+                    _logger.warning("[as_get_stock] Error al procesar attribute_line_ids para producto %s: %s", product_code, str(e))
+                    attribute_lines = []
+                
+                # Agrupar sumando cantidades
+                if key in grouped_data:
+                    grouped_data[key]['stock'] += available_qty
+                    grouped_data[key]['reserved_quantity'] += quant['reserved_quantity']
+                else:
+                    grouped_data[key] = {
+                        'location': location_name,
+                        'product_code': product_code,
+                        'product_name': product_name,
+                        'stock': available_qty,
+                        'reserved_quantity': quant['reserved_quantity'],
+                        'nimax_price_usd': round(nimax_price_usd, 2),
+                        'attribute_line_ids': attribute_lines
+                    }
             # Convertir el diccionario agrupado a lista
             result = list(grouped_data.values())
             
@@ -883,6 +946,7 @@ class AsStockAPI(http.Controller):
         # Construir dominio de búsqueda
         # domain = [('quantity', '>', 0)]  # Solo productos con stock positivo
         domain = []  # Solo productos con stock positivo
+        domain_alternativo = []  # Solo productos con stock positivo
         
         # Filtrar por código de producto si se proporciona
         if default_code:
@@ -901,11 +965,13 @@ class AsStockAPI(http.Controller):
                 )
                 
             domain.append(('product_id', '=', product.id))
+            domain_alternativo.append(('product_id', '=', product.id))
         # Compatibilidad con versiones anteriores
         elif product_id:
             try:
                 product_id = int(product_id)
                 domain.append(('product_id', '=', product_id))
+                domain_alternativo.append(('product_id', '=', product_id))
             except (ValueError, TypeError):
                 _logger.warning("[as_get_stock_with_price] Parámetro product_id inválido: %s", product_id)
                 
@@ -936,6 +1002,7 @@ class AsStockAPI(http.Controller):
         
         # Solo considerar ubicaciones internas (tipo = internal)
         domain.append(('location_id.usage', '=', 'internal'))
+        domain_alternativo.append(('location_id.usage', '=', 'internal'))
         
         # Filtrar por almacenes si el usuario tiene configurados almacenes específicos
         if user.as_warehouse_ids:
@@ -943,7 +1010,11 @@ class AsStockAPI(http.Controller):
                          ", ".join(user.as_warehouse_ids.mapped('name')))
             warehouse_locations = user.as_warehouse_ids.mapped('view_location_id').ids
             domain.append(('location_id', 'child_of', warehouse_locations))
-        
+            location_alter = []
+            location_alternative = self.env['match.locations'].sudo().search([('name_to', '=', user.company_id.id)])
+            for loc in location_alternative:
+                location_alter.append(loc.location_id.id)
+            domain_alternativo.append(('location_id', 'child_of', location_alter))
         try:
             # Cambiar al entorno del usuario para la consulta
             user_env = request.env(user=user.id)
@@ -969,7 +1040,19 @@ class AsStockAPI(http.Controller):
                 ],
                 order='write_date desc'
             )
-            
+            if domain_alternativo:
+                quants_alternativo = user_env['stock.quant'].sudo().with_context(lang='es_MX').search_read(
+                    domain=domain_alternativo,
+                    fields=[
+                        'product_id', 
+                        'location_id', 
+                        'quantity', 
+                        'lot_id', 
+                        'reserved_quantity',
+                        'write_date'
+                    ],
+                    order='write_date desc'
+                )
             # Preparar respuesta simplificada
             result = []
             
@@ -1054,7 +1137,85 @@ class AsStockAPI(http.Controller):
                         'rate_usd': round(rate, 4),
                         'attribute_line_ids': attribute_lines
                     }
-            
+            for quant in quants_alternativo:
+                product = request.env['product.product'].sudo().browse(quant['product_id'][0])
+                available_qty = quant['quantity'] - quant['reserved_quantity']
+                location_id = product.get_location_alternative(quant['location_id'][0])
+                
+                # Crear clave única para agrupar
+                location_name = location_id.complete_name
+                product_code = product.default_code or ''
+                product_name = quant['product_id'][1]
+                product_info_id = quant['product_id'][0]
+                key = f"{location_name}_{product_code}"
+                
+                # Calcular el precio NIMAX
+                nimax_price_usd = 0
+                try:
+                    # Buscar el programa de proveedor (tf_partner_id) para este producto/categoría
+                    tf_partner_id = False
+                    for x in partner.tf_vendor_parameter_ids:
+                        if x.category_id.id == product.categ_id.id:
+                            tf_partner_id = x
+                            break
+                    if tf_partner_id:
+                        # Calcular el precio base USD según la fórmula
+                        promo = request.env['coupon.program'].sudo()
+                        promociones = request.env['coupon.program'].sudo().search_promo(product,partner_id,promos_disponibles)
+                        if promociones[0]:
+                            precio = promociones[1]
+                            promo = promociones[2]
+                            nimax_price_usd = precio
+                        else:
+                            precio = product.list_price
+                            price_based_usd = (precio - (precio * tf_partner_id.partner_discount/100)) * \
+                                            tf_partner_id.cost_deal_import/100 * \
+                                            (product.product_tmpl_id.tf_import_tax/100)
+                            
+                            # Calcular el precio NIMAX
+                            nimax_price_usd = price_based_usd / (1 - expected_earning/100) if expected_earning < 100 else 0
+                except Exception as e:
+                    _logger.error("[as_get_stock_with_price] Error al calcular precio para producto %s: %s", 
+                                 product_code, str(e))
+                    nimax_price_usd = 0
+                
+                # Obtener los attribute_line_ids del producto
+                attribute_lines = []
+                try:
+                    if product.product_tmpl_id and product.product_tmpl_id.sudo().attribute_line_ids:
+                        for attr_line in product.product_tmpl_id.sudo().attribute_line_ids:
+                            values = []
+                            try:
+                                for val in attr_line.value_ids:
+                                    values.append(val.name)
+                            except Exception as e:
+                                _logger.warning("[as_get_stock_with_price] Error al procesar los valores de attribute_line_id: %s", str(e))
+                                
+                            attribute_lines.append({
+                                "attribute_name": attr_line.attribute_id.name,
+                                "values": values
+                            })
+                except Exception as e:
+                    _logger.warning("[as_get_stock_with_price] Error al procesar attribute_line_ids para producto %s: %s", product_code, str(e))
+                    attribute_lines = []
+                
+                # Agrupar sumando cantidades
+                if key in grouped_data:
+                    grouped_data[key]['stock'] += available_qty
+                    grouped_data[key]['reserved_quantity'] += quant['reserved_quantity']
+                else:
+                    grouped_data[key] = {
+                        'location': location_name,
+                        'product_code': product_code,
+                        'product_name': product_name,
+                        'product_id': product_info_id,
+                        'stock': available_qty,
+                        'reserved_quantity': quant['reserved_quantity'],
+                        'nimax_price_usd': round(nimax_price_usd, 2),
+                        'nimax_price_mxn': round(nimax_price_usd * rate, 2),
+                        'rate_usd': round(rate, 4),
+                        'attribute_line_ids': attribute_lines
+                    }
             # Convertir el diccionario agrupado a lista
             result = list(grouped_data.values())
             

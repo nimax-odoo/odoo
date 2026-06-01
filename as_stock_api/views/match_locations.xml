@@ -1,0 +1,32 @@
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="match_locations_tree_view">
+            <field name="name">match.locations.tree.view</field>
+            <field name="model">match.locations</field>
+            
+            <field name="arch" type="xml">
+                <list string="Emparejar ubicaciones API" editable="bottom">
+                    <field name="name"/>
+                    <field name="location_id"/>
+                    <field name="name_to"/>
+                    <field name="location_dest_id"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="action_match_locations" model="ir.actions.act_window">
+            <field name="name">Emparejar ubicaciones API</field>
+            <field name="res_model">match.locations</field>
+            <field name="view_mode">list</field>
+        </record>
+
+
+        <menuitem id="menu_match_locations"
+                  name="Emparejar ubicaciones API"
+                  action="action_match_locations"
+                  parent="stock.menu_warehouse_config"
+                  sequence="20"/>
+
+    </data>
+</odoo>
