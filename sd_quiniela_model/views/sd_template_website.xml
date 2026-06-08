@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <template id="quiniela" name="Quiniela">
+        <t t-call="website.layout">
+
+            <span class="hidden" data-for="contactus_form" t-att-data-values="contactus_form_values" />
+            <div id="wrap" class="oe_structure oe_empty">
+                <section class="s_title parallax s_parallax_is_fixed bg-black-50 pt24 pb24" data-vcss="001"
+                    data-snippet="s_title" data-scroll-background-ratio="1">
+                    <span class="s_parallax_bg oe_img_bg"
+                        style="background-image: url('sd_quiniela_model/static/description/mundial.jpg'); background-position: 50% 0;" />
+                    <div class="o_we_bg_filter bg-black-50" />
+                    <div class="container">
+                        <h1>Quiniela 🔥NUEVO🔥</h1>
+                    </div>
+                </section>
+                <section class="s_text_block pt40 pb40 o_colored_level " data-snippet="s_text_block">
+                    <div class="container s_allow_columns">
+                        <div class="row">
+                            <div class="col-lg-7 mt-4 mt-lg-0">
+                                <p class="lead">
+                                    <b>GANA HASTA $21,000 MXN LLENANDO ESTA QUINIELA</b><br />
+                                    Atínale al marcador y GANA $800 pesos, aumenta tu premio a $1000 pesos si aciertas
+                                    tu pronóstico
+                                    del ganador por partido. Si no aciertas el marcador/ganador, AÚN PUEDES GANAR con
+                                    tus
+                                    predicciones del minuto en que se anotarán los goles (solo goles de México); tienes
+                                    4 oportunidades
+                                    de ganar, por cada gol que aciertes ganas $1,500 pesos, podrás ganar un total de
+                                    $4,000 PESOS.
+                                </p>
+                                <div class="container">
+
+
+                                    <div t-foreach="winners" t-as="win">
+                                        <h3>
+                                            <img t-if="win.name.image_equipo_a" width="100" height="70" t-att-src="image_data_uri(win.name.image_equipo_a)" class="agent-source-image" />
+                                            <span t-esc="win.name.equipo_a_name" /> VS <img t-if="win.name.image_equipo_b" width="60" height="60" t-att-src="image_data_uri(win.name.image_equipo_b)" class="agent-source-image" /> <span
+                                                t-esc="win.name.equipo_b_name" /></h3>
+
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Participante</th>
+                                                    <th>Puntaje</th>
+                                                    <th>Estado</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                <t t-set="pos" t-value="1" />
+
+                                                <tr t-foreach="win.proposticos_winner_ids.sorted(key=lambda r: r.puntaje, reverse=True)"
+                                                    t-as="p">
+                                                    <td>
+                                                        <span t-esc="pos" />
+                                                        <t t-set="pos" t-value="pos + 1" />
+                                                    </td>
+
+                                                    <td>
+                                                        <span t-esc="p.quiniela_pronostico_id.partner_id.name" />
+                                                    </td>
+
+                                                    <td>
+                                                        <span t-esc="p.puntaje" />
+                                                    </td>
+
+                                                    <td>
+                                                        <span t-if="p.is_winner" class="badge bg-success">
+                                                            Ganador
+                                                        </span>
+                                                    </td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                </div>
+                            </div>
+                            <div class="col-lg-4 offset-lg-1 mt-4 mt-lg-0">
+                                <h5>My Company</h5>
+                                <ul class="list-unstyled mb-0 ps-2">
+                                    <li><i class="fa fa-map-marker fa-fw me-2" /><span class="o_force_ltr">3575 Fake
+                                            Buena Vista Avenue</span></li>
+                                    <li><i class="fa fa-phone fa-fw me-2" /><span class="o_force_ltr">+1
+                                            555-555-5556</span></li>
+                                    <li><i
+                                            class="fa fa-1x fa-fw fa-envelope me-2" /><span>info@yourcompany.example.com</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+
+    <record id="quiniela_page" model="website.page">
+        <field name="url">/quiniela</field>
+        <field name="is_published">True</field>
+        <field name="view_id" ref="sd_quiniela_model.quiniela" />
+        <field name="track">True</field>
+        <field name="website_meta_description">Ranking de quiniela mundial México 2026</field>
+    </record>
+
+    <record id="menu_quiniela" model="website.menu">
+        <field name="name">Quiniela 🔥NUEVO🔥</field>
+        <field name="url">/quiniela</field>
+        <field name="page_id" ref="sd_quiniela_model.quiniela_page" />
+        <field name="parent_id" ref="website.main_menu" />
+        <field name="sequence" type="int">60</field>
+    </record>
+
+
+</odoo>

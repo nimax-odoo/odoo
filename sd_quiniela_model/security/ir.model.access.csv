@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sd_quiniela_data,sd_quiniela_data,model_sd_quiniela_data,,1,1,1,1
+access_sd_quiniela_partidos,sd_quiniela_partidos,model_sd_quiniela_partidos,,1,1,1,1
+access_sd_quiniela_pronostico,sd_quiniela_pronostico,model_sd_quiniela_pronostico,,1,1,1,1
+access_sd_register_winner,sd_register_winner,model_sd_register_winner,,1,1,1,1
+
