@@ -24,7 +24,7 @@
                     <field name="score_equipo_b"/>
                     <field name="ganador"/>
                     <field name="currency_id" optional="hide"/>
-                    <field name="puntaje"/>
+                    <field name="puntaje" sum="total"/>
                     <field name="register_winner_id" optional="hide"/>
                     <field name="is_winner" optional="hide"/>
 

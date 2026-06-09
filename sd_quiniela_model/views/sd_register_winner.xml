@@ -32,35 +32,26 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
-                    <button name="action_extract_winner" icon="fa-plus" type="object" class="btn-primary" string="Extraer Ganadores"/>
+                        <button name="action_extract_winner" icon="fa-plus" type="object" class="btn-primary"
+                            string="Extraer Ganadores" />
                     </header>
                     <sheet>
-                    <div name="button_box" class="oe_button_box">
-                            <button type="object" name="action_open_ganadores"
-                              class="oe_stat_button" icon="fa-usd">
-                                <field name="winner_count" string="Ganadores" widget="statinfo"/>
+                        <div name="button_box" class="oe_button_box">
+                            <button type="object" name="action_open_ganadores" class="oe_stat_button" icon="fa-usd">
+                                <field name="winner_count" string="Ganadores" widget="statinfo" />
                             </button>
-                         
+
                         </div>
                         <group>
-                            <field name="name" />
-                            <field name="ganador" />
+                            <group>
+                                <field name="name" />
+                            </group>
+                            <group>
+                                <field name="ganador" />
+                            </group>
                         </group>
+                        <hr />
                         <group>
-                            <group>
-                                <field name="min_0_9_t1" />
-                                <field name="min_10_18_t1" />
-                                <field name="min_19_27_t1" />
-                                <field name="min_28_36_t1" />
-                                <field name="min_37_45_t1" />
-                            </group>
-                            <group>
-                                <field name="min_0_9_t2" />
-                                <field name="min_10_18_t2" />
-                                <field name="min_19_27_t2" />
-                                <field name="min_28_36_t2" />
-                                <field name="min_37_45_t2" />
-                            </group>
                             <group>
                                 <field name="score_equipo_a" />
                             </group>
@@ -68,8 +59,77 @@
                                 <field name="score_equipo_b" />
                             </group>
                         </group>
+                        <hr />
+                        <group>
+                            <group>
+
+                                <label for="min_0_9_t1" string="Min/Cant 0-9 T1" />
+                                <div name="min_0_9_t11" class="o_row">
+                                    <field name="min_0_9_t1" />
+                                    <field name="min_0_9_t1_cant" nolabel="1" class="ms-2" invisible="not min_0_9_t1" required="min_0_9_t1"/>
+                                </div>
+                                <label for="min_10_18_t1" string="Min/Cant 10-18 T1" />
+                                <div name="min_10_18_t11" class="o_row">
+                                    <field name="min_10_18_t1" />
+                                    <field name="min_10_18_t1_cant" nolabel="1" class="ms-2"
+                                        invisible="not min_10_18_t1" required="min_10_18_t1"/>
+                                </div>
+                                <label for="min_19_27_t1" string="Min/Cant 19-27 T1" />
+                                <div name="min_19_27_t11" class="o_row">
+                                    <field name="min_19_27_t1" />
+                                    <field name="min_19_27_t1_cant" nolabel="1" class="ms-2"
+                                        invisible="not min_19_27_t1" required="min_19_27_t1"/>
+                                </div>
+                                <label for="min_28_36_t1" string="Min/Cant 28-36 T1" />
+                                <div name="min_28_36_t11" class="o_row">
+                                    <field name="min_28_36_t1" />
+                                    <field name="min_28_36_t1_cant" nolabel="1" class="ms-2"
+                                        invisible="not min_28_36_t1" required="min_28_36_t1"/>
+                                </div>
+                                <label for="min_37_45_t1" string="Min/Cant 37-45 T1" />
+                                <div name="min_37_45_t11" class="o_row">
+                                    <field name="min_37_45_t1" />
+                                    <field name="min_37_45_t1_cant" nolabel="1" class="ms-2"
+                                        invisible="not min_37_45_t1" required="min_37_45_t1"/>
+                                </div>
+                            </group>
+                            <group>
+                                <label for="min_0_9_t2" string="Min/Cant 0-9 T2" />
+                                <div name="min_0_9_t21" class="o_row">
+                                    <field name="min_0_9_t2" />
+                                    <field name="min_0_9_t2_cant" nolabel="1" class="ms-2" invisible="not min_0_9_t2" required="min_0_9_t2"/>
+                                </div>
+                                <label for="min_10_18_t2" string="Min/Cant 10-18 T2" />
+                                <div name="min_10_18_t21" class="o_row">
+                                    <field name="min_10_18_t2" />
+                                    <field name="min_10_18_t2_cant" nolabel="1" class="ms-2"
+                                        invisible="not min_10_18_t2" required="min_10_18_t2"/>
+                                </div>
+                                <label for="min_19_27_t2" string="Min/Cant 19-27 T2" />
+                                <div name="min_19_27_t21" class="o_row">
+                                    <field name="min_19_27_t2" />
+                                    <field name="min_19_27_t2_cant" nolabel="1" class="ms-2"
+                                        invisible="not min_19_27_t2" required="min_19_27_t2"/>
+                                </div>
+                                <label for="min_28_36_t2" string="Min/Cant 28-36 T2" />
+                                <div name="min_28_36_t21" class="o_row">
+                                    <field name="min_28_36_t2" />
+                                    <field name="min_28_36_t2_cant" nolabel="1" class="ms-2"
+                                        invisible="not min_28_36_t2" required="min_28_36_t2"/>
+                                </div>
+                                <label for="min_37_45_t2" string="Min/Cant 37-45 T2" />
+                                <div name="min_37_45_t21" class="o_row">
+                                    <field name="min_37_45_t2" />
+                                    <field name="min_37_45_t2_cant" nolabel="1" class="ms-2"
+                                        invisible="not min_37_45_t2" required="min_37_45_t2"/>
+                                </div>
+
+
+                            </group>
+
+                        </group>
                     </sheet>
-                    <chatter reload_on_post="True"/>
+                    <chatter reload_on_post="True" />
                 </form>
             </field>
         </record>

@@ -35,6 +35,16 @@ class SdRegisterWinner(models.Model):
     score_equipo_b = fields.Integer(string='Marcador Equipo B')
     ganador = fields.Selection([('equipo_a', 'Equipo A'), ('equipo_b', 'Equipo B'), ('empate', 'Empate')], string='Ganador')
     winner_count = fields.Integer('Contactos', compute='_get_winner_count')
+    min_0_9_t1_cant = fields.Integer(string='Goles 0-9 min T1')
+    min_10_18_t1_cant = fields.Integer(string='Goles 10-18 min T1')
+    min_19_27_t1_cant = fields.Integer(string='Goles 19-27 min T1')
+    min_28_36_t1_cant = fields.Integer(string='Goles 28-36 min T1')
+    min_37_45_t1_cant = fields.Integer(string='Goles 37-45 min T1')
+    min_0_9_t2_cant = fields.Integer(string='Goles 0-9 min T2')
+    min_10_18_t2_cant = fields.Integer(string='Goles 10-18 min T2')
+    min_19_27_t2_cant = fields.Integer(string='Goles 19-27 min T2')
+    min_28_36_t2_cant = fields.Integer(string='Goles 28-36 min T2')
+    min_37_45_t2_cant = fields.Integer(string='Goles 37-45 min T2')
     
     def _get_winner_count(self):
         self.winner_count = len(self.proposticos_winner_ids)    
@@ -133,6 +143,7 @@ class SdRegisterWinner(models.Model):
         for record in self:
             for winner in ganadores:
                 winner.puntaje = 0
+                cantidad = 0
                 ganador = False
                 marcador = False
                 minuto = False
@@ -142,27 +153,57 @@ class SdRegisterWinner(models.Model):
                     ganador = True
                 if winner.min_0_9_t1 == record.min_0_9_t1 and record.min_0_9_t1 == True:
                     minuto = True
+                    cantidad += record.min_0_9_t1_cant
+                    if record.min_0_9_t1_cant == 0:
+                        cantidad = 1
                 if winner.min_10_18_t1 == record.min_10_18_t1 and record.min_10_18_t1 == True:
                     minuto = True
+                    cantidad += record.min_10_18_t1_cant
+                    if record.min_10_18_t1_cant == 0:
+                        cantidad = 1
                 if winner.min_19_27_t1 == record.min_19_27_t1 and record.min_19_27_t1 == True:
                     minuto = True
+                    cantidad += record.min_19_27_t1_cant
+                    if record.min_19_27_t1_cant == 0:
+                        cantidad = 1
                 if winner.min_28_36_t1 == record.min_28_36_t1 and record.min_28_36_t1 == True:
                     minuto = True
+                    cantidad += record.min_28_36_t1_cant
+                    if record.min_28_36_t1_cant == 0:
+                        cantidad = 1
                 if winner.min_37_45_t1 == record.min_37_45_t1 and record.min_37_45_t1 == True:
                     minuto = True
+                    cantidad += record.min_37_45_t1_cant
+                    if record.min_37_45_t1_cant == 0:
+                        cantidad = 1
                 if winner.min_0_9_t2 == record.min_0_9_t2 and record.min_0_9_t2 == True:
                     minuto = True
+                    cantidad += record.min_0_9_t2_cant
+                    if record.min_0_9_t2_cant == 0:
+                        cantidad = 1
                 if winner.min_10_18_t2 == record.min_10_18_t2 and record.min_10_18_t2 == True:
                     minuto = True
+                    cantidad += record.min_10_18_t2_cant
+                    if record.min_10_18_t2_cant == 0:
+                        cantidad = 1
                 if winner.min_19_27_t2 == record.min_19_27_t2 and record.min_19_27_t2 == True:
                     minuto = True
+                    cantidad += record.min_19_27_t2_cant
+                    if record.min_19_27_t2_cant == 0:
+                        cantidad = 1
                 if winner.min_28_36_t2 == record.min_28_36_t2 and record.min_28_36_t2 == True:
                     minuto = True
+                    cantidad += record.min_28_36_t2_cant
+                    if record.min_28_36_t2_cant == 0:
+                        cantidad = 1
                 if winner.min_37_45_t2 == record.min_37_45_t2 and record.min_37_45_t2 == True:
                     minuto = True
+                    cantidad += record.min_37_45_t2_cant
+                    if record.min_37_45_t2_cant == 0:
+                        cantidad = 1
                 if marcador:
                     winner.puntaje += record.name.monto_marcador
                 if ganador:
                     winner.puntaje += record.name.monto_ganador
                 if minuto:
-                    winner.puntaje += record.name.monto_minute
+                    winner.puntaje += record.name.monto_minute * cantidad
