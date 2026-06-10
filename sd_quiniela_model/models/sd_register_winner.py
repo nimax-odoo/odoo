@@ -20,6 +20,7 @@ class SdRegisterWinner(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     
     name = fields.Many2one('sd.quiniela.partidos', string='Partido')
+    sequence = fields.Integer(string='Secuencia',default=1)
     proposticos_winner_ids = fields.One2many('sd.quiniela.data', 'register_winner_id', string='Pronósticos Ganadores')
     min_0_9_t1 = fields.Boolean(string='0-9 min T1')
     min_10_18_t1 = fields.Boolean(string='10-18 min T1')

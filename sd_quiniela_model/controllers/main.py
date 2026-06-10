@@ -7,7 +7,7 @@ class QuinielaPortal(http.Controller):
     def quiniela(self, **kw):
         winners = request.env['sd.register.winner'].sudo().search(
             [],
-            order='id desc'
+            order='sequence asc'
         )
         winners_json = {}
         for winner in winners:

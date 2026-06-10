@@ -54,6 +54,8 @@
                         <group>
                             <group>
                                 <field name="score_equipo_a" />
+                                <field name="sequence" />
+                                
                             </group>
                             <group>
                                 <field name="score_equipo_b" />
