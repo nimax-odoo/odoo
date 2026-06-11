@@ -36,70 +36,82 @@
                         <div t-foreach="winners" t-as="win" t-att-id="'match_' + str(win.id)"
                             t-att-class="'tab-pane fade show active' if content_index == 0 else 'tab-pane fade'">
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
 
-    <h2 class="mb-0 fw-bold">
-        <span t-esc="win.name.equipo_a_name"/>
-        VS
-        <span t-esc="win.name.equipo_b_name"/>
-    </h2>
+                                <h2 class="mb-0 fw-bold">
+                                    <span t-esc="win.name.equipo_a_name" />
+                                    VS
+                                    <span t-esc="win.name.equipo_b_name" />
+                                </h2>
 
-    <div class="d-flex align-items-center"
-         style="font-size:32px;font-weight:bold;">
+                                <div class="d-flex align-items-center" style="font-size:32px;font-weight:bold;">
 
-        <img t-if="win.name.image_equipo_a"
-             width="60"
-             height="60"
-             class="me-2"
-             t-att-src="image_data_uri(win.name.image_equipo_a)"/>
+                                    <img t-if="win.name.image_equipo_a" width="60" height="60" class="me-2"
+                                        t-att-src="image_data_uri(win.name.image_equipo_a)" />
 
-        <span t-esc="win.score_equipo_a"/>
+                                    <span t-esc="win.score_equipo_a" />
 
-        <span class="mx-2">-</span>
+                                    <span class="mx-2">-</span>
 
-        <span t-esc="win.score_equipo_b"/>
-        <img t-if="win.name.image_equipo_b"
-             width="60"
-             height="60"
-             class="ms-2"
-             t-att-src="image_data_uri(win.name.image_equipo_b)"/>
-
-    </div>
-
-</div>
-
-                            <style>
-                                .winners-columns {
-                                    column-count: 4;
-                                    column-gap: 30px;
-                                }
-
-                                .winner-item {
-                                    break-inside: avoid;
-                                    padding: 4px 0;
-                                    border-bottom: 1px solid #eee;
-                                }
-                            </style>
-
-                            <div class="winners-columns">
-
-                                <t t-set="pos" t-value="1" />
-
-                                <div t-foreach="win.proposticos_winner_ids.sorted(key=lambda r: r.puntaje, reverse=True)"
-                                    t-as="p" class="winner-item">
-
-                                    <strong>#<span t-esc="pos" /></strong>
-
-                                    <t t-set="pos" t-value="pos + 1" />
-
-                                    -
-                                    <span t-esc="p.quiniela_pronostico_id.partner_id.name" />
-
-                                    (<span t-esc="p.puntaje" /> pts)
+                                    <span t-esc="win.score_equipo_b" />
+                                    <img t-if="win.name.image_equipo_b" width="60" height="60" class="ms-2"
+                                        t-att-src="image_data_uri(win.name.image_equipo_b)" />
 
                                 </div>
 
                             </div>
+
+<style>
+    .winners-columns {
+        column-count: 4;
+        column-gap: 30px;
+    }
+
+    .winner-item {
+        break-inside: avoid;
+        border-bottom: 1px solid #eee;
+        padding: 4px 0;
+    }
+
+    .winner-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .winner-score {
+        font-weight: bold;
+        color: #198754;
+        margin-left: 10px;
+    }
+</style>
+
+<div class="winners-columns">
+
+    <t t-set="pos" t-value="1"/>
+
+    <div t-foreach="win.proposticos_winner_ids.sorted(key=lambda r: r.puntaje, reverse=True)"
+         t-as="p"
+         class="winner-item">
+
+        <div class="winner-row">
+
+            <span>
+                <strong>#<span t-esc="pos"/></strong>
+                <t t-set="pos" t-value="pos + 1"/>
+                -
+                <b><span t-esc="p.quiniela_pronostico_id.partner_id.name"/></b>
+            </span>
+
+            <span class="winner-score">
+                $<span t-esc="'{:.0f}'.format(p.puntaje)"/>
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
                             <!-- 
             <table class="table table-striped">
                 <thead>
