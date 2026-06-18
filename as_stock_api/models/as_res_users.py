@@ -57,6 +57,26 @@ class AsResUsers(models.Model):
         string='Almacenes Visibles en API',
         help='Almacenes cuyos productos se mostrarán en la API. Si no se selecciona ninguno, se mostrarán todos los almacenes.'
     )
+    #Campos de API gestión de ventas cyberpuerta
+    
+    sd_cy_token = fields.Char(
+        string='Token para Sincronizar',
+        copy=False,
+        help='Token proporcionado (solictado por Cyberpuerta) para sincronizar'
+    )
+    sd_cy_webhook_active = fields.Boolean(
+        string='Activar envio de catálogo a Cliente',
+        copy=False,
+        help='Activar envio de catálogo a Cliente'
+    )
+    sd_cy_url = fields.Char(
+        string='URL del sistema del cliente',
+        copy=False,
+        help='URL del sistema del cliente para enviar el catálogo'
+    )
+    _sql_constraints = [
+        ('unique_token', 'unique(sd_cy_token)', 'El token debe ser único')
+    ]
     
     def _as_compute_api_key_display(self):
         """

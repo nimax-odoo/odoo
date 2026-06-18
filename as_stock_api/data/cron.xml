@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<odoo>
+    <data>
+        <record id="cron_cyberpuerta_full_catalog" model="ir.cron">
+            <field name="name">Cyberpuerta Full Catalog</field>
+            <field name="model_id" ref="product.model_product_template" />
+            <field name="state">code</field>
+            <field name="code">model.send_full_catalog_cyberpuerta(1)</field>
+            <field name="interval_number">2</field>
+            <field name="interval_type">hours</field>
+        </record>
+
+
+
+    </data>
+</odoo>

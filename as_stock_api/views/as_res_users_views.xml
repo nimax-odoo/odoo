@@ -15,23 +15,52 @@
                             Puede editar manualmente la clave API o usar los botones para generarla automáticamente.
                         </div>
                     </group>
-                    <group invisible="not as_api_enabled">
+                    <group string="API para la Gestion de Ventas (CYBERPUERTA)">
+                    <group>
+                        <field name="sd_cy_token"/>
+                        <div class="text-muted" invisible="not sd_cy_token">
+                            Token sugerido por Cyberpuerta para el uso en su sistema, en caso de otro cliente establecer uno.
+                        </div>
+                    </group>
+                     <group>
+                        <field name="sd_cy_webhook_active"/>
+                        <div class="text-muted" invisible="not sd_cy_webhook_active">
+                            Url del cliente para enviar catalogo de productos a esta URL se le concatena /api/proveedor/artículos/catálogo-completo.
+                        </div>
+                    </group>
+                     <group invisible="not sd_cy_webhook_active">
+                        <field name="sd_cy_url"/>
+                        <div class="text-muted" invisible="not sd_cy_url and not sd_cy_webhook_active">
+                            Url del cliente para enviar catalogo de productos a esta URL se le concatena /api/proveedor/artículos/catálogo-completo.
+                        </div>
+                    </group>
+                    </group>
+
+                    <group string="API Inventario" invisible="not as_api_enabled">
+                    <group>
                         <field name="as_stock_percentaje" required="as_api_enabled" widget="percentage"/>
                         <div class="text-muted">
                             Porcentaje del stock real que se mostrará en la API. Por ejemplo, 80% mostrará el 80% del stock real.
                         </div>
+                    </group>
+                    <group>
                         <field name="as_pricelist" invisible="not as_api_enabled"/>
                         <div class="text-muted">
                             Lista de precios que se utilizará por defecto en la API de Stock con precios. Si se deja vacío, se usará la lista de precios del cliente.
                         </div>
+                    </group>
+                    <group>
                         <field name="as_partner_id" invisible="not as_api_enabled"/>
                         <div class="text-muted">
                             Cliente que se utilizará por defecto en las consultas de la API de Stock con precios. Si se especifica, no será necesario incluir el parámetro partner_id en las llamadas a la API.
                         </div>
+                    </group>
+                    <group>
                         <field name="as_warehouse_ids" invisible="not as_api_enabled" widget="many2many_tags" options="{'no_create': True}"/>
                         <div class="text-muted">
                             Almacenes cuyos productos se mostrarán en la API. Si no se selecciona ninguno, se mostrarán todos los almacenes.
                         </div>
+                    </group>
                     </group>
                     <group invisible="not as_api_enabled">
                         <button name="as_generate_api_key" 
