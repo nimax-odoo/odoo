@@ -13,7 +13,6 @@
                     <field name="name"/>
                     <field name="equipo_a_id"/>
 
-                    <!-- MINUTOS -->
                     <field name="min_0_9_t1"/>
                     <field name="min_10_18_t1"/>
                     <field name="min_19_27_t1"/>
@@ -26,11 +25,9 @@
                     <field name="min_28_36_t2"/>
                     <field name="min_37_45_t2"/>
 
-                    <!-- ✅ TIEMPO EXTRA -->
                     <field name="tiempo_extra_1"/>
                     <field name="tiempo_extra_2"/>
 
-                    <!-- RESULTADO -->
                     <field name="score_equipo_a"/>
                     <field name="score_equipo_b"/>
                     <field name="ganador"/>
@@ -43,9 +40,6 @@
             </field>
         </record>
 
-        <!-- ========================= -->
-        <!-- FORM -->
-        <!-- ========================= -->
         <record id="as_quiniela_data_form" model="ir.ui.view">
             <field name="name">Quiniela Data</field>
             <field name="model">sd.quiniela.data</field>
@@ -99,9 +93,6 @@
             </field>
         </record>
 
-        <!-- ========================= -->
-        <!-- ACTION -->
-        <!-- ========================= -->
         <record id="as_quiniela_data_action" model="ir.actions.act_window">
             <field name="name">Quiniela Data</field>
             <field name="res_model">sd.quiniela.data</field>
@@ -110,4 +101,3 @@
 
     </data>
 </odoo>
-``
