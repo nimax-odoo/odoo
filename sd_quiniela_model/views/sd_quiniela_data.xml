@@ -26,7 +26,7 @@
                     <field name="min_28_36_t2"/>
                     <field name="min_37_45_t2"/>
 
-                    <!-- ✅ NUEVO TIEMPO EXTRA -->
+                    <!-- ✅ TIEMPO EXTRA -->
                     <field name="tiempo_extra_1"/>
                     <field name="tiempo_extra_2"/>
 
@@ -75,7 +75,6 @@
                             <field name="min_37_45_t2"/>
                         </group>
 
-                        <!-- ✅ NUEVO -->
                         <group string="Tiempo Extra">
                             <field name="tiempo_extra_1"/>
                             <field name="tiempo_extra_2"/>
@@ -107,9 +106,8 @@
             <field name="name">Quiniela Data</field>
             <field name="res_model">sd.quiniela.data</field>
             <field name="view_mode">list,form</field>
-        </record> 
-
-        as_quiniela_data_action
+        </record>
 
     </data>
 </odoo>
+``
