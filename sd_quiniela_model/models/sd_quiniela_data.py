@@ -14,6 +14,7 @@ from odoo.tools import format_amount
 # from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 
+
 class SdQuinielaData(models.Model):
     _name = 'sd.quiniela.data'
     _description = 'Quiniela Data'
@@ -36,9 +37,13 @@ class SdQuinielaData(models.Model):
     min_28_36_t2 = fields.Boolean(string='28-36 min T2')
     min_37_45_t2 = fields.Boolean(string='37-45 min T2')
 
-    # ===== NUEVO: TIEMPO EXTRA =====
+    # ===== TIEMPO EXTRA =====
     tiempo_extra_1 = fields.Boolean(string='Tiempo Extra 1')
     tiempo_extra_2 = fields.Boolean(string='Tiempo Extra 2')
+
+    # ===== GOLES TIEMPO EXTRA =====
+    tiempo_extra_1_cant = fields.Integer(string='Goles Tiempo Extra 1')
+    tiempo_extra_2_cant = fields.Integer(string='Goles Tiempo Extra 2')
 
     # ===== RESULTADO =====
     score_equipo_a = fields.Integer(string='Marcador Equipo A')
@@ -50,7 +55,11 @@ class SdQuinielaData(models.Model):
     ], string='Ganador')
 
     # ===== PUNTAJE =====
-    currency_id = fields.Many2one('res.currency', string='Currency', default=lambda self: self.env.company.currency_id)
+    currency_id = fields.Many2one(
+        'res.currency',
+        string='Currency',
+        default=lambda self: self.env.company.currency_id
+    )
     puntaje = fields.Monetary(string='Puntaje', currency_field='currency_id')
 
     register_winner_id = fields.Many2one('sd.register.winner', string='Registro Ganador')
@@ -58,7 +67,8 @@ class SdQuinielaData(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        res = super().create(vals_list)
         for vals in vals_list:
             vals['name'] = str(vals.get('equipo_a_id')) if vals.get('equipo_a_id') else 'Pronóstico'
+
+        res = super().create(vals_list)
         return res

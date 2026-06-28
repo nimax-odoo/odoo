@@ -10,11 +10,9 @@
             <field name="model">sd.quiniela.partidos</field>
             <field name="arch" type="xml">
                 <list string="partidos" editable="bottom" multi_edit="1">
-
                     <field name="name"/>
                     <field name="equipo_a_name"/>
                     <field name="equipo_b_name"/>
-
                     <field name="image_equipo_a" widget="image" options="{'preview_image': 'image_equipo_a'}"/>
                     <field name="image_equipo_b" widget="image" options="{'preview_image': 'image_equipo_b'}"/>
 
@@ -23,12 +21,10 @@
                     <field name="monto_marcador"/>
                     <field name="monto_ganador"/>
 
-                    <!-- ✅ TIEMPO EXTRA -->
-                    <field name="monto_tiempo_extra_1"/>
-                    <field name="monto_tiempo_extra_2"/>
+                    <!-- TIEMPO EXTRA -->
+                    <field name="monto_tiempo_extra"/>
 
                     <field name="active" widget="boolean_toggle"/>
-
                 </list>
             </field>
         </record>
@@ -42,12 +38,10 @@
             <field name="arch" type="xml">
                 <form>
                     <sheet>
-
                         <group>
                             <field name="name"/>
                             <field name="equipo_a_name"/>
                             <field name="equipo_b_name"/>
-
                             <field name="image_equipo_a" widget="image" options="{'preview_image': 'image_equipo_a'}"/>
                             <field name="image_equipo_b" widget="image" options="{'preview_image': 'image_equipo_b'}"/>
                         </group>
@@ -59,14 +53,12 @@
                         </group>
 
                         <group string="Tiempo Extra">
-                            <field name="monto_tiempo_extra_1"/>
-                            <field name="monto_tiempo_extra_2"/>
+                            <field name="monto_tiempo_extra"/>
                         </group>
 
                         <group>
                             <field name="active" widget="boolean_toggle"/>
                         </group>
-
                     </sheet>
                 </form>
             </field>

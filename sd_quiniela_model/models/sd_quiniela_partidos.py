@@ -1,18 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from odoo import fields, models, api, _
-from datetime import date, time
-from odoo.tools.safe_eval import safe_eval
-from datetime import date, datetime, time
 import logging
-from odoo.exceptions import ValidationError
-from odoo.exceptions import UserError, ValidationError
-from odoo.tools import float_is_zero, is_html_empty
-from odoo.tools.translate import html_translate
-from odoo.http import request
-from odoo.tools import format_amount
-# from odoo.exceptions import UserError
+
 _logger = logging.getLogger(__name__)
+
 
 class SdQuinielaEquipo(models.Model):
     _name = 'sd.quiniela.partidos'
@@ -29,19 +21,39 @@ class SdQuinielaEquipo(models.Model):
     monto_marcador = fields.Float(string='Monto por marcador')
     monto_ganador = fields.Float(string='Monto por ganador')
 
-    # ===== NUEVO: TIEMPO EXTRA =====
-    monto_tiempo_extra_1 = fields.Float(string='Monto Tiempo Extra 1')
-    monto_tiempo_extra_2 = fields.Float(string='Monto Tiempo Extra 2')
+    # ===== TIEMPO EXTRA =====
+    # Un solo monto porque se paga por gol acertado en tiempo extra
+    monto_tiempo_extra = fields.Float(string='Monto por gol Tiempo Extra')
 
     active = fields.Boolean(string='Active', default=False)
 
+    def _prepare_partido_name(self, vals):
+        equipo_a = vals.get('equipo_a_name')
+        equipo_b = vals.get('equipo_b_name')
+
+        if equipo_a and equipo_b:
+            return '{} vs {}'.format(equipo_a, equipo_b)
+
+        return 'Partido'
+
     @api.model_create_multi
     def create(self, vals_list):
-        res = super().create(vals_list)
         for vals in vals_list:
-            vals['name'] = (
-                str(vals.get('equipo_a_name')) + ' vs ' + str(vals.get('equipo_b_name'))
-                if vals.get('equipo_a_name') and vals.get('equipo_b_name')
-                else 'Partido'
-            )
+            vals['name'] = self._prepare_partido_name(vals)
+
+        return super(SdQuinielaEquipo, self).create(vals_list)
+
+    def write(self, vals):
+        res = super(SdQuinielaEquipo, self).write(vals)
+
+        if 'equipo_a_name' in vals or 'equipo_b_name' in vals:
+            for record in self:
+                if record.equipo_a_name and record.equipo_b_name:
+                    record.name = '{} vs {}'.format(
+                        record.equipo_a_name,
+                        record.equipo_b_name
+                    )
+                else:
+                    record.name = 'Partido'
+
         return res
