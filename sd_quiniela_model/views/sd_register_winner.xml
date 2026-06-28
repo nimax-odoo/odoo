@@ -10,16 +10,12 @@
             <field name="model">sd.register.winner</field>
             <field name="arch" type="xml">
                 <list string="Registrar Ganador">
-
                     <field name="name"/>
                     <field name="ganador"/>
                     <field name="score_equipo_a"/>
                     <field name="score_equipo_b"/>
-
-                    <!-- ✅ TIEMPO EXTRA -->
                     <field name="tiempo_extra_1"/>
                     <field name="tiempo_extra_2"/>
-
                 </list>
             </field>
         </record>
@@ -32,7 +28,6 @@
             <field name="model">sd.register.winner</field>
             <field name="arch" type="xml">
                 <form>
-
                     <header>
                         <button name="action_extract_winner"
                                 icon="fa-plus"
@@ -42,7 +37,6 @@
                     </header>
 
                     <sheet>
-
                         <div name="button_box" class="oe_button_box">
                             <button type="object"
                                     name="action_open_ganadores"
@@ -76,10 +70,8 @@
                         <hr/>
 
                         <group>
-
                             <!-- T1 -->
                             <group>
-
                                 <label for="min_0_9_t1" string="Min/Cant 0-9 T1"/>
                                 <div class="o_row">
                                     <field name="min_0_9_t1"/>
@@ -114,12 +106,10 @@
                                     <field name="min_37_45_t1_cant" nolabel="1" class="ms-2"
                                            invisible="not min_37_45_t1" required="min_37_45_t1"/>
                                 </div>
-
                             </group>
 
                             <!-- T2 -->
                             <group>
-
                                 <label for="min_0_9_t2" string="Min/Cant 0-9 T2"/>
                                 <div class="o_row">
                                     <field name="min_0_9_t2"/>
@@ -154,16 +144,13 @@
                                     <field name="min_37_45_t2_cant" nolabel="1" class="ms-2"
                                            invisible="not min_37_45_t2" required="min_37_45_t2"/>
                                 </div>
-
                             </group>
-
                         </group>
 
                         <hr/>
 
                         <!-- TIEMPO EXTRA -->
                         <group string="Tiempo Extra">
-
                             <group>
                                 <label for="tiempo_extra_1" string="Tiempo Extra 1"/>
                                 <div class="o_row">
@@ -181,13 +168,10 @@
                                            invisible="not tiempo_extra_2" required="tiempo_extra_2"/>
                                 </div>
                             </group>
-
                         </group>
-
                     </sheet>
 
                     <chatter reload_on_post="True"/>
-
                 </form>
             </field>
         </record>

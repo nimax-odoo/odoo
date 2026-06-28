@@ -42,8 +42,6 @@ class SdQuinielaData(models.Model):
     tiempo_extra_2 = fields.Boolean(string='Tiempo Extra 2')
 
     # ===== GOLES TIEMPO EXTRA =====
-    tiempo_extra_1_cant = fields.Integer(string='Goles Tiempo Extra 1')
-    tiempo_extra_2_cant = fields.Integer(string='Goles Tiempo Extra 2')
 
     # ===== RESULTADO =====
     score_equipo_a = fields.Integer(string='Marcador Equipo A')

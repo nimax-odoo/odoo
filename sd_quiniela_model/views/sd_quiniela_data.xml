@@ -26,9 +26,7 @@
                     <field name="min_37_45_t2"/>
 
                     <field name="tiempo_extra_1"/>
-                    <field name="tiempo_extra_1_cant"/>
                     <field name="tiempo_extra_2"/>
-                    <field name="tiempo_extra_2_cant"/>
 
                     <field name="score_equipo_a"/>
                     <field name="score_equipo_b"/>
@@ -74,21 +72,8 @@
                         </group>
 
                         <group string="Tiempo Extra">
-                            <label for="tiempo_extra_1" string="Tiempo Extra 1"/>
-                            <div class="o_row">
-                                <field name="tiempo_extra_1"/>
-                                <field name="tiempo_extra_1_cant" nolabel="1" class="ms-2"
-                                       invisible="not tiempo_extra_1"
-                                       required="tiempo_extra_1"/>
-                            </div>
-
-                            <label for="tiempo_extra_2" string="Tiempo Extra 2"/>
-                            <div class="o_row">
-                                <field name="tiempo_extra_2"/>
-                                <field name="tiempo_extra_2_cant" nolabel="1" class="ms-2"
-                                       invisible="not tiempo_extra_2"
-                                       required="tiempo_extra_2"/>
-                            </div>
+                            <field name="tiempo_extra_1"/>
+                            <field name="tiempo_extra_2"/>
                         </group>
 
                         <group string="Resultado">

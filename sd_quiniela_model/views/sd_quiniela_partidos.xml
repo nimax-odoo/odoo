@@ -20,8 +20,6 @@
                     <field name="monto_minute"/>
                     <field name="monto_marcador"/>
                     <field name="monto_ganador"/>
-
-                    <!-- TIEMPO EXTRA -->
                     <field name="monto_tiempo_extra"/>
 
                     <field name="active" widget="boolean_toggle"/>
@@ -46,13 +44,10 @@
                             <field name="image_equipo_b" widget="image" options="{'preview_image': 'image_equipo_b'}"/>
                         </group>
 
-                        <group string="Montos Normales">
+                        <group string="Montos">
                             <field name="monto_minute"/>
                             <field name="monto_marcador"/>
                             <field name="monto_ganador"/>
-                        </group>
-
-                        <group string="Tiempo Extra">
                             <field name="monto_tiempo_extra"/>
                         </group>
 
