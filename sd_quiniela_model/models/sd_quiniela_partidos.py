@@ -11,8 +11,10 @@ from odoo.tools import float_is_zero, is_html_empty
 from odoo.tools.translate import html_translate
 from odoo.http import request
 from odoo.tools import format_amount
-#from odoo.exceptions import UserError
+# from odoo.exceptions import UserError
+
 _logger = logging.getLogger(__name__)
+
 
 class SdQuinielaEquipo(models.Model):
     _name = 'sd.quiniela.partidos'
@@ -23,14 +25,25 @@ class SdQuinielaEquipo(models.Model):
     equipo_b_name = fields.Char(string='Equipo B')
     image_equipo_a = fields.Binary(string='Image Equipo A')
     image_equipo_b = fields.Binary(string='Image Equipo B')
+
+    # ===== MONTOS =====
     monto_minute = fields.Float(string='Monto por minuto')
     monto_marcador = fields.Float(string='Monto por marcador')
     monto_ganador = fields.Float(string='Monto por ganador')
+
+    # ===== MONTO TIEMPO EXTRA =====
+    # Un solo monto porque se paga por gol real definido en Registro Ganador.
+    monto_tiempo_extra = fields.Float(string='Monto por gol Tiempo Extra')
+
     active = fields.Boolean(string='Active', default=False)
 
     @api.model_create_multi
     def create(self, vals_list):
         res = super().create(vals_list)
         for vals in vals_list:
-            vals['name'] = str(vals.get('equipo_a_name')) + ' vs ' + str(vals.get('equipo_b_name')) if vals.get('equipo_a_name') and vals.get('equipo_b_name') else 'Partido'
+            vals['name'] = (
+                str(vals.get('equipo_a_name')) + ' vs ' + str(vals.get('equipo_b_name'))
+                if vals.get('equipo_a_name') and vals.get('equipo_b_name')
+                else 'Partido'
+            )
         return res

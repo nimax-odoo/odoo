@@ -2,42 +2,56 @@
 <odoo>
     <data>
 
+        <!-- ========================= -->
+        <!-- TREE -->
+        <!-- ========================= -->
         <record id="sd_partidos_tree_view" model="ir.ui.view">
             <field name="name">sd.quiniela.partidos.tree.view</field>
             <field name="model">sd.quiniela.partidos</field>
             <field name="arch" type="xml">
                 <list string="partidos" editable="bottom" multi_edit="1">
                     <field name="name"/>
-                    <field name="equipo_a_name" />
-                    <field name="equipo_b_name" />
+                    <field name="equipo_a_name"/>
+                    <field name="equipo_b_name"/>
                     <field name="image_equipo_a" widget="image" options="{'preview_image': 'image_equipo_a'}"/>
                     <field name="image_equipo_b" widget="image" options="{'preview_image': 'image_equipo_b'}"/>
+
+                    <!-- MONTOS -->
                     <field name="monto_minute"/>
                     <field name="monto_marcador"/>
                     <field name="monto_ganador"/>
+                    <field name="monto_tiempo_extra"/>
+
                     <field name="active" widget="boolean_toggle"/>
                 </list>
             </field>
         </record>
 
+        <!-- ========================= -->
+        <!-- FORM -->
+        <!-- ========================= -->
         <record id="sd_partidos_form" model="ir.ui.view">
             <field name="name">Partidos</field>
             <field name="model">sd.quiniela.partidos</field>
             <field name="arch" type="xml">
                 <form>
-                    <header>
-                        
-                    </header>
                     <sheet>
                         <group>
                             <field name="name"/>
-                            <field name="equipo_a_name" />
-                            <field name="equipo_b_name" />
+                            <field name="equipo_a_name"/>
+                            <field name="equipo_b_name"/>
                             <field name="image_equipo_a" widget="image" options="{'preview_image': 'image_equipo_a'}"/>
                             <field name="image_equipo_b" widget="image" options="{'preview_image': 'image_equipo_b'}"/>
+                        </group>
+
+                        <group string="Montos">
                             <field name="monto_minute"/>
                             <field name="monto_marcador"/>
                             <field name="monto_ganador"/>
+                            <field name="monto_tiempo_extra"/>
+                        </group>
+
+                        <group>
                             <field name="active" widget="boolean_toggle"/>
                         </group>
                     </sheet>
@@ -45,15 +59,14 @@
             </field>
         </record>
 
+        <!-- ========================= -->
+        <!-- ACTION -->
+        <!-- ========================= -->
         <record id="sd_partidos_action" model="ir.actions.act_window">
             <field name="name">Partidos</field>
             <field name="res_model">sd.quiniela.partidos</field>
             <field name="view_mode">list,form</field>
-        </record> 
-
-        <menuitem id="sd_partidos_action_menu" name="Partidos"
-            parent="menu_website_quinielas" sequence="1"
-            action="sd_partidos_action" />
+        </record>
 
     </data>
 </odoo>

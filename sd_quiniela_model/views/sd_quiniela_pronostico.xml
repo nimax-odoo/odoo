@@ -6,12 +6,9 @@
             <field name="name">sd.quiniela.pronostico.tree.view</field>
             <field name="model">sd.quiniela.pronostico</field>
             <field name="arch" type="xml">
-                <list string="Pronósticos" >
+                <list string="Pronósticos">
                     <field name="name"/>
-                    <field name="partner_id" />
-                    
-
-
+                    <field name="partner_id"/>
                 </list>
             </field>
         </record>
@@ -22,15 +19,19 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
-                    <button name="action_pronosticos_partidos" icon="fa-plus" type="object" string="Cargar Partidos"/>
+                        <button name="action_pronosticos_partidos"
+                                icon="fa-plus"
+                                type="object"
+                                string="Cargar Partidos"/>
                     </header>
                     <sheet>
-                        <group col = "2">
+                        <group col="2">
                             <field name="name"/>
                             <field name="partner_id" required="1"/>
-                
                         </group>
-                            <field name="datas_ids" />
+
+                        <field name="datas_ids"/>
+
                     </sheet>
                 </form>
             </field>
@@ -40,11 +41,13 @@
             <field name="name">Pronósticos</field>
             <field name="res_model">sd.quiniela.pronostico</field>
             <field name="view_mode">list,form</field>
-        </record> 
+        </record>
 
-        <menuitem id="sd_pronostico_action_menu" name="Pronósticos"
-            parent="menu_website_quinielas" sequence="1"
-            action="sd_pronostico_action" />
+        <menuitem id="sd_pronostico_action_menu"
+                  name="Pronósticos"
+                  parent="menu_website_quinielas"
+                  sequence="1"
+                  action="sd_pronostico_action"/>
 
     </data>
 </odoo>
