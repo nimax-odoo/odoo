@@ -66,7 +66,24 @@ class SdQuinielaData(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            vals['name'] = str(vals.get('equipo_a_id')) if vals.get('equipo_a_id') else 'Pronóstico'
+            # Si el Excel/importación ya mandó Name,
+            # se respeta porque ese es el nombre del participante.
+            if vals.get('name'):
+                continue
+
+            # Si no viene Name, buscarlo desde el pronóstico padre.
+            pronostico_id = vals.get('quiniela_pronostico_id')
+            if pronostico_id:
+                pronostico = self.env['sd.quiniela.pronostico'].browse(pronostico_id)
+
+                if pronostico.partner_id:
+                    vals['name'] = pronostico.partner_id.name
+                elif pronostico.name:
+                    vals['name'] = pronostico.name
+                else:
+                    vals['name'] = 'Pronóstico'
+            else:
+                vals['name'] = 'Pronóstico'
 
         res = super().create(vals_list)
         return res
