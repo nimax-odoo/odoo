@@ -14,8 +14,36 @@
                     <field name="ganador"/>
                     <field name="score_equipo_a"/>
                     <field name="score_equipo_b"/>
+
+                    <!-- T1 -->
+                    <field name="min_0_9_t1"/>
+                    <field name="min_0_9_t1_cant"/>
+                    <field name="min_10_18_t1"/>
+                    <field name="min_10_18_t1_cant"/>
+                    <field name="min_19_27_t1"/>
+                    <field name="min_19_27_t1_cant"/>
+                    <field name="min_28_36_t1"/>
+                    <field name="min_28_36_t1_cant"/>
+                    <field name="min_37_45_t1"/>
+                    <field name="min_37_45_t1_cant"/>
+
+                    <!-- T2 -->
+                    <field name="min_0_9_t2"/>
+                    <field name="min_0_9_t2_cant"/>
+                    <field name="min_10_18_t2"/>
+                    <field name="min_10_18_t2_cant"/>
+                    <field name="min_19_27_t2"/>
+                    <field name="min_19_27_t2_cant"/>
+                    <field name="min_28_36_t2"/>
+                    <field name="min_28_36_t2_cant"/>
+                    <field name="min_37_45_t2"/>
+                    <field name="min_37_45_t2_cant"/>
+
+                    <!-- TIEMPO EXTRA -->
                     <field name="tiempo_extra_1"/>
+                    <field name="tiempo_extra_1_cant"/>
                     <field name="tiempo_extra_2"/>
+                    <field name="tiempo_extra_2_cant"/>
                 </list>
             </field>
         </record>
@@ -71,7 +99,7 @@
 
                         <group>
                             <!-- T1 -->
-                            <group>
+                            <group string="Primer Tiempo">
                                 <label for="min_0_9_t1" string="Min/Cant 0-9 T1"/>
                                 <div class="o_row">
                                     <field name="min_0_9_t1"/>
@@ -109,7 +137,7 @@
                             </group>
 
                             <!-- T2 -->
-                            <group>
+                            <group string="Segundo Tiempo">
                                 <label for="min_0_9_t2" string="Min/Cant 0-9 T2"/>
                                 <div class="o_row">
                                     <field name="min_0_9_t2"/>
