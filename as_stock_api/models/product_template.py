@@ -13,7 +13,8 @@ class ProductTemplate(models.Model):
 
     def compute_price_nimax(self,partner,pricelist):
         # Calcular el precio NIMAX
-        for product in self:
+        for productt in self:
+            product = self.env['product.product'].sudo().search([('product_tmpl_id','=',productt.id)],limit=1)
             expected_earning = 0
             nimax_price_usd = 0
             expected_earning = pricelist.expected_earning or 0
@@ -35,7 +36,7 @@ class ProductTemplate(models.Model):
                     if promociones[0]:
                         precio = promociones[1]
                         promo = promociones[2]
-                        nimax_price_usd = precio
+                        price_based_usd = precio
                     else:
                         precio = product.list_price
                         item_pricelist = False
