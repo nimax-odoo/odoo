@@ -1,0 +1,33 @@
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="request_logger_tree_view">
+            <field name="name">request.logger.tree.view</field>
+            <field name="model">request.logger</field>
+            
+            <field name="arch" type="xml">
+                <list string="Log de API Ventas" editable="bottom">
+                    <field name="name"/>
+                    <field name="user_id"/>
+                    <field name="date"/>
+                    <field name="json"/>
+                    <field name="response"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="action_request_logger" model="ir.actions.act_window">
+            <field name="name">Log de API Ventas</field>
+            <field name="res_model">request.logger</field>
+            <field name="view_mode">list</field>
+        </record>
+
+
+        <menuitem id="menu_request_logger"
+                  name="Log de API Ventas"
+                  action="action_request_logger"
+                  parent="sale.menu_sale_config"
+                  sequence="20"/>
+
+    </data>
+</odoo>

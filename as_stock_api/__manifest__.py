@@ -17,6 +17,7 @@
         "views/match_locations.xml",
         "views/sale_order.xml",
         "views/account_move.xml",
+        "views/request_logger.xml",
         "data/cron.xml",
     ],
     'installable': True,

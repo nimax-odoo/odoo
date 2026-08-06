@@ -10,6 +10,9 @@
                     <field name="sd_waybills" />
                     <field name="sd_carrier_id" />
                 </xpath>
+                <xpath expr="//sheet" position="after">
+                    <div class="o_attachment_preview o_center_attachment"/>
+                </xpath>
             </field>
         </record>
     </data>
