@@ -115,7 +115,7 @@ class AsResUsers(models.Model):
         """
         self.ensure_one()
         lock = False
-        if self.sd_sync_lock_until_cant and self.sd_sync_lock_until_type:
+        if self.sd_sync_lock_until_cant and self.sd_sync_lock_until_type and self.sd_sync_lock_until:
             if self.sd_sync_lock_until_type == 'Minutos':
                 delta = timedelta(minutes=self.sd_sync_lock_until_cant)
             else:
