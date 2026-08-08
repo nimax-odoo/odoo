@@ -75,21 +75,21 @@ class AsResUsers(models.Model):
         copy=False,
         help='URL del sistema del cliente para enviar el catálogo'
     )
-    sd_sync_lock_until = fields.Datetime(
-        string='Fecha de Bloqueo de Sincronización',
-        copy=False,
-        help='Fecha hasta la cual se bloqueará la sincronización'
-    )
-    sd_sync_lock_until_cant = fields.Integer(
-        string='Cantidad de Tiempo de Bloqueo',
-        copy=False,
-        help='Cantidad de tiempo para el bloqueo de sincronización'
-    )
-    sd_sync_lock_until_type  = fields.Selection(
-        [('Minutos', 'Minutos'), ('Horas', 'Horas')],
-        string='Tipo de Bloqueo de Sincronización',
-        default='Horas',
-    )
+    # sd_sync_lock_until = fields.Datetime(
+    #     string='Fecha de Bloqueo de Sincronización',
+    #     copy=False,
+    #     help='Fecha hasta la cual se bloqueará la sincronización'
+    # )
+    # sd_sync_lock_until_cant = fields.Integer(
+    #     string='Cantidad de Tiempo de Bloqueo',
+    #     copy=False,
+    #     help='Cantidad de tiempo para el bloqueo de sincronización'
+    # )
+    # sd_sync_lock_until_type  = fields.Selection(
+    #     [('Minutos', 'Minutos'), ('Horas', 'Horas')],
+    #     string='Tipo de Bloqueo de Sincronización',
+    #     default='Horas',
+    # )
     
     _sql_constraints = [
         ('unique_token', 'unique(sd_cy_token)', 'El token debe ser único')
