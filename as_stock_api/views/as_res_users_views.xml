@@ -9,12 +9,26 @@
             <notebook position="inside">
                 <page string="API de Stock" groups="base.group_system">
                     <group>
+                    <group>
                         <field name="as_api_enabled"/>
                         <field name="as_api_key" invisible="not as_api_enabled" readonly="not as_api_enabled"/>
                         <div class="text-muted" invisible="not as_api_enabled">
                             Puede editar manualmente la clave API o usar los botones para generarla automáticamente.
                         </div>
                     </group>
+                    <group>
+
+                        <field name="sd_sync_lock_until" invisible="not as_api_enabled"/>
+                        <label for="sd_sync_lock_until_cant" invisible="not as_api_enabled"/>
+                        <div class="o_row"  invisible="not as_api_enabled">
+                                <field name="sd_sync_lock_until_cant"/>
+                                <field name="sd_sync_lock_until_type"/>
+
+                        </div>
+
+                    </group>
+                    </group>
+
                     <group string="API para la Gestion de Ventas (CYBERPUERTA)">
                     <group>
                         <field name="sd_cy_token"/>
