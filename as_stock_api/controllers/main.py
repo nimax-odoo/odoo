@@ -182,6 +182,17 @@ class AsStockAPI(http.Controller):
             )
             
         user = self._as_validate_api_key(api_key)
+        if not user:
+            _logger.warning("[as_get_stock] Intento de acceso con API key inválida")
+            
+            response_data = {'error': 'API key inválida'}
+            self._as_log_response('/nimax/stock', 403, response_data)
+            
+            return Response(
+                json.dumps(response_data),
+                status=403,
+                content_type='application/json'
+            )
         user = user.sudo()
         if not user:
             _logger.warning("[as_get_stock] Intento de acceso con API key inválida")
@@ -194,6 +205,12 @@ class AsStockAPI(http.Controller):
                 status=403,
                 content_type='application/json'
             )
+        if user.is_sync_locked():
+            remaining = user.get_remaining_time()
+            response_data = {'error': remaining['message']}
+            self._as_log_response('/nimax/stock_with_price', 403, response_data)
+            
+            return response_data
         
         # Verificar permisos de usuario
         if not self._as_check_permissions(user):
@@ -436,7 +453,7 @@ class AsStockAPI(http.Controller):
             
             # Filtrar productos con stock cero después de aplicar porcentaje
             result = [item for item in result if item['stock'] > 0]
-            
+            user.set_sync_lock()
             _logger.info("[as_get_stock] Consulta exitosa por usuario %s, retornando %s registros", user.name, len(result))
             self._as_log_response('/nimax/stock', 200, result, user)
             
@@ -771,6 +788,17 @@ class AsStockAPI(http.Controller):
                 content_type='application/json'
             )
         user = self._as_validate_api_key(api_key)
+        if not user:
+            _logger.warning("[as_get_stock] Intento de acceso con API key inválida")
+            
+            response_data = {'error': 'API key inválida'}
+            self._as_log_response('/nimax/stock', 403, response_data)
+            
+            return Response(
+                json.dumps(response_data),
+                status=403,
+                content_type='application/json'
+            )
         user = user.sudo()
         if not user:
             _logger.warning("[as_get_stock_with_price] Intento de acceso con API key inválida")
@@ -783,7 +811,18 @@ class AsStockAPI(http.Controller):
                 status=403,
                 content_type='application/json'
             )
-        
+        if user.is_sync_locked():
+            remaining = user.get_remaining_time()
+            response_data = {'error': remaining['message']}
+            self._as_log_response('/nimax/stock_with_price', 403, response_data)
+            
+            return response_data
+            
+            # return Response(
+            #     json.dumps(response_data),
+            #     status=400,
+            #     content_type='application/json'
+            # )
         # Verificar permisos de usuario
         if not self._as_check_permissions(user):
             _logger.warning("[as_get_stock_with_price] Usuario %s sin permisos para acceder a stock.quant", user.name)
@@ -1243,7 +1282,7 @@ class AsStockAPI(http.Controller):
                 item['pricelist_currency'] = pricelist.currency_id.name
                 item['partner_id'] = partner.id
                 item['partner_name'] = partner.name
-            
+            user.set_sync_lock()
             _logger.info("[as_get_stock_with_price] Consulta exitosa por usuario %s, retornando %s registros", user.name, len(result))
             self._as_log_response('/nimax/stock_with_price', 200, result, user)
             

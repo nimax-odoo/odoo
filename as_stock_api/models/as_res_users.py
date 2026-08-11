@@ -3,6 +3,7 @@
 # For copyright and license notices, see __manifest__.py file in root directory
 ##############################################################################
 
+from datetime import date, timedelta
 import logging
 import uuid
 from odoo import api, fields, models, _
@@ -74,9 +75,109 @@ class AsResUsers(models.Model):
         copy=False,
         help='URL del sistema del cliente para enviar el catálogo'
     )
+    sd_sync_lock_until = fields.Datetime(
+        string='Fecha de Bloqueo de Sincronización',
+        copy=False,
+        help='Fecha hasta la cual se bloqueará la sincronización'
+    )
+    sd_sync_lock_until_cant = fields.Integer(
+        string='Cantidad de Tiempo de Bloqueo',
+        copy=False,
+        help='Cantidad de tiempo para el bloqueo de sincronización'
+    )
+    sd_sync_lock_until_type  = fields.Selection(
+        [('Minutos', 'Minutos'), ('Horas', 'Horas')],
+        string='Tipo de Bloqueo de Sincronización',
+        default='Horas',
+    )
+    
     _sql_constraints = [
         ('unique_token', 'unique(sd_cy_token)', 'El token debe ser único')
     ]
+    
+    def set_sync_lock(self):
+        """
+        Establece la fecha de bloqueo de sincronización para el usuario.
+        Args:
+            date (datetime): Fecha hasta la cual se bloqueará la sincronización.
+        """
+        self.ensure_one()
+        
+        self.sd_sync_lock_until = fields.Datetime.now()
+        _logger.info("[set_sync_lock] Usuario %s bloqueado hasta %s",self.name,self.sd_sync_lock_until)
+        
+    def is_sync_locked(self):
+        """
+        Obtiene la fecha de desbloqueo de sincronización para el usuario.
+        
+        Returns:
+            datetime: Fecha de desbloqueo de sincronización.
+        """
+        self.ensure_one()
+        lock = False
+        if self.sd_sync_lock_until_cant and self.sd_sync_lock_until_type and self.sd_sync_lock_until:
+            if self.sd_sync_lock_until_type == 'Minutos':
+                delta = timedelta(minutes=self.sd_sync_lock_until_cant)
+            else:
+                delta = timedelta(hours=self.sd_sync_lock_until_cant)
+            date_until = self.sd_sync_lock_until + delta
+            if fields.Datetime.now() < date_until:
+                lock = True
+        return lock
+
+    def get_remaining_time(self):
+        """
+        Retorna el tiempo restante del bloqueo.
+        """
+        self.ensure_one()
+
+        if not self.sd_sync_lock_until:
+            return {
+                'locked': False,
+                'seconds': 0,
+                'message': ''
+            }
+
+        if self.sd_sync_lock_until_type == 'Minutos':
+            unlock_date = self.sd_sync_lock_until + timedelta(
+                minutes=self.sd_sync_lock_until_cant
+            )
+        else:
+            unlock_date = self.sd_sync_lock_until + timedelta(
+                hours=self.sd_sync_lock_until_cant
+            )
+
+        remaining = unlock_date - fields.Datetime.now()
+
+        if remaining.total_seconds() <= 0:
+            return {
+                'locked': False,
+                'seconds': 0,
+                'message': ''
+            }
+
+        total_seconds = int(remaining.total_seconds())
+
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+
+        parts = []
+        parts.append("Debe esperar")
+        if hours:
+            parts.append(f"{hours} hora{'s' if hours != 1 else ''}")
+
+        if minutes:
+            parts.append(f"{minutes} minuto{'s' if minutes != 1 else ''}")
+
+        if seconds or not parts:
+            parts.append(f"{seconds} segundo{'s' if seconds != 1 else ''}")
+
+        return {
+            'locked': True,
+            'seconds': total_seconds,
+            'message': ", ".join(parts)
+        }
     
     def _as_compute_api_key_display(self):
         """
