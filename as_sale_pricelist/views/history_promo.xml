@@ -17,6 +17,7 @@
                     <field name="last_applied_promo"/>
                     <field name="total_usd"/>
                     <field name="total_mxp"/>
+                    <field name="move_credit_id"/>
                 </list>
             </field>
         </record>

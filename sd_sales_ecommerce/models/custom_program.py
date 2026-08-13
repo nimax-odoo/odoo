@@ -11,6 +11,7 @@ from odoo.tools import float_is_zero, is_html_empty
 from odoo.tools.translate import html_translate
 from odoo.http import request
 from odoo.tools import format_amount
+from odoo.tools.safe_eval import safe_eval
 #from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 class CouponProgram(models.Model):
@@ -48,23 +49,71 @@ class CouponProgram(models.Model):
     
     def search_promo_disponibles_ecommerce(self):
         promos = []
-        vals = {}
-        domain_promo = [('sd_apply_toprunner_ecommerce','=',True),('active','=',True)]
+
+        domain_promo = [
+            ('sd_apply_toprunner_ecommerce', '=', True),
+            ('active', '=', True)
+        ]
+
         promociones = self.env['coupon.program'].sudo().search(domain_promo)
-        clientes = self.env['res.partner']
-        productos = self.env['product.product']
+
+        # Cache para evitar repetir búsquedas
+        cache_productos = {}
+        cache_clientes = {}
+
         for promo in promociones:
+            productos_ids = []
+            clientes_ids = []
+
+            # PRODUCTOS
             if promo.rule_products_domain:
-                domain = safe_eval(promo.rule_products_domain)
-                productos = self.env['product.product'].sudo().search(domain)
+                domain_str = promo.rule_products_domain
+
+                if domain_str not in cache_productos:
+                    domain = safe_eval(domain_str)
+                    cache_productos[domain_str] = self.env['product.product'].sudo().search(domain).ids
+
+                productos_ids = cache_productos[domain_str]
+
+            # CLIENTES
             if promo.rule_partners_domain:
-                domain_partner = safe_eval(promo.rule_partners_domain)
-                clientes = self.env['res.partner'].sudo().search(domain_partner)
-            if productos or clientes:
+                domain_str = promo.rule_partners_domain
+
+                if domain_str not in cache_clientes:
+                    domain = safe_eval(domain_str)
+                    cache_clientes[domain_str] = self.env['res.partner'].sudo().search(domain).ids
+
+                clientes_ids = cache_clientes[domain_str]
+
+            if productos_ids or clientes_ids:
                 promos.append({
                     'promo': promo,
-                    'productos': productos.ids,
-                    'clientes': clientes.ids,
+                    'productos': productos_ids,
+                    'clientes': clientes_ids,
                     'price_unit_usd': promo.PRICE_UNIT_USD,
                 })
+
         return promos
+ 
+    # def search_promo_disponibles_ecommerce(self):
+    #     promos = []
+    #     vals = {}
+    #     domain_promo = [('sd_apply_toprunner_ecommerce','=',True),('active','=',True)]
+    #     promociones = self.env['coupon.program'].sudo().search(domain_promo)
+    #     clientes = self.env['res.partner']
+    #     productos = self.env['product.product']
+    #     for promo in promociones:
+    #         if promo.rule_products_domain:
+    #             domain = safe_eval(promo.rule_products_domain)
+    #             productos = self.env['product.product'].sudo().search(domain)
+    #         if promo.rule_partners_domain:
+    #             domain_partner = safe_eval(promo.rule_partners_domain)
+    #             clientes = self.env['res.partner'].sudo().search(domain_partner)
+    #         if productos or clientes:
+    #             promos.append({
+    #                 'promo': promo,
+    #                 'productos': productos.ids,
+    #                 'clientes': clientes.ids,
+    #                 'price_unit_usd': promo.PRICE_UNIT_USD,
+    #             })
+    #     return promos

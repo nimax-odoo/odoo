@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+     <record id="group_auto_access_portal" model="res.groups">
+        <field name="name">Recibir notificaciones de registro de acceso al portal</field>
+    </record>
+
+</odoo>

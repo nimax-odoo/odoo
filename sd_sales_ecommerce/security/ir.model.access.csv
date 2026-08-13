@@ -5,3 +5,4 @@ access_stock_location_public_public,stock.location.public,stock.model_stock_loca
 access_stock_warehouse_portal_portal,stock.warehouse.portal,stock.model_stock_warehouse,base.group_portal,1,0,0,0
 access_stock_quant_portal_portal,stock.quant.portal,stock.model_stock_quant,base.group_portal,1,0,0,0
 access_stock_location_portal_portal,stock.location.portal,stock.model_stock_location,base.group_portal,1,0,0,0
+access_res_access_portal,res_access_portal,model_res_access_portal,,1,1,1,1

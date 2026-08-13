@@ -84,31 +84,31 @@
             <field name="arch" type="xml">
                 <!-- Agregar botón en el header -->
                 <button name="action_register_payment" position="before">
-                    <button name="as_action_manual_l10n_mx_edi_cfdi_try_send" 
+                    <!-- <button name="as_action_manual_l10n_mx_edi_cfdi_try_send" 
                         type="object" 
                         string="Timbrar MX (Manual)" 
                         groups="account.group_account_manager"
-                        invisible="not l10n_mx_edi_is_cfdi_needed or l10n_mx_edi_cfdi_state in ('sent', 'cancel')"/>
+                        invisible="not l10n_mx_edi_is_cfdi_needed or l10n_mx_edi_cfdi_state in ('sent', 'cancel')"/> -->
                     
-                    <button name="as_action_retry_l10n_mx_edi_cfdi_with_current_date" 
+                    <!-- <button name="as_action_retry_l10n_mx_edi_cfdi_with_current_date" 
                         type="object" 
                         string="Reintentar Timbrado (Hora Actual)" 
                         groups="account.group_account_manager"
-                        invisible="not l10n_mx_edi_is_cfdi_needed or l10n_mx_edi_cfdi_state != 'failed'"/>
+                        invisible="not l10n_mx_edi_is_cfdi_needed or l10n_mx_edi_cfdi_state != 'failed'"/> -->
                     
-                    <button name="as_action_check_pac_config" 
+                    <!-- <button name="as_action_check_pac_config" 
                         type="object" 
                         string="Verificar PAC" 
                         icon="fa-gear" 
                         groups="account.group_account_manager"
-                        invisible="not l10n_mx_edi_is_cfdi_needed"/>
+                        invisible="not l10n_mx_edi_is_cfdi_needed"/> -->
                         
-                    <button name="as_action_fix_edi_documents" 
+                    <!-- <button name="as_action_fix_edi_documents" 
                         type="object" 
                         string="Reparar EDI" 
                         icon="fa-wrench" 
                         groups="account.group_account_manager"
-                        invisible="not l10n_mx_edi_is_cfdi_needed"/>
+                        invisible="not l10n_mx_edi_is_cfdi_needed"/> -->
                 </button>
             </field>
         </record>

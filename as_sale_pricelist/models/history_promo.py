@@ -28,3 +28,4 @@ class tf_history_promo(models.Model):
     sale_id = fields.Many2one('sale.order', string='Pedido')
     promo_id = fields.Many2one('coupon.program', string='Promoción')
     last_applied_promo = fields.Boolean('Última Promoción Aplicada', default=False) 
+    move_credit_id = fields.Many2one('account.move', string='Nota de Crédito')

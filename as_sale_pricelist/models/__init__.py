@@ -23,4 +23,5 @@ from . import tf_res_partner
 from . import as_parches
 from . import sd_stock_quant
 from . import stock_move_line
+from . import account_move
 # from . import stock_move

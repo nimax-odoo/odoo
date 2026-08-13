@@ -195,7 +195,7 @@ class ProductTemplate(models.Model):
                     date=date.today()
                 )
                 price_unit = price_result[self.id][0]
-                _logger.info(f"[default_get] Precio calculado: {price_unit}")
+                _logger.info(f"[default_get]2 Precio calculado: {price_unit}")
             except Exception as e:
                 _logger.error(f"[default_get] Error al calcular el precio: {str(e)}")
                 # Si hay error, intentamos con precio base del producto

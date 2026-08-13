@@ -47,5 +47,45 @@ Le notificamos que tiene una cotización <span style="font-weight:bold;" t-out="
             <field name="lang">{{ object.partner_id.lang }}</field>
             <field name="auto_delete" eval="True"/>
         </record>
+
+                    <record id="email_template_access_portal" model="mail.template">
+            <field name="name">Inventario: Notificar Usuario logeado</field>
+            <field name="model_id" ref="stock.model_res_partner" />
+            <field name="email_from">{{ (object.company_id.email_formatted) }}</field>
+            <!-- <field name="partner_to">{{ object.user_id.partner_id.id }}</field> -->
+            <field name="subject">Registro en el portal web de {{ object.name }}</field>
+            <field name="description">Correo para avisar que un usuario realizo su registro mediante el sitio web</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Estimado/a
+                        <br /><br />
+                        Se notifica que el usuario <span style="font-weight:bold;"
+                            t-out="object.name or ''">Usuario</span> ha realizado un registro en
+                        la compañía <span style="font-weight:bold;"
+                            t-out="object.company_id.name or ''">Compañía</span>.
+                        <br /><br />
+                       
+                        Por favor, revise el sistema para más detalles.
+                        <br /><br />
+                        Saludos cordiales,
+                        <br />
+                        <t t-out="object.company_id.name or ''">Compañía</t>
+
+
+
+                        <br /><br />
+                        No dude en ponerse en contacto con nosotros si tiene alguna pregunta.
+                        <t t-if="not is_html_empty(object.create_uid.signature)">
+                            <br /><br />
+                            <t t-out="object.create_uid.signature or ''">--<br />Mitchell Admin</t>
+                        </t>
+                    </p>
+                </div>
+            </field>
+            <field name="report_template_ids" eval="[]" />
+            <field name="lang">{{ object.create_uid.partner_id.lang }}</field>
+            <field name="auto_delete" eval="True" />
+        </record>
         </data>
 </odoo>

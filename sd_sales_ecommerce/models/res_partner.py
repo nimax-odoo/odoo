@@ -29,6 +29,21 @@ class ResPartner(models.Model):
                 partner.sd_pricelist = partner.parent_id.sd_pricelist
                 partner.sd_pricelist_ids = partner.parent_id.sd_pricelist_ids
                 partner.tf_vendor_parameter_ids = [(6, 0, vandors_categ)]
+    
+    def get_partner_id(self,vat):
+        valores = {}
+        partner = self.env['res.partner'].search([('vat', '=', vat)], limit=1)
+        if partner:
+            for part in partner:
+                valores = {
+                    'id': partner.id,
+                    'name': partner.name,
+                    'vat': partner.vat,
+                    'email': partner.email,
+                    'phone': partner.phone,
+                }
+                
+        return valores
 
     def action_assigned_vendor(self):
         for partner in self:

@@ -48,12 +48,12 @@
     <template id="custom_product_stock_status" inherit_id="website_sale.products_item" active="False">
         <xpath expr="//div[hasclass('product_price')]" position="after">
             <b>
-                <t t-esc="website._get_current_pricelist().currency_id.name" /></b>
+                <t t-out="website._get_current_pricelist().currency_id.name" /></b>
             <t t-set="tmpl_id" t-value="product.id" />
             <t t-set="qty" t-value="(stock_map.get(tmpl_id) or 0) if stock_map else 0" />
             <div t-if="product.sudo().stock_status == 'in_stock'" class="text-success">
                 En Stock
-                <t t-esc="int(qty or 0)" /> Unid.
+                <t t-out="int(qty or 0)" /> Unid.
             </div>
             <div t-if="product.sudo().stock_status == 'out_of_stock'" class="text-danger">
                 Agotado

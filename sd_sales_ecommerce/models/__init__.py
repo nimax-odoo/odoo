@@ -9,6 +9,7 @@ from . import res_users
 from . import website
 from . import variant
 from . import product_pricelist
+from . import res_access_portal
 
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

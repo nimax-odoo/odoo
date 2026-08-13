@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template inherit_id="web.login" id="login_inherit2" name="login">
+        <xpath expr="//div[hasclass('oe_login_buttons')]" position="after">
+            <div class="text-end mb-3">
+                <a href="/access_successful">Registrar Acceso</a>
+            </div>
+        </xpath>
+    </template>
+</odoo>
