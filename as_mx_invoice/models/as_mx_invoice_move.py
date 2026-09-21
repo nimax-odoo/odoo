@@ -159,7 +159,7 @@ class AsAccountInvoice(models.Model):
                 cfdi_values['monto'] = total_in_company_curr
             else:
                 cfdi_values['monto'] = total_in_payment_curr
-                cambio = total_in_payment_curr/total_in_company_curr
+                cambio = total_in_payment_curr / total_in_company_curr if total_in_company_curr else 1.0
                 total_in_company_curr = total_in_company_curr * cambio
                 
         else:
@@ -181,10 +181,17 @@ class AsAccountInvoice(models.Model):
         # The value must reflect the number of Mexican pesos that are equivalent to a unit of the currency indicated
         # in the 'moneda' attribute.
         # It is required when the MonedaP attribute is different from MXN.
-        cfdi_values['tipo_cambio_dp'] = 6
         if self.currency_id == company_curr:
-            payment_rate = None
+            # SAT Pagos 2.0 / CRP20215:
+            # cuando MonedaP = MXN, TipoCambioP debe enviarse exactamente como "1".
+            # La plantilla usa tipo_cambio_dp para formatear el atributo, por eso
+            # aquí usamos 0 decimales y un entero, evitando "1.000000".
+            cfdi_values['tipo_cambio_dp'] = 0
+            payment_rate = 1
         else:
+            # Para monedas distintas de MXN, TipoCambioP admite la precisión
+            # necesaria del tipo de cambio.
+            cfdi_values['tipo_cambio_dp'] = 6
             raw_payment_rate = abs(total_in_company_curr / total_in_payment_curr) if total_in_payment_curr else 0.0
             payment_rate = float_round(raw_payment_rate, precision_digits=cfdi_values['tipo_cambio_dp'])
 
@@ -226,19 +233,27 @@ class AsAccountInvoice(models.Model):
                 'local_retenciones_list',
             ):
                 for tax_values in inv_cfdi_values[key]:
+                    # IMPORTANTE PARA PAGOS 2.0:
+                    # BaseDR e ImporteDR intervienen directamente en BaseP/ImporteP.
+                    # No redondearlos aquí con invoice.currency_id.round() (MXN/USD normalmente 2 decimales),
+                    # porque se perdería precisión ANTES de aplicar EquivalenciaDR y puede provocar
+                    # CRP20268 / CRP20274. Conservamos hasta 6 decimales fiscales.
                     for tax_key in ('base', 'importe'):
                         if tax_values[tax_key] is not None:
-                            tax_values[tax_key] = invoice.currency_id.round(tax_values[tax_key] * percentage_paid)
+                            tax_values[tax_key] = float_round(
+                                tax_values[tax_key] * percentage_paid,
+                                precision_digits=6,
+                            )
 
                     # Handle the case where the rounding method was changed between Odoo versions.
-                    # This applies when an invoice's CFDI, generated in the previous version, is processed
-                    # after the upgrade in the new version, resulting in the use of a deprecated rounding method.
+                    # Para el complemento de pago mantenemos también 6 decimales aquí; usar
+                    # invoice.currency_id.decimal_places volvería a reducir MXN/USD a 2 decimales.
                     if all(tax_values[key] is not None for key in ('base', 'importe', 'tasa_o_cuota')):
                         post_amounts_map = self.env['l10n_mx_edi.document']._get_post_fix_tax_amounts_map(
                             base_amount=tax_values['base'],
                             tax_amount=tax_values['importe'],
                             tax_rate=tax_values['tasa_o_cuota'],
-                            precision_digits=invoice.currency_id.decimal_places,
+                            precision_digits=6,
                         )
                         tax_values['importe'] = post_amounts_map['new_tax_amount']
                         tax_values['base'] = post_amounts_map['new_base_amount']
@@ -254,23 +269,43 @@ class AsAccountInvoice(models.Model):
                 return abs(invoice_amount / payment_amount)
 
             if invoice.currency_id == self.currency_id:
-                # Same currency.
+                # MonedaDR == MonedaP:
+                # NO pasar 1.0 al formateador del XML. La plantilla de Odoo
+                # genera literalmente EquivalenciaDR="1" cuando equivalencia es None.
+                # Para los cálculos internos sí utilizamos inv_rate = 1.0.
                 computed_rate = None
+                inv_rate = 1.0
             elif invoice.currency_id == company_curr != self.currency_id:
-                # Adapt the payment rate to find the reconciled amount of the invoice but expressed in payment currency.
+                # Factura MXN / Pago USD.
+                # EquivalenciaDR = unidades de MonedaDR (MXN) por 1 unidad de MonedaP (USD).
                 balance = (invoice_values['balance'] + invoice_values['invoice_exchange_balance']) * cambio
-                computed_rate = calculate_rate(balance,invoice_values['payment_amount_currency'])
+                computed_rate = calculate_rate(balance, invoice_values['payment_amount_currency'])
             elif self.currency_id == company_curr != invoice.currency_id:
-                # Adapt the invoice rate to find the reconciled amount of the payment but expressed in invoice currency.
+                # Factura USD / Pago MXN.
+                # EquivalenciaDR = unidades de MonedaDR (USD) por 1 unidad de MonedaP (MXN).
                 balance = (invoice_values['balance'] + invoice_values['payment_exchange_balance']) * cambio
                 computed_rate = calculate_rate(invoice_values['invoice_amount_currency'], balance)
             else:
-                # Both are expressed in different currencies.
-                computed_rate = calculate_rate(invoice_values['invoice_amount_currency'], invoice_values['payment_amount_currency'])
-            currency_precision = company_curr.l10n_mx_edi_decimal_places
-            if self.currency_id == company_curr:
-                if self.company_id.currency_id.name != 'MXN':
-                    currency_precision = 6
+                # MonedaDR y MonedaP diferentes (caso general).
+                computed_rate = calculate_rate(
+                    invoice_values['invoice_amount_currency'],
+                    invoice_values['payment_amount_currency'],
+                )
+
+            # Cuando MonedaDR != MonedaP, EquivalenciaDR debe ser el mismo valor
+            # utilizado en el XML y en los cálculos de BaseP/ImporteP.
+            # Revisión B admite hasta 10 decimales en EquivalenciaDR.
+            # Cuando son iguales, dejamos computed_rate=None para que la plantilla
+            # escriba literalmente "1", pero inv_rate permanece en 1.0.
+            if computed_rate is not None:
+                computed_rate = float_round(computed_rate, precision_digits=10)
+                inv_rate = computed_rate
+
+            # BaseDR / ImporteDR admiten hasta 6 decimales en Pagos 2.0.
+            # Usamos siempre 6 para que el valor renderizado en el XML sea
+            # exactamente el mismo que participa en BaseP / ImporteP.
+            currency_precision = 6
+
             def format_float_custom(amount, precision=currency_precision):
                 if amount is None or amount is False:
                     return None
@@ -287,7 +322,7 @@ class AsAccountInvoice(models.Model):
                 'objeto_imp': objeto_imp or '02',
                 'id_documento': invoice.l10n_mx_edi_cfdi_uuid,
                 'equivalencia': computed_rate,
-                'inv_rate': computed_rate,
+                'inv_rate': inv_rate,
                 'num_parcialidad': invoice_values['number_of_payments'],
                 'imp_pagado': invoice_values['reconciled_amount'],
                 'imp_saldo_ant': invoice_values['amount_residual_before'],
@@ -353,15 +388,32 @@ class AsAccountInvoice(models.Model):
                 and tax_values['tipo_factor'] == tax_class
                 and company_curr.compare_amounts(tax_values['tasa_o_cuota'] or 0.0, amount) == 0
             )
-        
+
+        # Precisión fiscal de BaseDR/ImporteDR y BaseP/ImporteP.
+        # El complemento Pagos 2.0 admite hasta 6 decimales en estos importes.
+        # Usar 6 decimales evita perder precisión y evita depender del margen
+        # truncado/redondeado a 2 decimales del PAC.
+        payment_tax_precision = 6
+        payment_p_precision = 6
+
         withholding_values_map = defaultdict(lambda: {'importe': 0.0})
         transferred_values_map = defaultdict(lambda: {'base': 0.0, 'importe': 0.0})
         local_retenciones_values_map = defaultdict(lambda: {'base': 0.0, 'importe': 0.0})
         local_traslados_values_map = defaultdict(lambda: {'base': 0.0, 'importe': 0.0})
+
+        # TipoCambioP: MXN por una unidad de MonedaP. Para MXN es 1.
         pay_rate = cfdi_values['tipo_cambio'] or 1.0
+
         for cfdi_inv_values in invoice_values_list:
-            inv_rate = round(cfdi_inv_values.pop('inv_rate', False) or 1.0,10)
-            to_mxn_rate = pay_rate / inv_rate
+            # Debe ser exactamente la EquivalenciaDR que se envía al XML.
+            # En monedas diferentes conservamos hasta 10 decimales; si son iguales es 1.
+            inv_rate = cfdi_inv_values.pop('inv_rate', False) or 1.0
+            inv_rate = float_round(inv_rate, precision_digits=10)
+
+            # -----------------------------
+            # RetencionesP
+            # ImporteP = SUM(ImporteDR / EquivalenciaDR)
+            # -----------------------------
             for result_dict, key in (
                 (withholding_values_map, 'retenciones_list'),
                 (local_retenciones_values_map, 'local_retenciones_list'),
@@ -371,18 +423,19 @@ class AsAccountInvoice(models.Model):
                         'impuesto': tax_values['impuesto'],
                         'tipo_factor': tax_values['tipo_factor'],
                         'tasa_o_cuota': tax_values['tasa_o_cuota'],
-                        # 'local_tax_name': tax_values['local_tax_name'],
                     })
-                    result_dict[tax_key]['importe'] += tax_values['importe'] / inv_rate
 
-                    tax_amount_mxn = tax_values['importe'] * to_mxn_rate
-                    if tax_values['impuesto'] == '001':
-                        update_tax_amount('total_retenciones_isr', tax_amount_mxn)
-                    elif tax_values['impuesto'] == '002':
-                        update_tax_amount('total_retenciones_iva', tax_amount_mxn)
-                    elif tax_values['impuesto'] == '003':
-                        update_tax_amount('total_retenciones_ieps', tax_amount_mxn)
+                    importe_dr = tax_values['importe'] or 0.0
+                    importe_dr = float_round(importe_dr, precision_digits=payment_tax_precision)
+                    tax_values['importe'] = importe_dr
+                    importe_p = importe_dr / inv_rate
+                    result_dict[tax_key]['importe'] += importe_p
 
+            # -----------------------------
+            # TrasladosP
+            # BaseP    = SUM(BaseDR / EquivalenciaDR)
+            # ImporteP = SUM(ImporteDR / EquivalenciaDR)
+            # -----------------------------
             for result_dict, key in (
                 (transferred_values_map, 'traslados_list'),
                 (local_traslados_values_map, 'local_traslados_list'),
@@ -392,50 +445,40 @@ class AsAccountInvoice(models.Model):
                         'impuesto': tax_values['impuesto'],
                         'tipo_factor': tax_values['tipo_factor'],
                         'tasa_o_cuota': tax_values['tasa_o_cuota'],
-                        # 'local_tax_name': tax_values['local_tax_name'],
                     })
-                    tax_amount = tax_values['importe'] or 0.0
 
-                    if self.currency_id == company_curr:
-                        if self.company_id.currency_id.name == 'MXN':
-                            result_dict[tax_key]['base'] += tax_values['base'] / inv_rate
-                            result_dict[tax_key]['importe'] += tax_amount / inv_rate
-                            base_amount_mxn = tax_values['base'] * to_mxn_rate
-                            tax_amount_mxn = tax_amount * to_mxn_rate
-                        else:
-                            montos = self.extraer_montos_decimales(tax_values)
-                            tax_values['base'] = montos[0]
-                            result_dict[tax_key]['base'] += round(montos[0] / inv_rate,6)
-                            result_dict[tax_key]['importe'] += round(montos[1] / inv_rate,6)
-                            base_amount_mxn = round(montos[0] * to_mxn_rate,6)
-                            tax_amount_mxn = round(montos[1] * to_mxn_rate,6)
-                            tax_values['importe'] = montos[1]
-                            
-                            
-                    else:
-                        result_dict[tax_key]['base'] += tax_values['base'] / inv_rate
-                        result_dict[tax_key]['importe'] += tax_amount / inv_rate
-                        base_amount_mxn = company_curr.round(tax_values['base'] / inv_rate)*inv_rate
-                        tax_amount_mxn = company_curr.round(tax_amount  / inv_rate)*inv_rate
-                    
-                    
-                    if check_transferred_tax_values(tax_values, '002', 'Tasa', 0.0):
-                        update_tax_amount('total_traslados_base_iva0', base_amount_mxn)
-                        update_tax_amount('total_traslados_impuesto_iva0', tax_amount_mxn)
-                    elif check_transferred_tax_values(tax_values, '002', 'Exento', 0.0):
-                        update_tax_amount('total_traslados_base_iva_exento', base_amount_mxn)
-                    elif check_transferred_tax_values(tax_values, '002', 'Tasa', 0.08):
-                        update_tax_amount('total_traslados_base_iva8', base_amount_mxn)
-                        update_tax_amount('total_traslados_impuesto_iva8', tax_amount_mxn)
-                    elif check_transferred_tax_values(tax_values, '002', 'Tasa', 0.16):
-                        if is_usd:
-                            update_tax_amount('total_traslados_base_iva16', base_amount_mxn*to_mxn_rate)
-                            update_tax_amount('total_traslados_impuesto_iva16', tax_amount_mxn*to_mxn_rate)
-                        else:
-                            update_tax_amount('total_traslados_base_iva16', base_amount_mxn)
-                            update_tax_amount('total_traslados_impuesto_iva16', tax_amount_mxn)
-            
-        # Rounding global tax amounts.
+                    base_dr = tax_values['base'] or 0.0
+                    importe_dr = tax_values['importe'] or 0.0
+
+                    # Parche existente para compañías cuya moneda contable no es MXN.
+                    # En ese escenario el helper recupera los importes DR con la precisión
+                    # necesaria para el complemento, evitando perder decimales antes de BaseP.
+                    if self.currency_id == company_curr and self.company_id.currency_id.name != 'MXN':
+                        montos = self.extraer_montos_decimales(tax_values)
+                        if montos:
+                            base_dr = montos[0]
+                            importe_dr = montos[1]
+                            tax_values['base'] = base_dr
+                            tax_values['importe'] = importe_dr
+
+                    # Los atributos DR admiten hasta 6 decimales. Calcular P con los
+                    # mismos valores que se enviarán en el XML evita diferencias del PAC.
+                    base_dr = float_round(base_dr, precision_digits=payment_tax_precision)
+                    importe_dr = float_round(importe_dr, precision_digits=payment_tax_precision)
+                    tax_values['base'] = base_dr
+                    if tax_values['importe'] is not None:
+                        tax_values['importe'] = importe_dr
+
+                    base_p = base_dr / inv_rate
+                    importe_p = importe_dr / inv_rate
+
+                    result_dict[tax_key]['base'] += base_p
+                    result_dict[tax_key]['importe'] += importe_p
+
+        # BaseP / ImporteP: conservar 6 decimales.
+        # CRP20268 valida BaseP contra SUM(BaseDR / EquivalenciaDR).
+        # Al usar 6 decimales reducimos al mínimo cualquier diferencia por
+        # truncamiento/redondeo intermedio.
         for dictionary in (
             withholding_values_map,
             transferred_values_map,
@@ -444,9 +487,46 @@ class AsAccountInvoice(models.Model):
         ):
             for values in dictionary.values():
                 if 'base' in values:
-                    values['base'] = self.currency_id.round(values['base'])
-                values['importe'] = self.currency_id.round(values['importe'])
+                    values['base'] = float_round(
+                        values['base'],
+                        precision_digits=payment_p_precision,
+                    )
+                values['importe'] = float_round(
+                    values['importe'],
+                    precision_digits=payment_p_precision,
+                )
 
+        # Los Totales del complemento se expresan en MXN y se calculan desde
+        # los valores P ya consolidados: BaseP/ImporteP * TipoCambioP.
+        # De esta forma los cuatro casos usan exactamente la misma regla:
+        # MXN-MXN, USD-MXN, MXN-USD y USD-USD.
+        for tax_key, values in withholding_values_map.items():
+            importe_mxn = values['importe'] * pay_rate
+
+            if tax_key['impuesto'] == '001':
+                update_tax_amount('total_retenciones_isr', importe_mxn)
+            elif tax_key['impuesto'] == '002':
+                update_tax_amount('total_retenciones_iva', importe_mxn)
+            elif tax_key['impuesto'] == '003':
+                update_tax_amount('total_retenciones_ieps', importe_mxn)
+
+        for tax_key, values in transferred_values_map.items():
+            base_mxn = values['base'] * pay_rate
+            importe_mxn = values['importe'] * pay_rate
+
+            if check_transferred_tax_values(tax_key, '002', 'Tasa', 0.0):
+                update_tax_amount('total_traslados_base_iva0', base_mxn)
+                update_tax_amount('total_traslados_impuesto_iva0', importe_mxn)
+            elif check_transferred_tax_values(tax_key, '002', 'Exento', 0.0):
+                update_tax_amount('total_traslados_base_iva_exento', base_mxn)
+            elif check_transferred_tax_values(tax_key, '002', 'Tasa', 0.08):
+                update_tax_amount('total_traslados_base_iva8', base_mxn)
+                update_tax_amount('total_traslados_impuesto_iva8', importe_mxn)
+            elif check_transferred_tax_values(tax_key, '002', 'Tasa', 0.16):
+                update_tax_amount('total_traslados_base_iva16', base_mxn)
+                update_tax_amount('total_traslados_impuesto_iva16', importe_mxn)
+
+        # Sólo los Totales MXN se redondean a los decimales de MXN.
         for key in (
             'total_traslados_base_iva0',
             'total_traslados_impuesto_iva0',
@@ -483,8 +563,6 @@ class AsAccountInvoice(models.Model):
             for tax_values in cfdi_values[key]:
                 if tax_values['tipo_factor'] == 'Exento':
                     tax_values['importe'] = None
-
-
         
     def extraer_montos_decimales(self,tax_values):
         total = tax_values['base']+tax_values['importe']
