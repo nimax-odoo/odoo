@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Zebra Existencia de Productos',
-    'version': '18.0.1.0.0',
+    'version': '19.0.1.0.0',
     'summary': 'Reporte ordenable de existencia por producto',
     'description': '''
 Aplicación simple para consultar existencia por product.template.

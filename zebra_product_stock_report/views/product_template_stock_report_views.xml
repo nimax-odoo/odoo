@@ -2,22 +2,29 @@
 <odoo>
 
     <!-- LISTA PRINCIPAL: solo Producto y Existencia -->
-    <record id="view_zebra_product_template_stock_report_list" model="ir.ui.view">
-        <field name="name">zebra.product.template.stock.report.list</field>
-        <field name="model">zebra.product.template.stock.report</field>
-        <field name="arch" type="xml">
-            <list string="Existencia de Productos" default_order="qty_available desc" create="0" edit="0" delete="0">
-                <field name="product_tmpl_id" string="Producto"/>
-                <field name="qty_available" string="Existencia" sum="Total existencia"/>
-                <button name="action_open_product_template"
-                        type="object"
-                        string="Abrir"
-                        class="btn-link"
-                        optional="hide"/>
-            </list>
-        </field>
-    </record>
+<record id="view_zebra_product_template_stock_report_list" model="ir.ui.view">
+    <field name="name">zebra.product.template.stock.report.list</field>
+    <field name="model">zebra.product.template.stock.report</field>
+    <field name="arch" type="xml">
+        <list string="Existencia de Productos"
+              default_order="qty_available desc"
+              create="0"
+              edit="0"
+              delete="0">
+            <field name="product_tmpl_id"
+                   string="Producto"/>
 
+            <field name="qty_available"
+                   string="Existencia"
+                   sum="Total existencia"/>
+
+            <button name="action_open_product_template"
+                    type="object"
+                    string="Abrir"
+                    class="btn-link"/>
+        </list>
+    </field>
+</record>
     <!-- BUSCADOR -->
     <record id="view_zebra_product_template_stock_report_search" model="ir.ui.view">
         <field name="name">zebra.product.template.stock.report.search</field>
