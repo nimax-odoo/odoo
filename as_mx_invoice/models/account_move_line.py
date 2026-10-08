@@ -3,7 +3,7 @@ from contextlib import contextmanager, ExitStack
 from datetime import date
 import logging
 import re
-
+from odoo.tools import float_round
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError, UserError, RedirectWarning
 from odoo.fields import Command, Domain
@@ -22,32 +22,137 @@ class AccountMoveLine(models.Model):
     lot_ped_ids = fields.Many2many('stock.lot', string='Lotes', compute='_compute_lot_ids')
     
     def _compute_lot_ids(self):
+
         for line in self:
-            line.lot_ped_ids = [(6, 0, [])]
-            invoice_lines = line.sale_line_ids.mapped('invoice_lines')
-            # Inicializar SIEMPRE el campo (muy importante en campos compute)
-            for inv_line in invoice_lines:
-                inv_line.lot_ped_ids = [(6, 0, [])]
-            # Si no hay lineas de venta salir
-            if not line.sale_line_ids:
+            line.lot_ped_ids = [Command.clear()]
+
+            if line.display_type != 'product':
                 continue
-            # Obtener todos los lotes
-            all_lots = line.sale_line_ids.move_ids.mapped('lot_ids')
-            # Si no hay lotes salir (pero ya quedó vacío correctamente)
-            if not all_lots:
+
+            sale_lines = line.sale_line_ids
+
+            # Nota de crédito creada desde una factura
+            if not sale_lines and line.move_id.reversed_entry_id:
+                origin_lines = (
+                    line.move_id.reversed_entry_id.invoice_line_ids
+                    .filtered(
+                        lambda x: x.product_id == line.product_id
+                    )
+                )
+                sale_lines = origin_lines.mapped('sale_line_ids')
+
+            if not sale_lines:
                 continue
-            # ordenar para estabilidad
-            all_lots = all_lots.sorted('id')
-            lot_ids = all_lots.ids
-            index = 0
-            total_lots = len(lot_ids)
-            for inv_line in invoice_lines:
-                qty = int(inv_line.quantity)
-                if index >= total_lots:
-                    break
-                assigned = lot_ids[index:index + qty]
-                inv_line.lot_ped_ids = [(6, 0, assigned)]
-                index += qty
+
+            moves = sale_lines.move_ids.filtered(
+                lambda m: (
+                    m.state == 'done'
+                    and m.product_id == line.product_id
+                )
+            )
+
+            if line.move_id.move_type == 'out_refund':
+
+                # Entregas originales
+                outgoing = moves.filtered(
+                    lambda m: m.location_dest_id.usage == 'customer'
+                )
+
+                # Devoluciones relacionadas
+                returns = self.env['stock.move'].search([
+                    ('origin_returned_move_id', 'in', outgoing.ids),
+                    ('state', '=', 'done'),
+                    ('location_id.usage', '=', 'customer'),
+                    ('product_id', '=', line.product_id.id),
+                ])
+
+                # Líneas de lotes devueltos
+                return_lines = returns.move_line_ids.filtered(
+                    lambda ml: ml.lot_id
+                ).sorted(lambda ml: (
+                    ml.move_id.date,
+                    ml.id,
+                ))
+
+                # Todas las notas de crédito de la misma venta
+                refunds = sale_lines.mapped(
+                    'invoice_lines'
+                ).filtered(
+                    lambda il: (
+                        il.move_id.move_type == 'out_refund'
+                        and il.move_id.state != 'cancel'
+                        and il.product_id == line.product_id
+                    )
+                )
+
+                # Incluir notas creadas por reversión
+                original_invoices = sale_lines.mapped(
+                    'invoice_lines.move_id'
+                ).filtered(
+                    lambda inv: inv.move_type == 'out_invoice'
+                )
+
+                reversed_refunds = self.search([
+                    ('move_id.move_type', '=', 'out_refund'),
+                    ('move_id.state', '!=', 'cancel'),
+                    ('move_id.reversed_entry_id', 'in',
+                     original_invoices.ids),
+                    ('product_id', '=', line.product_id.id),
+                    ('display_type', '=', 'product'),
+                ])
+
+                refunds |= reversed_refunds
+
+                refunds = refunds.sorted(
+                    lambda il: (
+                        il.move_id.invoice_date
+                        or il.move_id.date,
+                        il.move_id.id,
+                        il.id,
+                    )
+                )
+
+                # Asignar lotes secuencialmente
+                position = 0
+                assigned = []
+
+                for refund in refunds:
+
+                    qty = int(float_round(
+                        abs(refund.quantity),
+                        precision_digits=0,
+                        rounding_method='UP',
+                    ))
+
+                    current = return_lines[
+                        position:position + qty
+                    ]
+
+                    if refund.id == line.id:
+                        assigned = current.mapped('lot_id').ids
+                        break
+
+                    position += qty
+
+                line.lot_ped_ids = [Command.set(assigned)]
+
+            else:
+
+                # Facturas normales
+                outgoing = moves.filtered(
+                    lambda m: (
+                        m.location_dest_id.usage == 'customer'
+                    )
+                )
+
+                move_lines = outgoing.move_line_ids.filtered(
+                    lambda ml: ml.lot_id
+                )
+
+                line.lot_ped_ids = [
+                    Command.set(move_lines.mapped('lot_id').ids)
+                ]
+
                 
 
     @api.model

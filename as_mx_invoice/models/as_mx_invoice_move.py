@@ -1373,6 +1373,7 @@ class AsAccountInvoice(models.Model):
         Retorno: String con nombres de lotes
         """
         names = ''
+        line_id._compute_lot_ids()
         for move in line_id.lot_ped_ids:
             name = move.name.split(' / ')[0] if len(move.name.split(' / ')) > 1 else move.name
             names += f"{name}, "

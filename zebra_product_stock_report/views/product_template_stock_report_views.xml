@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- LISTA PRINCIPAL: solo Producto y Existencia -->
+    <record id="view_zebra_product_template_stock_report_list" model="ir.ui.view">
+        <field name="name">zebra.product.template.stock.report.list</field>
+        <field name="model">zebra.product.template.stock.report</field>
+        <field name="arch" type="xml">
+            <list string="Existencia de Productos" default_order="qty_available desc" create="0" edit="0" delete="0">
+                <field name="product_tmpl_id" string="Producto"/>
+                <field name="qty_available" string="Existencia" sum="Total existencia"/>
+                <button name="action_open_product_template"
+                        type="object"
+                        string="Abrir"
+                        class="btn-link"
+                        optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- BUSCADOR -->
+    <record id="view_zebra_product_template_stock_report_search" model="ir.ui.view">
+        <field name="name">zebra.product.template.stock.report.search</field>
+        <field name="model">zebra.product.template.stock.report</field>
+        <field name="arch" type="xml">
+            <search string="Buscar productos">
+                <field name="product_tmpl_id" string="Producto"/>
+                <filter name="with_stock"
+                        string="Con existencia"
+                        domain="[('qty_available', '&gt;', 0)]"/>
+                <filter name="without_stock"
+                        string="Sin existencia"
+                        domain="[('qty_available', '=', 0)]"/>
+                <filter name="negative_stock"
+                        string="Existencia negativa"
+                        domain="[('qty_available', '&lt;', 0)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ACCIÓN -->
+    <record id="action_zebra_product_template_stock_report" model="ir.actions.act_window">
+        <field name="name">Existencia de Productos</field>
+        <field name="res_model">zebra.product.template.stock.report</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_zebra_product_template_stock_report_list"/>
+        <field name="search_view_id" ref="view_zebra_product_template_stock_report_search"/>
+        <field name="context">{'search_default_with_stock': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay productos con existencia para mostrar.
+            </p>
+        </field>
+    </record>
+
+    <!-- APLICACIÓN PROPIA CON ÍCONO -->
+    <menuitem id="menu_zebra_product_stock_root"
+              name="Zebra Existencias"
+              sequence="10"
+              web_icon="zebra_product_stock_report,static/description/icon.png"
+              groups="stock.group_stock_user"/>
+
+    <menuitem id="menu_zebra_product_stock_products"
+              name="Productos"
+              parent="menu_zebra_product_stock_root"
+              action="action_zebra_product_template_stock_report"
+              sequence="10"
+              groups="stock.group_stock_user"/>
+
+</odoo>
