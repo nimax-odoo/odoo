@@ -130,6 +130,8 @@ class PricelistItem(models.Model):
         if 'website_id' in self.env.context and self.env.user.sd_pricelist_ids:
             product = self.selected_product(product)
             pricelist = self.pricelist_id
+            if not pricelist and self.env.user.sd_pricelist_ids:
+                pricelist = self.env.user.sd_pricelist_ids[0]
             price_new = pricelist.get_price_pricelist_nimax(product.id, price, quantity)
             # time.sleep(10)
             if price_new:
@@ -137,6 +139,8 @@ class PricelistItem(models.Model):
         if 'website_id' in self.env.context:
             product = self.selected_product(product)
             pricelist = self.pricelist_id
+            if not pricelist and self.env.user.sd_pricelist_ids:
+                pricelist = self.env.user.sd_pricelist_ids[0]
             promos_disponibles = request.env['coupon.program'].sudo().search_promo_disponibles_ecommerce()
             partner_id = self.env.user.partner_id.id
             if promos_disponibles and partner_id:
