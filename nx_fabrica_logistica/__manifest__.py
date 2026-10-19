@@ -20,7 +20,7 @@ llegó y lleva más de N días sin facturar, o lleva más de N días sin ordenar
 N = parámetro nx_fabrica_logistica.dias_alerta (15 por defecto).
     """,
     'author': 'Nimax',
-    'depends': ['sale', 'sale_stock', 'purchase', 'purchase_stock', 'sale_purchase', 'mail'],
+    'depends': ['sale', 'sale_stock', 'purchase', 'purchase_stock', 'sale_purchase', 'as_sale_pricelist', 'mail'],
     'pre_init_hook': 'pre_init_check',
     'data': [
         'security/security.xml',
