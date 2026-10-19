@@ -14,10 +14,10 @@ class NxFabricaAsignarWizard(models.TransientModel):
 
     def action_confirmar(self):
         self.ensure_one()
-        validas = self.line_ids.filtered(lambda l: l.nx_estado in ('por_asignar', 'en_oc'))
+        validas = self.line_ids.filtered('nx_asignable')
         if not validas:
             raise UserError(_('Ninguna de las líneas seleccionadas está lista para asignar '
-                              '(deben estar "Por asignar" o "En OC sin confirmar").'))
+                              '(deben estar "Por asignar", "En OC sin confirmar" o con su OC cancelada).'))
         validas.write({'x_studio_oc_id': self.purchase_id.id})
         omitidas = len(self.line_ids) - len(validas)
         mensaje = _('%s línea(s) asignadas a %s.') % (len(validas), self.purchase_id.name)

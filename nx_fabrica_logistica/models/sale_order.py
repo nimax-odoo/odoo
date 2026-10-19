@@ -8,10 +8,13 @@ class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
     # Columnas del Excel que no existían en Odoo (nivel pedido)
-    x_studio_fecha_oc_cliente = fields.Date(string='Fecha de la OC del cliente', copy=False)
-    x_studio_proyecto_otras_marcas = fields.Char(string='Proyecto otras marcas', copy=False)
     x_studio_price_concession_zebra = fields.Char(string='Price Concession Zebra', copy=False)
     x_studio_dr_zebra = fields.Char(string='DR ZEBRA', copy=False)
+
+    # Solo las líneas solicitadas a fábrica (misma tabla que order_line, con filtro: sin carga extra)
+    nx_lineas_fabrica_ids = fields.One2many(
+        'sale.order.line', 'order_id', string='Líneas solicitadas a fábrica',
+        domain=[('x_studio_linea_product_fabric', '=', True)], copy=False)
 
     def write(self, vals):
         if 'x_studio_ordenado_a_fabricante' in vals or 'x_studio_marca' in vals:
