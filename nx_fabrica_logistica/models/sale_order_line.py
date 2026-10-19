@@ -13,19 +13,19 @@ ESTADOS = [
     ('por_asignar', 'Por asignar a OC'),
     ('en_oc', 'En OC sin confirmar'),
     ('confirmada', 'OC confirmada'),
-    ('parcial', 'Recibido parcial'),
-    ('recibido', 'Mercancía llegó'),
+    ('parcial', 'Llegó parcial'),
+    ('recibido', 'Llegó a almacén'),
     ('facturado', 'Facturado'),
     ('cancelado', 'Cancelado'),
 ]
 ENTREGA = [
-    ('entregado', 'Entregado'),
+    ('llego', 'Llegó a almacén'),
     ('en_tiempo', 'En tiempo'),
-    ('vence_hoy', 'Vence hoy'),
     ('retrasado', 'Retrasado'),
-    ('sin_fecha', 'Sin fecha prevista'),
+    ('cancelado', 'Cancelado'),
 ]
 OC_EDITABLE = ('draft', 'sent')
+PARAM_DIAS = 'nx_fabrica_logistica.dias_alerta'
 
 
 class SaleOrderLine(models.Model):
@@ -42,12 +42,18 @@ class SaleOrderLine(models.Model):
         help='La elige Logística. Solo se ofrecen OC sin confirmar.')
     x_studio_fecha_asignacion = fields.Datetime(
         string='Fecha de asignación', copy=False, readonly=True)
+    # Nota por línea del lado de Ventas
+    x_studio_nota_venta = fields.Text(string='Nota (Ventas)', copy=False)
 
     # ------------------------------------------------------------------
     # Campos que se jalan solos (no se capturan)
     # ------------------------------------------------------------------
     nx_estado = fields.Selection(ESTADOS, string='Estado fábrica',
-                                 compute='_compute_nx_estado', store=True, index=True)
+                                 compute='_compute_nx_estado', store=True)
+    nx_cerrado = fields.Boolean(
+        string='Cerrado', compute='_compute_nx_cerrado', store=True,
+        help='Se marca solo cuando la línea queda Facturada. Mientras no se facture, sigue abierta.')
+    nx_asignable = fields.Boolean(string='Se puede asignar a OC', compute='_compute_nx_asignable')
     nx_purchase_line_id = fields.Many2one('purchase.order.line', string='Línea de OC',
                                           compute='_compute_nx_compra')
     nx_fecha_oc = fields.Datetime(string='FechaOC', compute='_compute_nx_compra')
@@ -58,27 +64,34 @@ class SaleOrderLine(models.Model):
     nx_oc_nombre = fields.Char(related='x_studio_oc_id.name', string='Orden Compra', readonly=True)
     nx_fecha_llegada = fields.Datetime(string='Fecha de llegada', compute='_compute_nx_compra')
     nx_dias = fields.Integer(string='Días transcurridos', compute='_compute_nx_compra')
+    # Se capturan en la línea de la OC (purchase.order.line)
+    nx_orden_fabricante = fields.Char(string='Orden del fabricante (Sales Order)',
+                                      compute='_compute_nx_compra',
+                                      search='_search_nx_orden_fabricante')
+    nx_nota_compra = fields.Text(string='Nota (Compras)', compute='_compute_nx_compra')
     nx_entrega = fields.Selection(ENTREGA, string='Estado de entrega', compute='_compute_nx_entrega')
     nx_retrasado = fields.Boolean(string='Retrasado', compute='_compute_nx_entrega',
                                   search='_search_nx_retrasado')
+    # Colores de la fila: verde = proceso completo, rojo = algo anda mal
+    nx_rojo = fields.Boolean(string='Alerta roja', compute='_compute_nx_colores')
+    nx_verde = fields.Boolean(string='Verde', compute='_compute_nx_colores')
 
     # Datos del pedido, solo para mostrarlos en la lista
     nx_ordenado = fields.Boolean(related='order_id.x_studio_ordenado_a_fabricante',
                                  string='Ordenado a Fabricante', readonly=True)
     nx_marca = fields.Selection(related='order_id.x_studio_marca', string='Marca', readonly=True)
+    # Sucursal del contacto del vendedor del pedido (en vivo, no se guarda)
+    nx_sucursal = fields.Selection(related='order_id.user_id.partner_id.x_studio_sucursal',
+                                   string='Sucursal', readonly=True)
     nx_usuario_final = fields.Char(related='order_id.as_usuario_final',
                                    string='Usuario (UF)', readonly=True)
     nx_oc_cliente = fields.Char(related='order_id.x_studio_orden_de_compra',
                                 string='OC del cliente', readonly=True)
-    nx_fecha_oc_cliente = fields.Date(related='order_id.x_studio_fecha_oc_cliente',
-                                      string='Fecha OC del cliente', readonly=True)
-    nx_proyecto = fields.Char(related='order_id.x_studio_proyecto_otras_marcas',
-                              string='Proyecto otras marcas', readonly=True)
     nx_price_concession = fields.Char(related='order_id.x_studio_price_concession_zebra',
                                       string='Price Concession Zebra', readonly=True)
     nx_dr_zebra = fields.Char(related='order_id.x_studio_dr_zebra', string='DR ZEBRA', readonly=True)
     nx_comentarios = fields.Text(related='order_id.x_studio_comentarios',
-                                 string='Comentarios ejecutivo', readonly=True)
+                                 string='Comentarios del pedido', readonly=True)
     nx_asistente_id = fields.Many2one(related='order_id.create_uid', string='Asistente', readonly=True)
     nx_clave_cliente = fields.Char(related='order_partner_id.ref', string='Clave de cliente', readonly=True)
 
@@ -89,6 +102,14 @@ class SaleOrderLine(models.Model):
         """Línea de OC enlazada (sale_line_id) cuya OC no está cancelada."""
         self.ensure_one()
         return self.sudo().purchase_line_ids.filtered(lambda l: l.order_id.state != 'cancel')[:1]
+
+    @api.model
+    def _nx_dias_alerta(self):
+        valor = self.env['ir.config_parameter'].sudo().get_param(PARAM_DIAS, '15')
+        try:
+            return int(valor)
+        except (TypeError, ValueError):
+            return 15
 
     @api.depends('x_studio_linea_product_fabric', 'display_type', 'invoice_status',
                  'order_id.state', 'order_id.x_studio_ordenado_a_fabricante',
@@ -105,9 +126,11 @@ class SaleOrderLine(models.Model):
             elif order.state != 'sale' or not order.x_studio_ordenado_a_fabricante:
                 line.nx_estado = 'solicitado'
             else:
+                todas = line.sudo().purchase_line_ids
                 pl = line._nx_linea_compra_activa()
                 if not pl:
-                    line.nx_estado = 'por_asignar'
+                    # Si la OC enlazada se canceló, la línea queda cancelada (se puede reasignar)
+                    line.nx_estado = 'cancelado' if todas else 'por_asignar'
                 elif pl.order_id.state in ('draft', 'sent', 'to approve'):
                     line.nx_estado = 'en_oc'
                 else:
@@ -120,8 +143,24 @@ class SaleOrderLine(models.Model):
                     else:
                         line.nx_estado = 'confirmada'
 
+    @api.depends('nx_estado')
+    def _compute_nx_cerrado(self):
+        for line in self:
+            line.nx_cerrado = line.nx_estado == 'facturado'
+
+    @api.depends('nx_estado', 'order_id.state')
+    def _compute_nx_asignable(self):
+        """Logística puede elegir OC si está por asignar, en una OC sin confirmar,
+        o si su OC se canceló (para mandarla a otra). Nunca si se canceló el pedido."""
+        for line in self:
+            estado = line.nx_estado
+            line.nx_asignable = bool(
+                line.order_id.state == 'sale'
+                and (estado in ('por_asignar', 'en_oc') or estado == 'cancelado'))
+
     @api.depends('nx_estado', 'purchase_line_ids.order_id.state', 'purchase_line_ids.order_id.date_approve',
                  'purchase_line_ids.date_planned', 'purchase_line_ids.qty_received',
+                 'purchase_line_ids.x_studio_orden_fabricante', 'purchase_line_ids.x_studio_nota_compra',
                  'purchase_line_ids.move_ids.state', 'purchase_line_ids.move_ids.date')
     def _compute_nx_compra(self):
         ahora = fields.Datetime.now()
@@ -131,6 +170,8 @@ class SaleOrderLine(models.Model):
             line.nx_fecha_oc = pl.order_id.date_approve if pl else False
             line.nx_fecha_prevista = pl.date_planned if pl else False
             line.nx_qty_recibida = pl.qty_received if pl else 0.0
+            line.nx_orden_fabricante = (pl.x_studio_orden_fabricante or False) if pl else False
+            line.nx_nota_compra = (pl.x_studio_nota_compra or False) if pl else False
             movs = pl.move_ids.filtered(lambda m: m.state != 'cancel') if pl else self.env['stock.move']
             line.nx_entradas = ', '.join(movs.picking_id.mapped('name')) or False
             hechos = movs.filtered(lambda m: m.state == 'done')
@@ -145,24 +186,44 @@ class SaleOrderLine(models.Model):
 
     @api.depends('nx_estado', 'nx_fecha_prevista')
     def _compute_nx_entrega(self):
+        """Solo 4 valores: Llegó a almacén, En tiempo, Retrasado, Cancelado."""
         hoy = fields.Date.context_today(self)
         for line in self:
+            estado = line.nx_estado
             entrega = False
-            if line.nx_estado in ('recibido', 'facturado'):
-                entrega = 'entregado'
-            elif line.nx_estado in ('confirmada', 'parcial'):
-                if not line.nx_fecha_prevista:
-                    entrega = 'sin_fecha'
-                else:
+            if estado == 'cancelado':
+                entrega = 'cancelado'
+            elif estado in ('recibido', 'facturado'):
+                entrega = 'llego'
+            elif estado in ('confirmada', 'parcial'):
+                entrega = 'en_tiempo'
+                if line.nx_fecha_prevista:
                     prevista = fields.Datetime.context_timestamp(line, line.nx_fecha_prevista).date()
                     if prevista < hoy:
                         entrega = 'retrasado'
-                    elif prevista == hoy:
-                        entrega = 'vence_hoy'
-                    else:
-                        entrega = 'en_tiempo'
             line.nx_entrega = entrega
             line.nx_retrasado = entrega == 'retrasado'
+
+    @api.depends('nx_estado', 'nx_entrega', 'nx_fecha_llegada', 'nx_fecha_oc', 'order_id.date_order')
+    def _compute_nx_colores(self):
+        """VERDE: proceso completo (facturado).
+        ROJO: algo anda mal = cancelado | retrasado | llegó y lleva más de N días sin facturar |
+        lleva más de N días sin ordenarse (falta PM) o sin asignarse a una OC."""
+        limite = self._nx_dias_alerta()
+        ahora = fields.Datetime.now()
+        for line in self:
+            estado = line.nx_estado
+            rojo = False
+            if estado == 'cancelado' or line.nx_entrega == 'retrasado':
+                rojo = True
+            elif estado == 'recibido':
+                base = line.nx_fecha_llegada or line.nx_fecha_oc
+                rojo = bool(base) and (ahora - base).days > limite
+            elif estado in ('solicitado', 'por_asignar'):
+                fecha = line.order_id.date_order
+                rojo = bool(fecha) and (ahora - fecha).days > limite
+            line.nx_rojo = rojo
+            line.nx_verde = estado == 'facturado' and not rojo
 
     def _search_nx_retrasado(self, operator, value):
         if operator not in ('=', '!='):
@@ -176,6 +237,16 @@ class SaleOrderLine(models.Model):
             ('purchase_line_ids.date_planned', '<', inicio),
         ])
         return [('id', 'in' if positivo else 'not in', lineas.ids)]
+
+    def _search_nx_orden_fabricante(self, operator, value):
+        """Permite buscar en la lista por el número de orden del fabricante."""
+        if operator not in ('=', 'ilike', 'like', '=ilike', 'in'):
+            raise UserError(_('Para buscar por Orden del fabricante usa "contiene" o "igual a".'))
+        pols = self.env['purchase.order.line'].sudo().search([
+            ('sale_line_id', '!=', False),
+            ('x_studio_orden_fabricante', operator, value),
+        ])
+        return [('id', 'in', pols.sale_line_id.ids)]
 
     # ------------------------------------------------------------------
     # Asignación a la OC (única acción manual de Logística)
@@ -285,6 +356,18 @@ class SaleOrderLine(models.Model):
             else:
                 raise UserError(_('No se puede cambiar la cantidad: la línea ya está en la OC %s, que está '
                                   'confirmada. Avisa a Logística.') % activa.order_id.name)
+
+    def action_nx_abrir_pedido(self):
+        """Abre el pedido de venta completo desde la lista de seguimiento."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': self.order_id.name,
+            'res_model': 'sale.order',
+            'res_id': self.order_id.id,
+            'views': [(False, 'form')],
+            'target': 'current',
+        }
 
     def action_nx_abrir_asignar(self):
         if not self:

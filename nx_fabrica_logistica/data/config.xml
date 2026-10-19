@@ -6,5 +6,10 @@
             <field name="key">nx_fabrica_logistica.enforce_groups</field>
             <field name="value">0</field>
         </record>
+        <!-- Días para pintar en rojo (llegó sin facturar / sin ordenar o asignar). Editable sin código -->
+        <record id="param_nx_fabrica_dias_alerta" model="ir.config_parameter">
+            <field name="key">nx_fabrica_logistica.dias_alerta</field>
+            <field name="value">15</field>
+        </record>
     </data>
 </odoo>
