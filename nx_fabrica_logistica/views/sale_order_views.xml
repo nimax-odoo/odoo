@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Columnas en las líneas del pedido.
-         Si "Solicitar a Fabrica" sale duplicada, desactiva ESTA vista (Ajustes > Técnico > Vistas). -->
+    <!-- Columna "Solicitar a Fabrica" en las líneas del pedido.
+         Si ya sale duplicada, desactiva ESTA vista (Ajustes > Técnico > Vistas). -->
     <record id="view_order_form_nx_fabrica_lineas" model="ir.ui.view">
         <field name="name">sale.order.form.nx.fabrica.lineas</field>
         <field name="model">sale.order</field>
@@ -12,7 +12,6 @@
                        readonly="nx_oc_nombre"/>
                 <field name="nx_oc_nombre" string="OC (Logística)" readonly="1" optional="hide"/>
                 <field name="nx_estado" string="Estado fábrica" widget="badge" readonly="1" optional="show"/>
-                <field name="x_studio_nota_venta" string="Nota (Ventas)" optional="show"/>
             </xpath>
         </field>
     </record>

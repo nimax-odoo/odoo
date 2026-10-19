@@ -6,10 +6,7 @@
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='order_line']/list" position="inside">
-                <field name="sale_order_id" string="Pedido de venta" readonly="1" optional="show"
-                       groups="sales_team.group_sale_salesman"/>
-                <field name="x_studio_orden_fabricante" string="Orden del fabricante" optional="show"/>
-                <field name="x_studio_nota_compra" string="Nota (Compras)" optional="show"/>
+                <field name="sale_order_id" string="Pedido de venta" readonly="1" optional="show" groups="sales_team.group_sale_salesman"/>
             </xpath>
         </field>
     </record>

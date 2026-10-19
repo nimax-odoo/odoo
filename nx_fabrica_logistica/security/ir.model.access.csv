@@ -1,5 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_nx_sale_order_line_logistica,sale.order.line nx logistica,sale.model_sale_order_line,group_nx_fabrica_logistica,1,1,0,0
 access_nx_sale_order_logistica,sale.order nx logistica,sale.model_sale_order,group_nx_fabrica_logistica,1,0,0,0
-access_nx_purchase_order_logistica,purchase.order nx logistica,purchase.model_purchase_order,group_nx_fabrica_logistica,1,1,0,0
-access_nx_purchase_order_line_logistica,purchase.order.line nx logistica,purchase.model_purchase_order_line,group_nx_fabrica_logistica,1,1,0,0
+access_nx_purchase_order_logistica,purchase.order nx logistica,purchase.model_purchase_order,group_nx_fabrica_logistica,1,0,0,0
+access_nx_purchase_order_line_logistica,purchase.order.line nx logistica,purchase.model_purchase_order_line,group_nx_fabrica_logistica,1,0,0,0
