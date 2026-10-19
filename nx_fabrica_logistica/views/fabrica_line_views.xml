@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_nx_fabrica_line_list" model="ir.ui.view">
+        <field name="name">sale.order.line.nx.fabrica.list</field>
+        <field name="model">sale.order.line</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list string="Pedidos a fábrica" editable="bottom" create="0" delete="0"
+                  decoration-danger="nx_entrega == 'retrasado'"
+                  decoration-success="nx_estado in ('recibido', 'facturado')"
+                  decoration-muted="nx_estado == 'cancelado'">
+                <header>
+                    <button name="action_nx_abrir_asignar" type="object"
+                            string="Asignar a orden de compra" class="btn-primary"/>
+                </header>
+                <field name="order_id" readonly="1"/>
+                <field name="create_date" string="Fecha pedido" readonly="1" optional="show"/>
+                <field name="salesman_id" string="Ejecutivo" widget="many2one_avatar_user" readonly="1"/>
+                <field name="nx_asistente_id" optional="hide"/>
+                <field name="warehouse_id" string="Sucursal" readonly="1" optional="show"/>
+                <field name="order_partner_id" string="Cliente" readonly="1" optional="show"/>
+                <field name="nx_clave_cliente" optional="hide"/>
+                <field name="nx_usuario_final" optional="hide"/>
+                <field name="nx_marca" optional="show"/>
+                <field name="x_studio_ref_nimax" string="Clave Nimax" readonly="1" optional="show"/>
+                <field name="product_id" readonly="1"/>
+                <field name="product_uom_qty" string="Cantidad" readonly="1" sum="Total"/>
+                <field name="nx_proyecto" optional="hide"/>
+                <field name="nx_price_concession" optional="hide"/>
+                <field name="nx_dr_zebra" optional="hide"/>
+                <field name="nx_oc_cliente" optional="hide"/>
+                <field name="nx_fecha_oc_cliente" optional="hide"/>
+                <field name="nx_comentarios" optional="hide"/>
+                <field name="x_studio_oc_id" string="Orden Compra"
+                       options="{'no_create': True, 'no_open': True}"
+                       readonly="nx_estado not in ('por_asignar', 'en_oc')"/>
+                <field name="x_studio_fecha_asignacion" optional="show"/>
+                <field name="nx_fecha_oc" optional="show"/>
+                <field name="nx_dias" optional="show"/>
+                <field name="nx_fecha_prevista" optional="show"/>
+                <field name="nx_entradas" optional="show"/>
+                <field name="nx_fecha_llegada" optional="show"/>
+                <field name="nx_qty_recibida" optional="show"/>
+                <field name="nx_entrega" widget="badge"
+                       decoration-danger="nx_entrega == 'retrasado'"
+                       decoration-warning="nx_entrega == 'vence_hoy'"
+                       decoration-success="nx_entrega == 'entregado'"
+                       decoration-info="nx_entrega == 'en_tiempo'"/>
+                <field name="nx_estado" widget="badge"
+                       decoration-info="nx_estado in ('solicitado', 'por_asignar', 'en_oc')"
+                       decoration-warning="nx_estado in ('confirmada', 'parcial')"
+                       decoration-success="nx_estado in ('recibido', 'facturado')"/>
+                <field name="invoice_status" string="Estado de factura" widget="badge" optional="show"/>
+                <field name="nx_ordenado" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+
+    <!-- Ventas: misma lista, solo lectura y sin tocar el modelo de compras -->
+    <record id="view_nx_fabrica_line_list_ventas" model="ir.ui.view">
+        <field name="name">sale.order.line.nx.fabrica.list.ventas</field>
+        <field name="model">sale.order.line</field>
+        <field name="mode">primary</field>
+        <field name="priority">91</field>
+        <field name="inherit_id" ref="view_nx_fabrica_line_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="editable"></attribute>
+            </xpath>
+            <xpath expr="//header" position="replace"/>
+            <xpath expr="//field[@name='x_studio_oc_id']" position="replace">
+                <field name="nx_oc_nombre" string="Orden Compra"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_nx_fabrica_line_search" model="ir.ui.view">
+        <field name="name">sale.order.line.nx.fabrica.search</field>
+        <field name="model">sale.order.line</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <search string="Pedidos a fábrica">
+                <field name="order_id"/>
+                <field name="product_id"/>
+                <field name="x_studio_ref_nimax"/>
+                <field name="order_partner_id"/>
+                <field name="salesman_id"/>
+                <field name="x_studio_oc_id"/>
+                <field name="nx_oc_cliente"/>
+                <filter name="f_solicitado" string="Esperando al PM" domain="[('nx_estado', '=', 'solicitado')]"/>
+                <filter name="f_por_asignar" string="Por asignar a OC" domain="[('nx_estado', '=', 'por_asignar')]"/>
+                <filter name="f_en_oc" string="En OC sin confirmar" domain="[('nx_estado', '=', 'en_oc')]"/>
+                <filter name="f_por_llegar" string="Por llegar" domain="[('nx_estado', 'in', ('confirmada', 'parcial'))]"/>
+                <filter name="f_retrasado" string="Retrasados" domain="[('nx_retrasado', '=', True)]"/>
+                <filter name="f_recibido" string="Mercancía llegó (sin facturar)" domain="[('nx_estado', '=', 'recibido')]"/>
+                <filter name="f_facturado" string="Facturado" domain="[('nx_estado', '=', 'facturado')]"/>
+                <separator/>
+                <filter name="f_abiertos" string="Abiertos" domain="[('nx_estado', 'not in', ('facturado', 'cancelado'))]"/>
+                <group>
+                    <filter name="g_estado" string="Estado" context="{'group_by': 'nx_estado'}"/>
+                    <filter name="g_oc" string="Orden de compra" context="{'group_by': 'x_studio_oc_id'}"/>
+                    <filter name="g_ejecutivo" string="Ejecutivo" context="{'group_by': 'salesman_id'}"/>
+                    <filter name="g_cliente" string="Cliente" context="{'group_by': 'order_partner_id'}"/>
+                    <filter name="g_pedido" string="Pedido" context="{'group_by': 'order_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Logística / Compras: solo lo que el PM ya ordenó -->
+    <record id="action_nx_fabrica_logistica" model="ir.actions.act_window">
+        <field name="name">Pedidos a fábrica</field>
+        <field name="res_model">sale.order.line</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_nx_fabrica_line_list"/>
+        <field name="search_view_id" ref="view_nx_fabrica_line_search"/>
+        <field name="domain">[('x_studio_linea_product_fabric', '=', True), ('order_id.state', '=', 'sale'), ('order_id.x_studio_ordenado_a_fabricante', '=', True)]</field>
+        <field name="context">{'search_default_f_abiertos': 1}</field>
+    </record>
+
+    <!-- Ventas: todas las líneas solicitadas, en cualquier estado -->
+    <record id="action_nx_fabrica_ventas" model="ir.actions.act_window">
+        <field name="name">Seguimiento a fábrica</field>
+        <field name="res_model">sale.order.line</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_nx_fabrica_line_list_ventas"/>
+        <field name="search_view_id" ref="view_nx_fabrica_line_search"/>
+        <field name="domain">[('x_studio_linea_product_fabric', '=', True)]</field>
+        <field name="context">{'search_default_f_abiertos': 1}</field>
+    </record>
+</odoo>

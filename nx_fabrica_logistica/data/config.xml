@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- 0 = permisos apagados (pruebas). Cambiar a 1 al final para exigir grupos PM / Logística -->
+        <record id="param_nx_fabrica_enforce_groups" model="ir.config_parameter">
+            <field name="key">nx_fabrica_logistica.enforce_groups</field>
+            <field name="value">0</field>
+        </record>
+    </data>
+</odoo>
