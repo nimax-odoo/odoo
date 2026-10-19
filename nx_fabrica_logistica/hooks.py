@@ -31,24 +31,10 @@ def preparar_columnas(cr):
     """)
 
 
-def corregir_nulos_studio(cr):
-    """x_recoleccion_sucursal (casilla de Studio) está marcada como obligatoria pero hay
-    pedidos con valor NULL. Cada vez que se instala/actualiza un módulo que toca sale.order,
-    Odoo intenta ponerle NOT NULL y registra un ERROR. NULL y Falso son lo mismo para Odoo,
-    así que se normaliza. Si no existe el campo, no hace nada."""
-    cr.execute("""
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'sale_order' AND column_name = 'x_recoleccion_sucursal'
-          AND data_type = 'boolean'
-    """)
-    if cr.fetchone():
-        cr.execute("UPDATE sale_order SET x_recoleccion_sucursal = FALSE "
-                   "WHERE x_recoleccion_sucursal IS NULL")
-        _logger.info("nx_fabrica_logistica: x_recoleccion_sucursal NULL -> FALSE en %s pedidos",
-                     cr.rowcount)
-
-
 def pre_init_check(env):
+    """Se ejecuta SOLO al instalar el módulo por primera vez en una base.
+    Únicamente valida requisitos y prepara columnas propias del módulo.
+    NO debe tocar ningún campo ajeno (por ejemplo, de Studio) que no sea de este módulo."""
     cr = env.cr
     faltan = []
     for modelo, campo, descripcion in REQUERIDOS:
@@ -61,4 +47,3 @@ def pre_init_check(env):
             "(Ajustes > Técnico > Modelos > Campos) con el mismo nombre técnico:\n\n"
             + "\n".join(faltan))
     preparar_columnas(cr)
-    corregir_nulos_studio(cr)
