@@ -1,8 +1,16 @@
-from odoo import models
+from odoo import fields, models
 
 
 class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
+
+    # Número de orden propio del fabricante (columna SALES ORDER del Excel).
+    # Lo captura Logística en la línea de la OC; cambia en cada orden.
+    x_studio_orden_fabricante = fields.Char(
+        string='Orden del fabricante', copy=False, index=True,
+        help='Número de orden / Sales Order que asigna el fabricante a este pedido.')
+    # Nota por línea del lado de Compras (columna "Comentario Compras" del Excel)
+    x_studio_nota_compra = fields.Text(string='Nota (Compras)', copy=False)
 
     def unlink(self):
         if self.env.context.get('nx_skip_oc_sync'):
