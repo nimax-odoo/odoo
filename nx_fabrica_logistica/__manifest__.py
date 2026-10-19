@@ -1,6 +1,6 @@
 {
     'name': 'Nimax - Pedidos a fábrica (Logística)',
-    'version': '19.0.1.3.0',
+    'version': '19.0.1.2.0',
     'category': 'Inventory/Purchase',
     'summary': 'Solicitar a fábrica -> PM -> Logística asigna OC -> llegada -> facturado -> cerrado',
     'description': """
@@ -13,9 +13,6 @@ Flujo
 4. Logística captura en la línea de la OC la "Orden del fabricante" (SALES ORDER).
 5. Todo lo demás (FechaOC, entradas, llegada, días, estado de entrega, factura)
    se jala solo. Al facturarse la línea queda "Cerrada" y sale de la lista de abiertos.
-
-Usa campos y relaciones que ya existen en Odoo (sale_purchase: sale_line_id /
-purchase_line_ids). No crea modelos nuevos de seguimiento.
 
 Colores: verde = llegó/facturado; rojo = cancelado, retrasado, llegó y lleva más de
 15 días sin facturar, o lleva más de 15 días sin ordenarse/asignarse.
