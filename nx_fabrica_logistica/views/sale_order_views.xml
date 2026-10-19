@@ -1,47 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Columna "A fábrica" (interruptor) justo antes de la descripción, o sea junto al producto.
-         Si sale duplicada, desactiva ESTA vista (Ajustes > Técnico > Vistas). -->
+    <!-- Columnas en las líneas del pedido.
+         Si "Solicitar a Fabrica" sale duplicada, desactiva ESTA vista (Ajustes > Técnico > Vistas). -->
     <record id="view_order_form_nx_fabrica_lineas" model="ir.ui.view">
         <field name="name">sale.order.form.nx.fabrica.lineas</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="before">
-                <field name="x_studio_linea_product_fabric" string="A fábrica" widget="boolean_toggle"
-                       width="90px" optional="show" readonly="nx_oc_nombre"/>
-            </xpath>
             <xpath expr="//field[@name='order_line']/list" position="inside">
+                <field name="x_studio_linea_product_fabric" string="Solicitar a Fabrica" optional="show"
+                       readonly="nx_oc_nombre"/>
                 <field name="nx_oc_nombre" string="OC (Logística)" readonly="1" optional="hide"/>
                 <field name="nx_estado" string="Estado fábrica" widget="badge" readonly="1" optional="show"/>
+                <field name="x_studio_nota_venta" string="Nota (Ventas)" optional="show"/>
             </xpath>
         </field>
     </record>
 
-    <!-- Pestaña con SOLO las líneas solicitadas a fábrica + sus notas de Ventas -->
     <record id="view_order_form_nx_fabrica_datos" model="ir.ui.view">
         <field name="name">sale.order.form.nx.fabrica.datos</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
-                <page string="Solicitado a fábrica" name="nx_fabrica_datos">
+                <page string="Datos de fábrica" name="nx_fabrica_datos">
                     <group>
                         <group>
-                            <field name="x_studio_price_concession_zebra"/>
+                            <field name="x_studio_fecha_oc_cliente"/>
+                            <field name="x_studio_proyecto_otras_marcas"/>
                         </group>
                         <group>
+                            <field name="x_studio_price_concession_zebra"/>
                             <field name="x_studio_dr_zebra"/>
                         </group>
                     </group>
-                    <field name="nx_lineas_fabrica_ids" nolabel="1">
-                        <list editable="bottom" create="0" delete="0">
-                            <field name="product_id" readonly="1"/>
-                            <field name="product_uom_qty" string="Cantidad" readonly="1"/>
-                            <field name="nx_estado" string="Estado" widget="badge" readonly="1"/>
-                            <field name="x_studio_nota_venta" string="Nota (Ventas)"/>
-                        </list>
-                    </field>
                 </page>
             </xpath>
         </field>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Logística / Compras: editable solo la columna "Orden Compra".
-         Texto verde = proceso completo (facturado). Texto rojo = algo anda mal. -->
+    <!-- Logística / Compras: editable solo la columna "Orden Compra" -->
     <record id="view_nx_fabrica_line_list" model="ir.ui.view">
         <field name="name">sale.order.line.nx.fabrica.list</field>
         <field name="model">sale.order.line</field>
@@ -13,13 +12,12 @@
                     <button name="action_nx_abrir_asignar" type="object"
                             string="Asignar a orden de compra" class="btn-primary"/>
                 </header>
-                <button name="action_nx_abrir_pedido" type="object" icon="fa-external-link"
-                        title="Abrir pedido de venta"/>
-                <field name="order_id" string="Pedido" readonly="1"/>
+                <field name="order_id" readonly="1"/>
                 <field name="create_date" string="Fecha pedido" readonly="1" optional="show"/>
                 <field name="salesman_id" string="Ejecutivo" widget="many2one_avatar_user" readonly="1"/>
                 <field name="nx_asistente_id" optional="hide"/>
-                <field name="nx_sucursal" string="Sucursal" readonly="1" optional="show"/>
+                <field name="nx_sucursal_id" string="Sucursal" readonly="1" optional="show"/>
+                <field name="warehouse_id" string="Almacén" readonly="1" optional="hide"/>
                 <field name="order_partner_id" string="Cliente" readonly="1" optional="show"/>
                 <field name="nx_clave_cliente" optional="hide"/>
                 <field name="nx_usuario_final" optional="hide"/>
@@ -27,14 +25,16 @@
                 <field name="x_studio_ref_nimax" string="Clave Nimax" readonly="1" optional="show"/>
                 <field name="product_id" readonly="1"/>
                 <field name="product_uom_qty" string="Cantidad" readonly="1" sum="Total"/>
+                <field name="nx_proyecto" optional="hide"/>
                 <field name="nx_price_concession" optional="hide"/>
                 <field name="nx_dr_zebra" optional="hide"/>
                 <field name="nx_oc_cliente" optional="hide"/>
+                <field name="nx_fecha_oc_cliente" optional="hide"/>
                 <field name="nx_comentarios" optional="hide"/>
                 <field name="x_studio_nota_venta" string="Nota (Ventas)" readonly="1" optional="show"/>
                 <field name="x_studio_oc_id" string="Orden Compra"
                        options="{'no_create': True, 'no_open': True}"
-                       readonly="not nx_asignable"/>
+                       readonly="nx_estado not in ('por_asignar', 'en_oc')"/>
                 <field name="x_studio_fecha_asignacion" optional="show"/>
                 <field name="nx_fecha_oc" optional="show"/>
                 <field name="nx_dias" optional="show"/>
@@ -45,15 +45,14 @@
                 <field name="nx_fecha_llegada" optional="show"/>
                 <field name="nx_qty_recibida" optional="show"/>
                 <field name="nx_entrega" widget="badge"
-                       decoration-success="nx_entrega == 'llego'"
-                       decoration-danger="nx_entrega in ('retrasado', 'cancelado')"/>
+                       decoration-danger="nx_entrega == 'retrasado'"
+                       decoration-success="nx_entrega == 'entregado'"/>
                 <field name="nx_estado" widget="badge"
-                       decoration-success="nx_estado == 'facturado'"
-                       decoration-danger="nx_estado == 'cancelado'"/>
+                       decoration-danger="nx_estado == 'cancelado'"
+                       decoration-success="nx_estado in ('recibido', 'facturado')"/>
                 <field name="nx_cerrado" optional="hide"/>
                 <field name="invoice_status" string="Estado de factura" widget="badge" optional="show"/>
                 <field name="nx_ordenado" column_invisible="1"/>
-                <field name="nx_asignable" column_invisible="1"/>
                 <field name="nx_rojo" column_invisible="1"/>
                 <field name="nx_verde" column_invisible="1"/>
             </list>
@@ -89,7 +88,7 @@
                 <field name="x_studio_ref_nimax"/>
                 <field name="order_partner_id"/>
                 <field name="salesman_id"/>
-                <field name="nx_sucursal" string="Sucursal"/>
+                <field name="nx_sucursal_id" string="Sucursal"/>
                 <field name="x_studio_oc_id"/>
                 <field name="nx_orden_fabricante" string="Orden del fabricante"/>
                 <field name="nx_oc_cliente"/>
@@ -103,8 +102,7 @@
                 <filter name="f_en_oc" string="En OC sin confirmar" domain="[('nx_estado', '=', 'en_oc')]"/>
                 <filter name="f_por_llegar" string="Por llegar" domain="[('nx_estado', 'in', ('confirmada', 'parcial'))]"/>
                 <filter name="f_retrasado" string="Retrasados" domain="[('nx_retrasado', '=', True)]"/>
-                <filter name="f_recibido" string="Llegó a almacén (sin facturar)" domain="[('nx_estado', '=', 'recibido')]"/>
-                <filter name="f_cancelado" string="Cancelados" domain="[('nx_estado', '=', 'cancelado')]"/>
+                <filter name="f_recibido" string="Mercancía llegó (sin facturar)" domain="[('nx_estado', '=', 'recibido')]"/>
                 <group>
                     <filter name="g_estado" string="Estado" context="{'group_by': 'nx_estado'}"/>
                     <filter name="g_oc" string="Orden de compra" context="{'group_by': 'x_studio_oc_id'}"/>
