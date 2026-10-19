@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Columna "A fábrica" (interruptor) justo antes de la descripción, o sea junto al producto.
+    <!-- Checkbox simple "A fábrica" justo antes de la descripción (junto al producto).
          Si sale duplicada, desactiva ESTA vista (Ajustes > Técnico > Vistas). -->
     <record id="view_order_form_nx_fabrica_lineas" model="ir.ui.view">
         <field name="name">sale.order.form.nx.fabrica.lineas</field>
@@ -8,8 +8,8 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="before">
-                <field name="x_studio_linea_product_fabric" string="A fábrica" widget="boolean_toggle"
-                       width="90px" optional="show" readonly="nx_oc_nombre"/>
+                <field name="x_studio_linea_product_fabric" string="A fábrica"
+                       optional="show" readonly="nx_oc_nombre"/>
             </xpath>
             <xpath expr="//field[@name='order_line']/list" position="inside">
                 <field name="nx_oc_nombre" string="OC (Logística)" readonly="1" optional="hide"/>

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Pestaña con SOLO las líneas que vienen de un pedido de venta:
-         ahí Logística captura la Orden del fabricante y la nota de Compras. -->
+         ahí Logística captura la Orden del fabricante, la fecha de entrega esperada
+         (date_planned, de la que depende el cálculo de "a tiempo / retrasado") y la nota. -->
     <record id="purchase_order_form_nx_fabrica" model="ir.ui.view">
         <field name="name">purchase.order.form.nx.fabrica</field>
         <field name="model">purchase.order</field>
@@ -14,6 +15,7 @@
                             <field name="sale_order_id" string="Pedido de venta" readonly="1"/>
                             <field name="product_id" readonly="1"/>
                             <field name="product_qty" string="Cantidad" readonly="1"/>
+                            <field name="date_planned" string="Fecha de entrega esperada"/>
                             <field name="x_studio_orden_fabricante" string="Orden del fabricante"/>
                             <field name="x_studio_nota_compra" string="Nota (Compras)"/>
                         </list>
