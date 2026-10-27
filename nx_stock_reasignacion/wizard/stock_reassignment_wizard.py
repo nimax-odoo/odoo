@@ -203,6 +203,22 @@ class StockReassignmentWizard(models.TransientModel):
         if float_compare(self.quantity, destination_pending, precision_rounding=rounding) > 0:
             raise ValidationError(_("La cantidad supera lo pendiente por reservar en el pedido destino."))
 
+        # La linea de venta origen debe poder bajar su cantidad
+        line = source.sale_line_id
+        if not line:
+            raise ValidationError(_("El movimiento origen no esta ligado a una linea de venta."))
+        new_line_qty = line.product_uom_qty - self.quantity
+        if float_compare(new_line_qty, line.qty_delivered, precision_rounding=rounding) < 0:
+            raise ValidationError(_(
+                "No se puede bajar la cantidad del pedido origen por debajo de lo ya entregado (%s).",
+                line.qty_delivered,
+            ))
+        if float_compare(new_line_qty, line.qty_invoiced, precision_rounding=rounding) < 0:
+            raise ValidationError(_(
+                "No se puede bajar la cantidad del pedido origen por debajo de lo ya facturado (%s).",
+                line.qty_invoiced,
+            ))
+
     # ------------------------------------------------------------------
     # Accion principal
     # ------------------------------------------------------------------
@@ -212,53 +228,86 @@ class StockReassignmentWizard(models.TransientModel):
 
         source = self.source_move_id
         destination = self.destination_move_id
+        source_order = self.source_order_id
+        destination_order = self.destination_order_id
+        source_line = source.sale_line_id
         qty = self.quantity
         rounding = source.product_uom.rounding
+
         source_reserved_before = source.quantity
         destination_reserved_before = destination.quantity
         source_restore_qty = source_reserved_before - qty
         expected_destination = destination_reserved_before + qty
+        line_qty_before = source_line.product_uom_qty
+        line_qty_after = line_qty_before - qty
 
-        # Liberamos el movimiento origen completo para que Odoo actualice quants y
-        # lineas de movimiento con su logica estandar. Luego el destino toma solo
-        # la cantidad solicitada y el origen recupera el resto.
+        # 1) Mover la reserva con la logica estandar de Odoo.
         source._do_unreserve()
         destination._action_assign(force_qty=qty)
         if float_compare(source_restore_qty, 0.0, precision_rounding=rounding) > 0:
             source._action_assign(force_qty=source_restore_qty)
 
-        # Verificacion exacta: si Odoo no dejo las cantidades esperadas se cancela
-        # todo (el UserError revierte la transaccion) y se muestran los numeros reales.
+        # 2) Bajar la cantidad del pedido origen. Si el pedido esta bloqueado se
+        #    desbloquea solo durante el cambio y se vuelve a bloquear.
+        was_locked = "locked" in source_order._fields and source_order.locked
+        if was_locked:
+            source_order.write({"locked": False})
+        source_line.write({"product_uom_qty": line_qty_after})
+        if was_locked:
+            source_order.write({"locked": True})
+
+        # 3) Verificacion exacta. Si algo no cuadra, el UserError revierte todo.
         if (
             float_compare(destination.quantity, expected_destination, precision_rounding=rounding) != 0
             or float_compare(source.quantity, source_restore_qty, precision_rounding=rounding) != 0
+            or float_compare(source_line.product_uom_qty, line_qty_after, precision_rounding=rounding) != 0
         ):
             raise UserError(_(
-                "La reserva no quedo como se esperaba y se cancelo la operacion.\n"
-                "Origen: esperado %(se)s, resultado %(sr)s.\n"
-                "Destino: esperado %(de)s, resultado %(dr)s.",
+                "La operacion no quedo como se esperaba y se cancelo sin guardar cambios.\n"
+                "Reservado en origen: esperado %(se)s, resultado %(sr)s.\n"
+                "Reservado en destino: esperado %(de)s, resultado %(dr)s.\n"
+                "Cantidad del pedido origen: esperada %(le)s, resultado %(lr)s.",
                 se=source_restore_qty,
                 sr=source.quantity,
                 de=expected_destination,
                 dr=destination.quantity,
+                le=line_qty_after,
+                lr=source_line.product_uom_qty,
             ))
 
-        source_order = self.source_order_id
-        destination_order = self.destination_order_id
-        message = _(
-            "Se reasignaron %(qty)s %(uom)s de %(product)s desde %(source)s hacia %(destination)s. "
-            "Reservado ahora: %(source)s = %(sq)s, %(destination)s = %(dq)s.",
+        # 4) Notas en el chatter de ambos pedidos.
+        product_name = source.product_id.display_name
+        uom_name = source.product_uom.name
+        source_order.message_post(body=_(
+            "Se reasignaron %(qty)s %(uom)s de %(product)s hacia el pedido %(destination)s. "
+            "Cantidad del pedido: %(before)s -> %(after)s. "
+            "Reservado ahora: %(reserved)s.",
             qty=qty,
-            uom=source.product_uom.name,
-            product=source.product_id.display_name,
+            uom=uom_name,
+            product=product_name,
+            destination=destination_order.name,
+            before=line_qty_before,
+            after=line_qty_after,
+            reserved=source.quantity,
+        ))
+        destination_order.message_post(body=_(
+            "Se recibieron %(qty)s %(uom)s de %(product)s reasignadas desde el pedido %(source)s. "
+            "Reservado ahora: %(reserved)s.",
+            qty=qty,
+            uom=uom_name,
+            product=product_name,
+            source=source_order.name,
+            reserved=destination.quantity,
+        ))
+
+        message = _(
+            "Se reasignaron %(qty)s %(uom)s de %(product)s desde %(source)s hacia %(destination)s.",
+            qty=qty,
+            uom=uom_name,
+            product=product_name,
             source=source_order.name,
             destination=destination_order.name,
-            sq=source.quantity,
-            dq=destination.quantity,
         )
-        source_order.message_post(body=message)
-        destination_order.message_post(body=message)
-
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
