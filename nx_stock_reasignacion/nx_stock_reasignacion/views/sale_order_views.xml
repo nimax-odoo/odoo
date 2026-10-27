@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="nx_sale_order_form_stock_reassignment" model="ir.ui.view">
+        <field name="name">sale.order.form.stock.reassignment</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_open_stock_reassignment"
+                        type="object"
+                        string="Reasignar piezas"
+                        class="btn-secondary"
+                        groups="stock.group_stock_manager"
+                        invisible="state not in ('sale', 'done')"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
