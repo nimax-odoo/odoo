@@ -76,6 +76,7 @@ class StockReassignmentWizard(models.TransientModel):
             lambda move: move.state in ("confirmed", "partially_available", "assigned")
             and move.picking_id
             and move.picking_id.picking_type_id.code == "outgoing"
+            and move.company_id == order.company_id
         )
 
     # ------------------------------------------------------------------
@@ -97,6 +98,7 @@ class StockReassignmentWizard(models.TransientModel):
                 continue
             product = wizard.source_move_id.product_id
             warehouse = wizard.source_order_id.warehouse_id
+            company = wizard.source_order_id.company_id
             candidate_moves = self.env["stock.move"].search([
                 ("product_id", "=", product.id),
                 ("state", "in", ["confirmed", "partially_available", "assigned"]),
@@ -104,6 +106,9 @@ class StockReassignmentWizard(models.TransientModel):
                 ("sale_line_id.order_id", "!=", wizard.source_order_id.id),
                 ("sale_line_id.order_id.state", "in", ["sale", "done"]),
                 ("sale_line_id.order_id.warehouse_id", "=", warehouse.id),
+                # Solo pedidos de la misma empresa
+                ("sale_line_id.order_id.company_id", "=", company.id),
+                ("company_id", "=", company.id),
             ])
             valid_moves = candidate_moves.filtered(
                 lambda move: move.product_uom_qty > move.quantity
@@ -169,6 +174,17 @@ class StockReassignmentWizard(models.TransientModel):
             raise ValidationError(_("Solo se puede reasignar exactamente el mismo producto."))
         if source.product_uom != destination.product_uom:
             raise ValidationError(_("Ambos movimientos deben utilizar la misma unidad de medida."))
+
+        company = self.source_order_id.company_id
+        if (
+            self.destination_order_id.company_id != company
+            or source.company_id != company
+            or destination.company_id != company
+        ):
+            raise ValidationError(_("Solo se pueden reasignar piezas entre pedidos de la misma empresa."))
+        if company not in self.env.companies:
+            raise ValidationError(_("Active la empresa del pedido para poder reasignar piezas."))
+
         if self.source_order_id.warehouse_id != self.destination_order_id.warehouse_id:
             raise ValidationError(_("Los pedidos deben pertenecer al mismo almacen."))
         if source.location_id != destination.location_id:
@@ -201,38 +217,44 @@ class StockReassignmentWizard(models.TransientModel):
         source_reserved_before = source.quantity
         destination_reserved_before = destination.quantity
         source_restore_qty = source_reserved_before - qty
+        expected_destination = destination_reserved_before + qty
 
         # Liberamos el movimiento origen completo para que Odoo actualice quants y
         # lineas de movimiento con su logica estandar. Luego el destino toma solo
         # la cantidad solicitada y el origen recupera el resto.
         source._do_unreserve()
         destination._action_assign(force_qty=qty)
-
-        received_qty = destination.quantity - destination_reserved_before
-        if float_compare(received_qty, qty, precision_rounding=rounding) < 0:
-            raise UserError(_(
-                "No fue posible reservar la cantidad completa en el pedido destino. "
-                "La operacion fue cancelada sin guardar cambios."
-            ))
-
         if float_compare(source_restore_qty, 0.0, precision_rounding=rounding) > 0:
             source._action_assign(force_qty=source_restore_qty)
-            if float_compare(source.quantity, source_restore_qty, precision_rounding=rounding) < 0:
-                raise UserError(_(
-                    "No fue posible devolver al pedido origen todas las piezas que debian permanecer reservadas. "
-                    "La operacion fue cancelada sin guardar cambios."
-                ))
 
-        product_name = source.product_id.display_name
+        # Verificacion exacta: si Odoo no dejo las cantidades esperadas se cancela
+        # todo (el UserError revierte la transaccion) y se muestran los numeros reales.
+        if (
+            float_compare(destination.quantity, expected_destination, precision_rounding=rounding) != 0
+            or float_compare(source.quantity, source_restore_qty, precision_rounding=rounding) != 0
+        ):
+            raise UserError(_(
+                "La reserva no quedo como se esperaba y se cancelo la operacion.\n"
+                "Origen: esperado %(se)s, resultado %(sr)s.\n"
+                "Destino: esperado %(de)s, resultado %(dr)s.",
+                se=source_restore_qty,
+                sr=source.quantity,
+                de=expected_destination,
+                dr=destination.quantity,
+            ))
+
         source_order = self.source_order_id
         destination_order = self.destination_order_id
         message = _(
-            "Se reasignaron %(qty)s %(uom)s de %(product)s desde %(source)s hacia %(destination)s.",
+            "Se reasignaron %(qty)s %(uom)s de %(product)s desde %(source)s hacia %(destination)s. "
+            "Reservado ahora: %(source)s = %(sq)s, %(destination)s = %(dq)s.",
             qty=qty,
             uom=source.product_uom.name,
-            product=product_name,
+            product=source.product_id.display_name,
             source=source_order.name,
             destination=destination_order.name,
+            sq=source.quantity,
+            dq=destination.quantity,
         )
         source_order.message_post(body=message)
         destination_order.message_post(body=message)
