@@ -65,6 +65,22 @@ class StockReassignmentWizard(models.TransientModel):
         digits="Product Unit of Measure",
     )
 
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+    def _get_order_moves(self, order):
+        """Movimientos de entrega pendientes de un pedido de venta."""
+        if not order:
+            return self.env["stock.move"]
+        return order.order_line.move_ids.filtered(
+            lambda move: move.state in ("confirmed", "partially_available", "assigned")
+            and move.picking_id
+            and move.picking_id.picking_type_id.code == "outgoing"
+        )
+
+    # ------------------------------------------------------------------
+    # Computes
+    # ------------------------------------------------------------------
     @api.depends("source_order_id")
     def _compute_available_source_moves(self):
         for wizard in self:
@@ -120,6 +136,9 @@ class StockReassignmentWizard(models.TransientModel):
                 0.0,
             )
 
+    # ------------------------------------------------------------------
+    # Onchange
+    # ------------------------------------------------------------------
     @api.onchange("source_move_id")
     def _onchange_source_move_id(self):
         self.destination_order_id = False
@@ -133,16 +152,9 @@ class StockReassignmentWizard(models.TransientModel):
         if len(moves) == 1:
             self.destination_move_id = moves
 
-    def _get_order_moves(self, order):
-        if not order:
-            return self.env["stock.move"]
-        return order.order_line.move_ids.filtered(
-            lambda move: move.state in ("confirmed", "partially_available", "assigned")
-            and move.picking_id
-            and move.picking_id.picking_type_id.code == "outgoing"
-            and not move.scrapped
-        )
-
+    # ------------------------------------------------------------------
+    # Validaciones
+    # ------------------------------------------------------------------
     def _validate_moves(self):
         self.ensure_one()
         source = self.source_move_id
@@ -175,6 +187,9 @@ class StockReassignmentWizard(models.TransientModel):
         if float_compare(self.quantity, destination_pending, precision_rounding=rounding) > 0:
             raise ValidationError(_("La cantidad supera lo pendiente por reservar en el pedido destino."))
 
+    # ------------------------------------------------------------------
+    # Accion principal
+    # ------------------------------------------------------------------
     def action_reassign(self):
         self.ensure_one()
         self._validate_moves()
@@ -182,6 +197,7 @@ class StockReassignmentWizard(models.TransientModel):
         source = self.source_move_id
         destination = self.destination_move_id
         qty = self.quantity
+        rounding = source.product_uom.rounding
         source_reserved_before = source.quantity
         destination_reserved_before = destination.quantity
         source_restore_qty = source_reserved_before - qty
@@ -193,7 +209,6 @@ class StockReassignmentWizard(models.TransientModel):
         destination._action_assign(force_qty=qty)
 
         received_qty = destination.quantity - destination_reserved_before
-        rounding = source.product_uom.rounding
         if float_compare(received_qty, qty, precision_rounding=rounding) < 0:
             raise UserError(_(
                 "No fue posible reservar la cantidad completa en el pedido destino. "
