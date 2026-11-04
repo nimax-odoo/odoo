@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from datetime import datetime
+from unittest import result
 from odoo import http, _
 from odoo.http import request, Response
 from odoo.exceptions import AccessError, ValidationError
@@ -1094,21 +1095,24 @@ class AsStockAPI(http.Controller):
                 )
             # Preparar respuesta simplificada
             result = []
-            
+            locations_product = {}
             # Diccionario para agrupar por ubicación y código de producto
             grouped_data = {}
             promos_disponibles = request.env['coupon.program'].sudo().search_promo_disponibles()
             for quant in quants:
                 product = request.env['product.product'].sudo().browse(quant['product_id'][0])
                 available_qty = quant['quantity'] - quant['reserved_quantity']
-                
                 # Crear clave única para agrupar
                 location_name = quant['location_id'][1]
+                location_code = quant['location_id'][0]
                 product_code = product.default_code or ''
                 product_name = quant['product_id'][1]
                 product_info_id = quant['product_id'][0]
                 key = f"{location_name}_{product_code}"
-                
+                if location_code not in locations_product:
+                    locations_product[location_code] = []
+                if product_info_id not in locations_product[location_code]:
+                    locations_product[location_code].append(product_info_id)
                 # Calcular el precio NIMAX
                 nimax_price_usd = 0
                 try:
@@ -1273,15 +1277,23 @@ class AsStockAPI(http.Controller):
                 item['reserved_quantity'] = int(item['reserved_quantity'])
             
             # Filtrar productos con stock cero después de aplicar porcentaje
-            result = [item for item in result if item['stock'] > 0]
+            # result = [item for item in result if item['stock'] > 0]
             
             # Agregar información de la lista de precios y del cliente
+            products_list = []
             for item in result:
                 item['pricelist_name'] = pricelist.name
                 item['pricelist_id'] = pricelist_id
                 item['pricelist_currency'] = pricelist.currency_id.name
                 item['partner_id'] = partner.id
                 item['partner_name'] = partner.name
+                products_list.append(item['product_id'])
+                
+            #agregar los productos que no esten solo precios
+            for prod_price in request.env['sd.compute.product.price'].sudo().extract_product(locations_product, user.as_partner_id, warehouse_locations, default_code,location_id, rate):
+                result.append(prod_price)
+                
+                
             user.set_sync_lock()
             _logger.info("[as_get_stock_with_price] Consulta exitosa por usuario %s, retornando %s registros", user.name, len(result))
             self._as_log_response('/nimax/stock_with_price', 200, result, user)
@@ -1293,6 +1305,126 @@ class AsStockAPI(http.Controller):
             
             response_data = {'error': 'Error interno del servidor'}
             self._as_log_response('/nimax/stock_with_price', 500, response_data, user)
+            
+            return Response(
+                json.dumps(response_data),
+                status=500,
+                content_type='application/json'
+            ) 
+
+    @http.route('/nimax/pricelist', type='json', auth='none', methods=['POST'], csrf=False)
+    def as_get_pricelist(self, **kwargs):
+        """
+        Endpoint para consultar la lista de precios NIMAX.
+        
+        Args en el cuerpo JSON:
+            default_code (str, opcional): Código del producto a filtrar
+            location_id (int, opcional): ID de la ubicación a filtrar
+            partner_id (int, obligatorio): ID del cliente para determinar la lista de precios
+            api_key (str, obligatorio): Clave API para autenticación
+            
+        Returns:
+            dict: Datos de stock y precios en formato JSON o mensaje de error
+        """
+        # Obtener los parámetros del cuerpo JSON
+        params = json.loads(request.httprequest.data.decode('utf-8')) or {} or {}
+        
+        _logger.info("[as_get_pricelist] Recibida solicitud POST de consulta de stock con precios")
+        self._as_log_request('/nimax/pricelist', 'POST', params)
+        
+        # Verificar autenticación por API key
+        api_key = params.get('api_key')
+        if not api_key:
+            _logger.warning("[as_get_pricelist] Intento de acceso sin API key")
+            
+            response_data = {'error': 'Se requiere API key'}
+            self._as_log_response('/nimax/pricelist', 401, response_data)
+            
+            return Response(
+                json.dumps(response_data),
+                status=401,
+                content_type='application/json'
+            )
+        user = self._as_validate_api_key(api_key)
+        if not user:
+            _logger.warning("[as_get_pricelist] Intento de acceso con API key inválida")
+            
+            response_data = {'error': 'API key inválida'}
+            self._as_log_response('/nimax/pricelist', 403, response_data)
+            
+            return Response(
+                json.dumps(response_data),
+                status=403,
+                content_type='application/json'
+            )
+        user = user.sudo()
+        if not user:
+            _logger.warning("[as_get_pricelist] Intento de acceso con API key inválida")
+            
+            response_data = {'error': 'API key inválida'}
+            self._as_log_response('/nimax/pricelist', 403, response_data)
+            
+            return Response(
+                json.dumps(response_data),
+                status=403,
+                content_type='application/json'
+            )
+        if user.is_sync_locked():
+            remaining = user.get_remaining_time()
+            response_data = {'error': remaining['message']}
+            self._as_log_response('/nimax/pricelist', 403, response_data, user)
+            
+            return Response(
+                json.dumps(response_data),
+                status=403,
+                content_type='application/json'
+            )
+            
+            # return Response(
+            #     json.dumps(response_data),
+            #     status=400,
+            #     content_type='application/json'
+            # )
+        # Verificar permisos de usuario
+        if not self._as_check_permissions(user):
+            _logger.warning("[as_get_pricelist] Usuario %s sin permisos para acceder a stock.quant", user.name)
+            
+            response_data = {'error': 'No tiene permisos para acceder a esta información'}
+            self._as_log_response('/nimax/pricelist', 403, response_data, user)
+            
+            return Response(
+                json.dumps(response_data),
+                status=403,
+                content_type='application/json'
+            )
+            
+        try:
+            resultado = []
+            # Obtener el tipo de cambio MXN más reciente
+            mxn_currency = request.env['res.currency'].sudo().search([('name', '=', 'MXN')], limit=1)
+            usd_currency = request.env['res.currency'].sudo().search([('name', '=', 'USD')], limit=1)
+            
+            if not mxn_currency or not usd_currency:
+                _logger.error("[as_get_pricelist] No se encontró la moneda MXN o USD")
+                return Response(
+                    json.dumps({'error': 'Error al obtener las monedas MXN/USD'}),
+                    status=500,
+                    content_type='application/json'
+                )
+            
+            # Obtener la tasa de cambio más reciente
+            today = Date.today()
+            rate = usd_currency._convert(1.0, mxn_currency, user.company_id, today)
+            default_code = params.get('default_code')
+            for prod_price in request.env['sd.compute.product.price'].sudo().extract_products( user.as_partner_id, default_code,rate):
+                resultado.append(prod_price)
+            return resultado
+
+        except Exception as e:
+            _logger.error("[as_get_pricelist] Error al consultar lista de precios: %s", str(e))
+            
+            response_data = {'error': 'Error interno del servidor'}
+            self._as_log_response('/nimax/pricelist', 500, response_data, user)
             
             return Response(
                 json.dumps(response_data),

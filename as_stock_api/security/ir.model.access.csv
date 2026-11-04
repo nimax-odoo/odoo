@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_match_locations,match_locations,model_match_locations,,1,1,1,1
 access_request_logger,request_logger,model_request_logger,,1,1,1,1
+access_sd_compute_product_price,sd_compute_product_price,model_sd_compute_product_price,,1,1,1,1

@@ -263,3 +263,14 @@ class AsResUsers(models.Model):
                 'type': 'success',
             }
         } 
+
+class AsResPartner(models.Model):
+    """
+    Extensión del modelo res.partner para agregar funcionalidad de API key.
+    """
+    _inherit = 'res.partner'
+    
+    def compute_price_api(self):
+        for partner in self:
+            self.env['sd.compute.product.price'].sudo().syn_partner_prices(partner, 'Contacto')
+        return True

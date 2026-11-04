@@ -1,0 +1,65 @@
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="sd_compute_product_price_tree_view">
+            <field name="name">sd.compute.product.price.tree.view</field>
+            <field name="model">sd.compute.product.price</field>
+            
+            <field name="arch" type="xml">
+                <list string="Cálculo de Precios de Productos" editable="bottom">
+                    <field name="name"/>
+                    <field name="product_id"/>
+                    <field name="pricelist_id"/>
+                    <field name="promo_id"/>
+                    <field name="currency_id"/>
+                    <field name="nimax_price_usd"/>
+                    <field name="nimax_price_mxn"/>
+                    <field name="create_date"/>
+                    <field name="write_date"/>
+                    <field name="date_update"/>
+                    <field name="fuente"/>
+                </list>
+            </field>
+        </record>
+
+
+
+        <record id="sd_compute_product_price_search_view" model="ir.ui.view">
+            <field name="name">sd.compute.product.price.search.view</field>
+            <field name="model">sd.compute.product.price</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="product_id"/>
+                    <field name="name"/>
+                    <field name="pricelist_id"/>
+                    <field name="promo_id"/>
+                </search>
+            </field>
+        </record>
+
+
+        <record id="action_sd_compute_product_price" model="ir.actions.act_window">
+            <field name="name">Cálculo de Precios de Productos</field>
+            <field name="res_model">sd.compute.product.price</field>
+            <field name="view_mode">list</field>
+            <field name="search_view_id" ref="sd_compute_product_price_search_view"/>
+        </record>
+        <menuitem id="menu_sd_compute_product_price"
+                  name="Cálculo de Precios de Productos"
+                  action="action_sd_compute_product_price"
+                  parent="sale.menu_sale_config"
+                  sequence="20"/>
+
+        <record model="ir.actions.server" id="action_compute_price_api">
+            <field name="name">Calcular precios API</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="group_ids" eval="[]"/>
+            <field name="binding_model_id" ref="base.model_res_partner" />
+            <field name="state">code</field>
+            <field name="code">
+                if records:
+                    action = records.compute_price_api()
+            </field>
+        </record>
+    </data>
+</odoo>

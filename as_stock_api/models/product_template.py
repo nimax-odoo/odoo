@@ -10,6 +10,18 @@ from datetime import date
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        product = super().create(vals_list)
+        product_id = self.env['product.product'].sudo().search([('product_tmpl_id','=',product.id)],limit=1)
+        self.env['sd.compute.product.price'].sudo().syn_product_prices(product_id, 'Producto')
+        return product
+    
+    def write(self, vals):
+        res = super().write(vals)
+        product_id = self.env['product.product'].sudo().search([('product_tmpl_id','=',self.id)],limit=1)
+        self.env['sd.compute.product.price'].sudo().syn_product_prices(product_id, 'Producto')
+        return res
 
     def compute_price_nimax(self,partner,pricelist):
         # Calcular el precio NIMAX
@@ -84,6 +96,78 @@ class ProductTemplate(models.Model):
                 price_based_usd = 0
             return price_based_usd
 
+    def compute_price_nimax_without_promo(self,partner,pricelist,promos_disponibles):
+        # Calcular el precio NIMAX
+        for productt in self:
+            product = self.env['product.product'].sudo().search([('product_tmpl_id','=',productt.id)],limit=1)
+            expected_earning = 0
+            nimax_price_usd = 0
+            expected_earning = pricelist.expected_earning or 0
+            product_code = product.default_code
+            price_unit = 0.0
+            price_based_usd = 0.0
+            try:
+                # Buscar el programa de proveedor (tf_partner_id) para este producto/categoría
+                tf_partner_id = False
+                tf_partner_id = self.env['tf.res.partner']
+                for x in partner.tf_vendor_parameter_ids:
+                    if x.category_id.id == product.categ_id.id:
+                        tf_partner_id = x
+                if tf_partner_id:
+                    # Calcular el precio base USD según la fórmula
+                    promo = self.env['coupon.program'].sudo()
+                    promociones = self.env['coupon.program'].sudo().search_promo(product,partner.id,promos_disponibles)
+                    if promociones[0]:
+                        precio = promociones[1]
+                        promo = promociones[2]
+                        price_based_usd = precio
+                    else:
+                        precio = product.list_price
+                        item_pricelist = False
+                        for item in pricelist.item_ids:
+                            if item.categ_id == product.categ_id:
+                                item_pricelist = item
+                        ################################################################
+                        try:
+                            price_result = pricelist._compute_price_rule(
+                                products=product,
+                                quantity=1,
+                                currency=pricelist.currency_id,
+                                uom=product.uom_id,
+                                date=date.today()
+                            )
+                            price_unit = price_result[product.id][0]
+                        except Exception as e:
+                            price_unit = product.list_price
+                        #################################################################
+                        if price_unit:
+                            
+                            if item_pricelist and item_pricelist.as_utilidad > 0:
+                                last_purchase_price = 0.0
+                                if hasattr(product, 'as_last_purchase_price'):
+                                    last_purchase_price = product.as_last_purchase_price
+                                else:
+                                    # Si no existe, usamos el standard_price como alternativa
+                                    _logger.warning(f"[default_get] Campo as_last_purchase_price no existe, usando standard_price")
+                                    last_purchase_price = product.standard_price
+                                
+                                if last_purchase_price and (1-item_pricelist.as_utilidad/100) != 0:
+                                    descuento = (1-(last_purchase_price/(1-item_pricelist.as_utilidad/100)))*100
+                                    price_unit = product.list_price * (1-descuento/100)
+                                else:
+                                    _logger.warning(f"[default_get] Precio de compra es 0 o división por cero, saltando cálculo de descuento")
+                                
+                            price_based_usd = (product.list_price - (product.list_price * tf_partner_id[0].partner_discount/100))*tf_partner_id[0].cost_deal_import/100*(product.tf_import_tax/100)
+
+                        price_based_usd = self.env.company.currency_id._convert(price_based_usd,pricelist.currency_id,self.env.company,date.today())
+                        price_based_usd = (price_based_usd)/(1-pricelist.expected_earning/100) if pricelist.expected_earning else price_based_usd
+                        
+            except Exception as e:
+                _logger.error("[as_get_stock_with_price] Error al calcular precio para producto %s: %s", 
+                                product_code, str(e))
+                price_based_usd = 0
+            return price_based_usd
+        
     def get_in_store_product_available_qty(self, as_warehouse_ids, user):
         """ Return warehouses with stock formatted for API """
         warehouses = []
@@ -190,7 +274,18 @@ class ProductTemplate(models.Model):
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
-
+    
+    @api.model_create_multi
+    def create(self, vals_list):
+        product = super().create(vals_list)
+        self.env['sd.compute.product.price'].sudo().syn_product_prices(product.id, 'Producto')
+        return product
+    
+    def write(self, vals):
+        res = super().write(vals)
+        self.env['sd.compute.product.price'].sudo().syn_product_prices(self.id, 'Producto')
+        return res
+    
     def get_location_alternative(self, location_id):
         self.ensure_one()
         location_id = self.env['stock.location'].sudo().browse(location_id)

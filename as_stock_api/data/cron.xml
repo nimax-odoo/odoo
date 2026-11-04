@@ -9,7 +9,14 @@
             <field name="interval_number">2</field>
             <field name="interval_type">hours</field>
         </record>
-
+        <record id="ir_cron_update_data_price_product" model="ir.cron">
+            <field name="name">NIMAX: Actualizar precios de productos por clientes</field>
+            <field name="interval_number">7</field>
+            <field name="interval_type">days</field>
+            <field name="model_id" ref="as_stock_api.model_sd_compute_product_price" />
+            <field name="code">model.syn_cron_prices()</field>
+            <field name="state">code</field>
+        </record>
 
 
     </data>

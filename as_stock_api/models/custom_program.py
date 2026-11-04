@@ -15,48 +15,121 @@ class CouponProgram(models.Model):
     
     sd_apply_toprunner_api = fields.Boolean('Aplicar automaticamente al API')
 
-    def search_promo(self,product,partner,promos_disponibles):
-        precio_usd = 0.0
-        promo = self.env['coupon.program']
-        for promo in promos_disponibles:
-            cumple_producto = True
-            cumple_cliente = True
-            cumple = False
-            if promo['productos'] and product.id not in promo['productos']: 
-                cumple_producto = False
-            if not promo['productos']:
-                cumple_producto = False
-            if promo['clientes'] and partner not in promo['clientes']:
-                cumple_cliente = False
-            if not promo['clientes']:
-                cumple_cliente = False
-            if cumple_producto and cumple_cliente:
-                cumple = True
-                precio_usd = promo['price_unit_usd']
-                promo_obj = promo['promo']
-                return cumple, precio_usd, promo_obj
-              
-        return cumple,precio_usd,promo  
-    
+    @api.model
     def search_promo_disponibles(self):
+        """
+        Carga promociones una sola vez.
+
+        OPTIMIZACIONES:
+        - Evita reutilizar productos de otras promociones.
+        - Convierte IDs en sets para búsquedas rápidas.
+        - Ignora promociones sin dominio válido.
+        - Conserva el orden de las promociones.
+        """
+
         promos = []
-        vals = {}
-        domain_promo = [('sd_apply_toprunner_api','=',True),('active','=',True)]
-        promociones = self.env['coupon.program'].sudo().search(domain_promo)
-        clientes = self.env['res.partner']
-        productos = self.env['product.product']
+
+        Product = self.env['product.product'].sudo()
+        Partner = self.env['res.partner'].sudo()
+
+        promociones = self.sudo().search([
+            ('sd_apply_toprunner_api', '=', True),
+            ('active', '=', True),
+        ])
+
         for promo in promociones:
-            if promo.rule_products_domain:
-                domain = safe_eval(promo.rule_products_domain)
-                productos = self.env['product.product'].sudo().search(domain)
-            if promo.rule_partners_domain:
-                domain_partner = safe_eval(promo.rule_partners_domain)
-                clientes = self.env['res.partner'].sudo().search(domain_partner)
-            if productos or clientes:
+
+            # El código original requiere que
+            # coincidan producto y cliente.
+            if not (
+                promo.rule_products_domain
+                and promo.rule_partners_domain
+            ):
+                continue
+
+            try:
+                # 1. Evaluar dominio de productos.
+                domain_product = safe_eval(
+                    promo.rule_products_domain
+                )
+
+                product_ids = set(
+                    Product.search(domain_product).ids
+                )
+
+                if not product_ids:
+                    continue
+
+                # 2. Evaluar dominio de clientes.
+                domain_partner = safe_eval(
+                    promo.rule_partners_domain
+                )
+
+                partner_ids = set(
+                    Partner.search(domain_partner).ids
+                )
+
+                if not partner_ids:
+                    continue
+
+                # 3. Guardar información en memoria.
                 promos.append({
                     'promo': promo,
-                    'productos': productos.ids,
-                    'clientes': clientes.ids,
-                    'price_unit_usd': promo.PRICE_UNIT_USD,
+                    'productos': product_ids,
+                    'clientes': partner_ids,
+                    'price_unit_usd': (
+                        promo.PRICE_UNIT_USD or 0.0
+                    ),
                 })
+
+            except Exception:
+                _logger.exception(
+                    "Error preparando promoción ID %s",
+                    promo.id,
+                )
+                raise
+
         return promos
+
+    @api.model
+    def search_promo(
+        self, product, partner, promos_disponibles
+    ):
+        """
+        Busca una promoción sin consultar PostgreSQL.
+
+        Mantiene el retorno original:
+        (cumple, precio_usd, promo)
+        """
+
+        product_id = (
+            product.id if hasattr(product, 'id')
+            else product
+        )
+
+        partner_id = (
+            partner.id if hasattr(partner, 'id')
+            else partner
+        )
+
+        for promo in promos_disponibles or []:
+
+            # La pertenencia a un set es O(1) promedio.
+            if product_id not in promo['productos']:
+                continue
+
+            if partner_id not in promo['clientes']:
+                continue
+
+            # Primera promoción aplicable.
+            return (
+                True,
+                promo['price_unit_usd'],
+                promo['promo'],
+            )
+
+        return (
+            False,
+            0.0,
+            self.env['coupon.program'],
+        )
