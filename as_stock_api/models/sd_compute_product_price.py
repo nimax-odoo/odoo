@@ -332,7 +332,18 @@ class RequestLogger(models.Model):
                     to_create = []
                     now = fields.Datetime.now()
                     for product in batch:
-                        amount = prices.get(product.id, 0.0)
+                        price_data = prices.get(product.id, {})
+                        amount = price_data.get('precio', 0.0)
+                        promo_aplicada = price_data.get('promo', False)
+
+                        if not amount:
+                            continue
+                        if not isinstance(amount, (int, float)) or isinstance(amount, bool):
+                            raise UserError(f"Precio inválido para producto {product.id}: {amount!r}")
+
+                        resumen['calculados'] += 1
+                        price_usd = pricelist.currency_id._convert(amount, usd, company, today)
+                        price_mxn = pricelist.currency_id._convert(amount, mxn, company, today)
                         if not amount:
                             continue
                         resumen['calculados'] += 1
