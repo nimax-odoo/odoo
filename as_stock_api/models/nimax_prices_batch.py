@@ -3,7 +3,7 @@
 import logging
 from datetime import date
 
-from attr import fields
+from odoo import api, fields, models, _
 from odoo import models
 
 _logger = logging.getLogger(__name__)
