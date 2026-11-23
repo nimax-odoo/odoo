@@ -10,7 +10,6 @@
                         <field name="source_order_id"/>
                         <field name="available_source_move_ids" invisible="1"/>
                         <field name="source_move_id" options="{'no_create': True, 'no_open': True}"/>
-                        <field name="product_id"/>
                         <field name="source_reserved_qty"/>
                     </group>
                     <group string="Destino">
@@ -22,10 +21,7 @@
                         <field name="quantity"/>
                     </group>
                 </group>
-                <div class="alert alert-info" role="alert">
-                    La operacion cambia la reserva real de inventario. No modifica las cantidades vendidas ni crea movimientos adicionales.
-                </div>
-                <footer>
+<footer>
                     <button name="action_reassign" type="object" string="Reasignar" class="btn-primary"/>
                     <button string="Cancelar" special="cancel" class="btn-secondary"/>
                 </footer>

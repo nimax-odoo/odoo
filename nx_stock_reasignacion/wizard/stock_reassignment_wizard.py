@@ -15,7 +15,7 @@ class StockReassignmentWizard(models.TransientModel):
     )
     source_move_id = fields.Many2one(
         "stock.move",
-        string="Producto / movimiento origen",
+        string="Producto origen",
         required=True,
         domain="[('id', 'in', available_source_move_ids)]",
     )
@@ -46,7 +46,7 @@ class StockReassignmentWizard(models.TransientModel):
     )
     destination_move_id = fields.Many2one(
         "stock.move",
-        string="Movimiento destino",
+        string="Producto destino",
         required=True,
         domain="[('id', 'in', available_destination_move_ids)]",
     )
@@ -78,6 +78,17 @@ class StockReassignmentWizard(models.TransientModel):
             and move.picking_id.picking_type_id.code == "outgoing"
             and move.company_id == order.company_id
         )
+
+    def _is_allowed_destination_order(self, destination_order):
+        """Allow the same customer, or a different customer without salesperson."""
+        self.ensure_one()
+        if not self.source_order_id or not destination_order:
+            return False
+        source_customer = self.source_order_id.partner_id.commercial_partner_id
+        destination_customer = destination_order.partner_id.commercial_partner_id
+        if destination_customer == source_customer:
+            return True
+        return not destination_customer.user_id
 
     # ------------------------------------------------------------------
     # Computes
@@ -112,6 +123,7 @@ class StockReassignmentWizard(models.TransientModel):
             ])
             valid_moves = candidate_moves.filtered(
                 lambda move: move.product_uom_qty > move.quantity
+                and wizard._is_allowed_destination_order(move.sale_line_id.order_id)
             )
             wizard.available_destination_order_ids = valid_moves.mapped(
                 "sale_line_id.order_id"
@@ -170,6 +182,11 @@ class StockReassignmentWizard(models.TransientModel):
             raise UserError(_("Solo un administrador de inventario puede reasignar piezas."))
         if source == destination:
             raise ValidationError(_("El movimiento origen y destino deben ser diferentes."))
+        if not self._is_allowed_destination_order(self.destination_order_id):
+            raise ValidationError(_(
+                "El pedido destino solo puede pertenecer al mismo cliente del pedido origen "
+                "o a un cliente diferente que no tenga vendedor asignado."
+            ))
         if source.product_id != destination.product_id:
             raise ValidationError(_("Solo se puede reasignar exactamente el mismo producto."))
         if source.product_uom != destination.product_uom:
