@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_nx_fabrica_compras" name="Pedidos a fábrica"
+              parent="purchase.menu_purchase_root" action="action_nx_fabrica_logistica" sequence="16"/>
+    <menuitem id="menu_nx_fabrica_ventas" name="Seguimiento a fábrica"
+              parent="sale.sale_menu_root" action="action_nx_fabrica_ventas" sequence="26"/>
+</odoo>

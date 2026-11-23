@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_nx_fabrica_asignar_wizard_form" model="ir.ui.view">
+        <field name="name">nx.fabrica.asignar.wizard.form</field>
+        <field name="model">nx.fabrica.asignar.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Asignar a orden de compra">
+                <group>
+                    <field name="purchase_id" options="{'no_create': True}"/>
+                    <field name="vendor_id"/>
+                </group>
+                <field name="line_ids" readonly="1">
+                    <list>
+                        <field name="order_id"/>
+                        <field name="product_id"/>
+                        <field name="product_uom_qty" string="Cantidad"/>
+                        <field name="nx_estado" widget="badge"/>
+                    </list>
+                </field>
+                <footer>
+                    <button name="action_confirmar" type="object" string="Confirmar y agregar a la OC"
+                            class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancelar" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
