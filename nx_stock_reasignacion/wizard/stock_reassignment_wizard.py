@@ -78,17 +78,34 @@ class StockReassignmentWizard(models.TransientModel):
             and move.picking_id.picking_type_id.code == "outgoing"
             and move.company_id == order.company_id
         )
-
     def _is_allowed_destination_order(self, destination_order):
-        """Allow the same customer, or a different customer without salesperson."""
+
+        """
+        Permite reasignar al mismo cliente, a un cliente sin vendedor,
+        o a un cliente asignado a un vendedor diferente.
+        Bloquea solamente cuando otro cliente pertenece al mismo vendedor.
+        """
         self.ensure_one()
         if not self.source_order_id or not destination_order:
             return False
+
         source_customer = self.source_order_id.partner_id.commercial_partner_id
         destination_customer = destination_order.partner_id.commercial_partner_id
+
+        # Mismo cliente: siempre permitido.
         if destination_customer == source_customer:
             return True
-        return not destination_customer.user_id
+
+        source_salesperson = source_customer.user_id
+        destination_salesperson = destination_customer.user_id
+
+        # Cliente destino sin vendedor: permitido.
+        if not destination_salesperson:
+            return True
+
+        # Cliente con vendedor diferente: permitido.
+        # Solo se bloquea si ambos clientes pertenecen al mismo vendedor.
+        return destination_salesperson != source_salesperson
 
     # ------------------------------------------------------------------
     # Computes
