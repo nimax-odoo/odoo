@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="nx_stock_reassignment_wizard_form" model="ir.ui.view">
+    <record id="view_stock_reassignment_wizard_form" model="ir.ui.view">
         <field name="name">nx.stock.reassignment.wizard.form</field>
         <field name="model">nx.stock.reassignment.wizard</field>
         <field name="arch" type="xml">
@@ -9,8 +9,9 @@
                     <group string="Origen">
                         <field name="source_order_id"/>
                         <field name="available_source_move_ids" invisible="1"/>
-                        <field name="source_move_id" invisible="1"/>
-                        <field name="product_id" string="Producto" readonly="1"/>
+                        <field name="source_move_id"
+                               string="Producto"
+                               options="{'no_create': True, 'no_open': True}"/>
                         <field name="source_reserved_qty"/>
                     </group>
 
