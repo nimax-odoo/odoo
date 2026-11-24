@@ -9,9 +9,8 @@
                     <group string="Origen">
                         <field name="source_order_id"/>
                         <field name="available_source_move_ids" invisible="1"/>
-                        <field name="source_move_id"
-                               string="Producto"
-                               options="{'no_create': True, 'no_open': True}"/>
+                        <field name="source_move_id" invisible="1"/>
+                        <field name="product_id" string="Producto" readonly="1"/>
                         <field name="source_reserved_qty"/>
                     </group>
 
