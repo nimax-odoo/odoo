@@ -29,6 +29,11 @@ class StockReassignmentWizard(models.TransientModel):
         related="source_move_id.product_id",
         readonly=True,
     )
+    product_internal_reference = fields.Char(
+        string="Producto",
+        compute="_compute_product_internal_reference",
+        readonly=True,
+    )
     source_reserved_qty = fields.Float(
         string="Reservado en origen",
         compute="_compute_quantities",
@@ -78,8 +83,8 @@ class StockReassignmentWizard(models.TransientModel):
             and move.picking_id.picking_type_id.code == "outgoing"
             and move.company_id == order.company_id
         )
-    def _is_allowed_destination_order(self, destination_order):
 
+    def _is_allowed_destination_order(self, destination_order):
         """
         Permite reasignar al mismo cliente, a un cliente sin vendedor,
         o a un cliente asignado a un vendedor diferente.
@@ -88,23 +93,14 @@ class StockReassignmentWizard(models.TransientModel):
         self.ensure_one()
         if not self.source_order_id or not destination_order:
             return False
-
         source_customer = self.source_order_id.partner_id.commercial_partner_id
         destination_customer = destination_order.partner_id.commercial_partner_id
-
-        # Mismo cliente: siempre permitido.
         if destination_customer == source_customer:
             return True
-
         source_salesperson = source_customer.user_id
         destination_salesperson = destination_customer.user_id
-
-        # Cliente destino sin vendedor: permitido.
         if not destination_salesperson:
             return True
-
-        # Cliente con vendedor diferente: permitido.
-        # Solo se bloquea si ambos clientes pertenecen al mismo vendedor.
         return destination_salesperson != source_salesperson
 
     # ------------------------------------------------------------------
@@ -116,6 +112,13 @@ class StockReassignmentWizard(models.TransientModel):
             wizard.available_source_move_ids = wizard._get_order_moves(
                 wizard.source_order_id
             ).filtered(lambda move: move.quantity > 0)
+
+    @api.depends("source_move_id.product_id.default_code")
+    def _compute_product_internal_reference(self):
+        for wizard in self:
+            wizard.product_internal_reference = (
+                wizard.source_move_id.product_id.default_code or ""
+            )
 
     @api.depends("source_move_id", "source_order_id")
     def _compute_available_destinations(self):
@@ -134,7 +137,6 @@ class StockReassignmentWizard(models.TransientModel):
                 ("sale_line_id.order_id", "!=", wizard.source_order_id.id),
                 ("sale_line_id.order_id.state", "in", ["sale", "done"]),
                 ("sale_line_id.order_id.warehouse_id", "=", warehouse.id),
-                # Solo pedidos de la misma empresa
                 ("sale_line_id.order_id.company_id", "=", company.id),
                 ("company_id", "=", company.id),
             ])
@@ -194,7 +196,6 @@ class StockReassignmentWizard(models.TransientModel):
         source = self.source_move_id
         destination = self.destination_move_id
         rounding = source.product_uom.rounding
-
         if not self.env.user.has_group("stock.group_stock_manager"):
             raise UserError(_("Solo un administrador de inventario puede reasignar piezas."))
         if source == destination:
@@ -208,7 +209,6 @@ class StockReassignmentWizard(models.TransientModel):
             raise ValidationError(_("Solo se puede reasignar exactamente el mismo producto."))
         if source.product_uom != destination.product_uom:
             raise ValidationError(_("Ambos movimientos deben utilizar la misma unidad de medida."))
-
         company = self.source_order_id.company_id
         if (
             self.destination_order_id.company_id != company
@@ -218,7 +218,6 @@ class StockReassignmentWizard(models.TransientModel):
             raise ValidationError(_("Solo se pueden reasignar piezas entre pedidos de la misma empresa."))
         if company not in self.env.companies:
             raise ValidationError(_("Active la empresa del pedido para poder reasignar piezas."))
-
         if self.source_order_id.warehouse_id != self.destination_order_id.warehouse_id:
             raise ValidationError(_("Los pedidos deben pertenecer al mismo almacen."))
         if source.location_id != destination.location_id:
@@ -236,8 +235,6 @@ class StockReassignmentWizard(models.TransientModel):
         destination_pending = destination.product_uom_qty - destination.quantity
         if float_compare(self.quantity, destination_pending, precision_rounding=rounding) > 0:
             raise ValidationError(_("La cantidad supera lo pendiente por reservar en el pedido destino."))
-
-        # La linea de venta origen debe poder bajar su cantidad
         line = source.sale_line_id
         if not line:
             raise ValidationError(_("El movimiento origen no esta ligado a una linea de venta."))
@@ -259,7 +256,6 @@ class StockReassignmentWizard(models.TransientModel):
     def action_reassign(self):
         self.ensure_one()
         self._validate_moves()
-
         source = self.source_move_id
         destination = self.destination_move_id
         source_order = self.source_order_id
@@ -267,30 +263,22 @@ class StockReassignmentWizard(models.TransientModel):
         source_line = source.sale_line_id
         qty = self.quantity
         rounding = source.product_uom.rounding
-
         source_reserved_before = source.quantity
         destination_reserved_before = destination.quantity
         source_restore_qty = source_reserved_before - qty
         expected_destination = destination_reserved_before + qty
         line_qty_before = source_line.product_uom_qty
         line_qty_after = line_qty_before - qty
-
-        # 1) Mover la reserva con la logica estandar de Odoo.
         source._do_unreserve()
         destination._action_assign(force_qty=qty)
         if float_compare(source_restore_qty, 0.0, precision_rounding=rounding) > 0:
             source._action_assign(force_qty=source_restore_qty)
-
-        # 2) Bajar la cantidad del pedido origen. Si el pedido esta bloqueado se
-        #    desbloquea solo durante el cambio y se vuelve a bloquear.
         was_locked = "locked" in source_order._fields and source_order.locked
         if was_locked:
             source_order.write({"locked": False})
         source_line.write({"product_uom_qty": line_qty_after})
         if was_locked:
             source_order.write({"locked": True})
-
-        # 3) Verificacion exacta. Si algo no cuadra, el UserError revierte todo.
         if (
             float_compare(destination.quantity, expected_destination, precision_rounding=rounding) != 0
             or float_compare(source.quantity, source_restore_qty, precision_rounding=rounding) != 0
@@ -308,8 +296,6 @@ class StockReassignmentWizard(models.TransientModel):
                 le=line_qty_after,
                 lr=source_line.product_uom_qty,
             ))
-
-        # 4) Notas en el chatter de ambos pedidos.
         product_name = source.product_id.display_name
         uom_name = source.product_uom.name
         source_order.message_post(body=_(
@@ -333,7 +319,6 @@ class StockReassignmentWizard(models.TransientModel):
             source=source_order.name,
             reserved=destination.quantity,
         ))
-
         message = _(
             "Se reasignaron %(qty)s %(uom)s de %(product)s desde %(source)s hacia %(destination)s.",
             qty=qty,
