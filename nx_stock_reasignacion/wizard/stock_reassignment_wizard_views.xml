@@ -10,10 +10,9 @@
                         <field name="source_order_id"/>
                         <field name="available_source_move_ids" invisible="1"/>
                         <field name="source_move_id" invisible="1"/>
-                        <field name="product_internal_reference" string="Producto" readonly="1"/>
+                        <field name="source_move_selection" string="Producto"/>
                         <field name="source_reserved_qty"/>
                     </group>
-
                     <group string="Destino">
                         <field name="available_destination_order_ids" invisible="1"/>
                         <field name="destination_order_id"
@@ -25,12 +24,10 @@
                         <field name="quantity"/>
                     </group>
                 </group>
-
                 <div class="alert alert-warning" role="alert">
                     <strong>Importante:</strong>
                     Al confirmar la reasignación, las piezas seleccionadas se descontarán de este pedido y se asignarán al pedido seleccionado.
                 </div>
-
                 <footer>
                     <button name="action_reassign"
                             type="object"

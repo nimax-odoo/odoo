@@ -15,7 +15,7 @@ class StockReassignmentWizard(models.TransientModel):
     )
     source_move_id = fields.Many2one(
         "stock.move",
-        string="Producto origen",
+        string="Movimiento origen",
         required=True,
         domain="[('id', 'in', available_source_move_ids)]",
     )
@@ -23,16 +23,10 @@ class StockReassignmentWizard(models.TransientModel):
         "stock.move",
         compute="_compute_available_source_moves",
     )
-    product_id = fields.Many2one(
-        "product.product",
+    source_move_selection = fields.Selection(
+        selection="_selection_source_moves",
         string="Producto",
-        related="source_move_id.product_id",
-        readonly=True,
-    )
-    product_internal_reference = fields.Char(
-        string="Producto",
-        compute="_compute_product_internal_reference",
-        readonly=True,
+        required=True,
     )
     source_reserved_qty = fields.Float(
         string="Reservado en origen",
@@ -84,6 +78,37 @@ class StockReassignmentWizard(models.TransientModel):
             and move.company_id == order.company_id
         )
 
+    def _selection_source_moves(self):
+        """Muestra solo la referencia interna del producto en el selector."""
+        order_id = self.env.context.get("default_source_order_id")
+        order = self.env["sale.order"].browse(order_id).exists() if order_id else False
+        moves = self._get_order_moves(order).filtered(lambda move: move.quantity > 0)
+        return [
+            (str(move.id), move.product_id.default_code or move.product_id.name)
+            for move in moves
+        ]
+
+    @api.model
+    def default_get(self, fields_list):
+        values = super().default_get(fields_list)
+        order_id = values.get("source_order_id") or self.env.context.get(
+            "default_source_order_id"
+        )
+        source_move_id = values.get("source_move_id") or self.env.context.get(
+            "default_source_move_id"
+        )
+        if source_move_id:
+            values["source_move_id"] = source_move_id
+            values["source_move_selection"] = str(source_move_id)
+            return values
+        if order_id:
+            order = self.env["sale.order"].browse(order_id).exists()
+            moves = self._get_order_moves(order).filtered(lambda move: move.quantity > 0)
+            if len(moves) == 1:
+                values["source_move_id"] = moves.id
+                values["source_move_selection"] = str(moves.id)
+        return values
+
     def _is_allowed_destination_order(self, destination_order):
         """
         Permite reasignar al mismo cliente, a un cliente sin vendedor,
@@ -112,13 +137,6 @@ class StockReassignmentWizard(models.TransientModel):
             wizard.available_source_move_ids = wizard._get_order_moves(
                 wizard.source_order_id
             ).filtered(lambda move: move.quantity > 0)
-
-    @api.depends("source_move_id.product_id.default_code")
-    def _compute_product_internal_reference(self):
-        for wizard in self:
-            wizard.product_internal_reference = (
-                wizard.source_move_id.product_id.default_code or ""
-            )
 
     @api.depends("source_move_id", "source_order_id")
     def _compute_available_destinations(self):
@@ -175,6 +193,14 @@ class StockReassignmentWizard(models.TransientModel):
     # ------------------------------------------------------------------
     # Onchange
     # ------------------------------------------------------------------
+    @api.onchange("source_move_selection")
+    def _onchange_source_move_selection(self):
+        self.source_move_id = (
+            self.env["stock.move"].browse(int(self.source_move_selection)).exists()
+            if self.source_move_selection
+            else False
+        )
+
     @api.onchange("source_move_id")
     def _onchange_source_move_id(self):
         self.destination_order_id = False
@@ -202,8 +228,7 @@ class StockReassignmentWizard(models.TransientModel):
             raise ValidationError(_("El movimiento origen y destino deben ser diferentes."))
         if not self._is_allowed_destination_order(self.destination_order_id):
             raise ValidationError(_(
-                "El pedido destino solo puede pertenecer al mismo cliente del pedido origen "
-                "o a un cliente diferente que no tenga vendedor asignado."
+                "El pedido destino no cumple la regla de cliente y vendedor permitida."
             ))
         if source.product_id != destination.product_id:
             raise ValidationError(_("Solo se puede reasignar exactamente el mismo producto."))
@@ -300,8 +325,7 @@ class StockReassignmentWizard(models.TransientModel):
         uom_name = source.product_uom.name
         source_order.message_post(body=_(
             "Se reasignaron %(qty)s %(uom)s de %(product)s hacia el pedido %(destination)s. "
-            "Cantidad del pedido: %(before)s -> %(after)s. "
-            "Reservado ahora: %(reserved)s.",
+            "Cantidad del pedido: %(before)s -> %(after)s. Reservado ahora: %(reserved)s.",
             qty=qty,
             uom=uom_name,
             product=product_name,
