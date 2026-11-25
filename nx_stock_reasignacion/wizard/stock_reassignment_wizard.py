@@ -15,18 +15,13 @@ class StockReassignmentWizard(models.TransientModel):
     )
     source_move_id = fields.Many2one(
         "stock.move",
-        string="Movimiento origen",
+        string="Producto",
         required=True,
         domain="[('id', 'in', available_source_move_ids)]",
     )
     available_source_move_ids = fields.Many2many(
         "stock.move",
         compute="_compute_available_source_moves",
-    )
-    source_move_selection = fields.Selection(
-        selection="_selection_source_moves",
-        string="Producto",
-        required=True,
     )
     source_reserved_qty = fields.Float(
         string="Reservado en origen",
@@ -78,16 +73,6 @@ class StockReassignmentWizard(models.TransientModel):
             and move.company_id == order.company_id
         )
 
-    def _selection_source_moves(self):
-        """Muestra solo la referencia interna del producto en el selector."""
-        order_id = self.env.context.get("default_source_order_id")
-        order = self.env["sale.order"].browse(order_id).exists() if order_id else False
-        moves = self._get_order_moves(order).filtered(lambda move: move.quantity > 0)
-        return [
-            (str(move.id), move.product_id.default_code or move.product_id.name)
-            for move in moves
-        ]
-
     @api.model
     def default_get(self, fields_list):
         values = super().default_get(fields_list)
@@ -99,14 +84,12 @@ class StockReassignmentWizard(models.TransientModel):
         )
         if source_move_id:
             values["source_move_id"] = source_move_id
-            values["source_move_selection"] = str(source_move_id)
             return values
         if order_id:
             order = self.env["sale.order"].browse(order_id).exists()
             moves = self._get_order_moves(order).filtered(lambda move: move.quantity > 0)
             if len(moves) == 1:
                 values["source_move_id"] = moves.id
-                values["source_move_selection"] = str(moves.id)
         return values
 
     def _is_allowed_destination_order(self, destination_order):
@@ -193,14 +176,6 @@ class StockReassignmentWizard(models.TransientModel):
     # ------------------------------------------------------------------
     # Onchange
     # ------------------------------------------------------------------
-    @api.onchange("source_move_selection")
-    def _onchange_source_move_selection(self):
-        self.source_move_id = (
-            self.env["stock.move"].browse(int(self.source_move_selection)).exists()
-            if self.source_move_selection
-            else False
-        )
-
     @api.onchange("source_move_id")
     def _onchange_source_move_id(self):
         self.destination_order_id = False
@@ -362,3 +337,16 @@ class StockReassignmentWizard(models.TransientModel):
                 "next": {"type": "ir.actions.act_window_close"},
             },
         }
+
+
+class StockMove(models.Model):
+    _inherit = "stock.move"
+
+    @api.depends_context("nx_only_product_ref")
+    def _compute_display_name(self):
+        super()._compute_display_name()
+        if self.env.context.get("nx_only_product_ref"):
+            for move in self:
+                move.display_name = (
+                    move.product_id.default_code or move.product_id.name or ""
+                )

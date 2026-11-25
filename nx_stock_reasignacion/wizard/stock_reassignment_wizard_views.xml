@@ -9,8 +9,10 @@
                     <group string="Origen">
                         <field name="source_order_id"/>
                         <field name="available_source_move_ids" invisible="1"/>
-                        <field name="source_move_id" invisible="1"/>
-                        <field name="source_move_selection" string="Producto"/>
+                        <field name="source_move_id"
+                               string="Producto"
+                               context="{'nx_only_product_ref': True}"
+                               options="{'no_create': True, 'no_open': True}"/>
                         <field name="source_reserved_qty"/>
                     </group>
                     <group string="Destino">
