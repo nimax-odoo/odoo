@@ -4,7 +4,7 @@ import pytz
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
-from odoo.tools import float_compare
+from odoo.tools import float_compare, float_is_zero
 
 from .nx_utils import nx_check_group
 
@@ -16,14 +16,17 @@ ESTADOS = [
     ('parcial', 'Llegó parcial'),
     ('recibido', 'Llegó a almacén'),
     ('facturado', 'Facturado'),
+    ('reasignado', 'Reasignado (cantidad en 0)'),
     ('cancelado', 'Cancelado'),
 ]
+
 ENTREGA = [
     ('llego', 'Llegó a almacén'),
     ('en_tiempo', 'En tiempo'),
     ('retrasado', 'Retrasado'),
     ('cancelado', 'Cancelado'),
 ]
+
 OC_EDITABLE = ('draft', 'sent')
 PARAM_DIAS = 'nx_fabrica_logistica.dias_alerta'
 
@@ -52,7 +55,8 @@ class SaleOrderLine(models.Model):
                                  compute='_compute_nx_estado', store=True)
     nx_cerrado = fields.Boolean(
         string='Cerrado', compute='_compute_nx_cerrado', store=True,
-        help='Se marca solo cuando la línea queda Facturada. Mientras no se facture, sigue abierta.')
+        help='Se marca solo cuando la línea queda Facturada o Reasignada (cantidad en 0). '
+             'Mientras no ocurra una de las dos, sigue abierta.')
     nx_asignable = fields.Boolean(string='Se puede asignar a OC', compute='_compute_nx_asignable')
     nx_purchase_line_id = fields.Many2one('purchase.order.line', string='Línea de OC',
                                           compute='_compute_nx_compra')
@@ -75,7 +79,6 @@ class SaleOrderLine(models.Model):
     # Colores de la fila: verde = proceso completo, rojo = algo anda mal
     nx_rojo = fields.Boolean(string='Alerta roja', compute='_compute_nx_colores')
     nx_verde = fields.Boolean(string='Verde', compute='_compute_nx_colores')
-
     # Datos del pedido, solo para mostrarlos en la lista
     nx_ordenado = fields.Boolean(related='order_id.x_studio_ordenado_a_fabricante',
                                  string='Ordenado a Fabricante', readonly=True)
@@ -112,6 +115,7 @@ class SaleOrderLine(models.Model):
             return 15
 
     @api.depends('x_studio_linea_product_fabric', 'display_type', 'invoice_status',
+                 'product_uom_qty',
                  'order_id.state', 'order_id.x_studio_ordenado_a_fabricante',
                  'purchase_line_ids.order_id.state', 'purchase_line_ids.qty_received',
                  'purchase_line_ids.product_qty')
@@ -123,6 +127,9 @@ class SaleOrderLine(models.Model):
             order = line.order_id
             if order.state == 'cancel':
                 line.nx_estado = 'cancelado'
+            elif order.state == 'sale' and float_is_zero(line.product_uom_qty, precision_digits=4):
+                # Toda la cantidad se reasignó a otro pedido: la línea se cierra (verde)
+                line.nx_estado = 'reasignado'
             elif order.state != 'sale' or not order.x_studio_ordenado_a_fabricante:
                 line.nx_estado = 'solicitado'
             else:
@@ -146,7 +153,7 @@ class SaleOrderLine(models.Model):
     @api.depends('nx_estado')
     def _compute_nx_cerrado(self):
         for line in self:
-            line.nx_cerrado = line.nx_estado == 'facturado'
+            line.nx_cerrado = line.nx_estado in ('facturado', 'reasignado')
 
     @api.depends('nx_estado', 'order_id.state')
     def _compute_nx_asignable(self):
@@ -206,7 +213,7 @@ class SaleOrderLine(models.Model):
 
     @api.depends('nx_estado', 'nx_entrega', 'nx_fecha_llegada', 'nx_fecha_oc', 'order_id.date_order')
     def _compute_nx_colores(self):
-        """VERDE: proceso completo (facturado).
+        """VERDE: proceso completo (facturado) o línea reasignada por completo (cantidad en 0).
         ROJO: algo anda mal = cancelado | retrasado | llegó y lleva más de N días sin facturar |
         lleva más de N días sin ordenarse (falta PM) o sin asignarse a una OC."""
         limite = self._nx_dias_alerta()
@@ -223,7 +230,7 @@ class SaleOrderLine(models.Model):
                 fecha = line.order_id.date_order
                 rojo = bool(fecha) and (ahora - fecha).days > limite
             line.nx_rojo = rojo
-            line.nx_verde = estado == 'facturado' and not rojo
+            line.nx_verde = estado in ('facturado', 'reasignado') and not rojo
 
     def _search_nx_retrasado(self, operator, value):
         if operator not in ('=', '!='):
