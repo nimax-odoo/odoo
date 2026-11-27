@@ -3,7 +3,7 @@ from datetime import datetime, time
 import pytz
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_compare, float_is_zero
 
 from .nx_utils import nx_check_group
@@ -16,7 +16,8 @@ ESTADOS = [
     ('parcial', 'Llegó parcial'),
     ('recibido', 'Llegó a almacén'),
     ('facturado', 'Facturado'),
-    ('reasignado', 'Reasignado (cantidad en 0)'),
+    ('reasignado', 'Cantidad en 0'),
+    ('no_ordenar', 'No se ordena'),
     ('cancelado', 'Cancelado'),
 ]
 
@@ -28,6 +29,30 @@ ENTREGA = [
 ]
 
 OC_EDITABLE = ('draft', 'sent')
+
+# El PM indica por qué una línea NO se manda a fábrica (en el Excel eran comentarios sueltos)
+MOTIVOS_NO_ORDENAR = [
+    ('stock', 'Hay stock'),
+    ('eol', 'Descontinuado (EOL)'),
+    ('anticipo', 'Espera anticipo del cliente'),
+    ('autorizacion', 'Espera autorización'),
+    ('cancelado', 'Cancelada (error de solicitud)'),
+]
+# Estos motivos cierran la línea; anticipo y autorización siguen abiertos con el PM
+MOTIVOS_CERRADOS = ('stock', 'eol', 'cancelado')
+
+PENDIENTE_CON = [
+    ('pm', 'PM'),
+    ('logistica', 'Logística'),
+    ('compras', 'Compras (confirmar OC)'),
+    ('fabricante', 'Esperando fabricante'),
+    ('facturacion', 'Facturación'),
+]
+
+TIPOS_SOLICITUD = [
+    ('venta', 'Venta'),
+    ('stock', 'Stock'),
+]
 PARAM_DIAS = 'nx_fabrica_logistica.dias_alerta'
 
 
@@ -47,6 +72,14 @@ class SaleOrderLine(models.Model):
         string='Fecha de asignación', copy=False, readonly=True)
     # Nota por línea del lado de Ventas
     x_studio_nota_venta = fields.Text(string='Nota (Ventas)', copy=False)
+    # Columnas del Excel que no existían en Odoo
+    nx_tipo_solicitud = fields.Selection(TIPOS_SOLICITUD, string='Venta / Stock',
+                                         default='venta', copy=False)
+    nx_proyecto = fields.Char(string='Proyecto / Quote (otras marcas)', copy=False)
+    nx_no_ordenar_motivo = fields.Selection(
+        MOTIVOS_NO_ORDENAR, string='No se ordena (motivo)', copy=False,
+        help='Lo captura el PM cuando la línea no se manda a fábrica. '
+             'No se puede usar si la línea ya está asignada a una OC.')
 
     # ------------------------------------------------------------------
     # Campos que se jalan solos (no se capturan)
@@ -55,8 +88,11 @@ class SaleOrderLine(models.Model):
                                  compute='_compute_nx_estado', store=True)
     nx_cerrado = fields.Boolean(
         string='Cerrado', compute='_compute_nx_cerrado', store=True,
-        help='Se marca solo cuando la línea queda Facturada o Reasignada (cantidad en 0). '
-             'Mientras no ocurra una de las dos, sigue abierta.')
+        help='Se marca solo cuando la línea queda Facturada, con cantidad en 0, o no se ordena '
+             'por stock, EOL o cancelación. Mientras no ocurra, sigue abierta.')
+    nx_pendiente_con = fields.Selection(
+        PENDIENTE_CON, string='Pendiente con', compute='_compute_nx_pendiente_con', store=True,
+        help='Quién tiene que hacer el siguiente paso. Vacío = nada pendiente.')
     nx_asignable = fields.Boolean(string='Se puede asignar a OC', compute='_compute_nx_asignable')
     nx_purchase_line_id = fields.Many2one('purchase.order.line', string='Línea de OC',
                                           compute='_compute_nx_compra')
@@ -84,8 +120,10 @@ class SaleOrderLine(models.Model):
                                  string='Ordenado a Fabricante', readonly=True)
     nx_marca = fields.Selection(related='order_id.x_studio_marca', string='Marca', readonly=True)
     # Sucursal del contacto del vendedor del pedido (en vivo, no se guarda)
-    nx_sucursal = fields.Selection(related='order_id.user_id.partner_id.x_studio_sucursal',
-                                   string='Sucursal', readonly=True)
+    # Sucursal = equipo de ventas del pedido (antes se leía del contacto del vendedor y salía vacía)
+    nx_sucursal = fields.Many2one(related='order_id.team_id', string='Sucursal', readonly=True)
+    nx_fecha_pedido = fields.Datetime(related='order_id.date_order', string='Fecha pedido',
+                                      readonly=True)
     nx_usuario_final = fields.Char(related='order_id.as_usuario_final',
                                    string='Usuario (UF)', readonly=True)
     nx_oc_cliente = fields.Char(related='order_id.x_studio_orden_de_compra',
@@ -115,7 +153,7 @@ class SaleOrderLine(models.Model):
             return 15
 
     @api.depends('x_studio_linea_product_fabric', 'display_type', 'invoice_status',
-                 'product_uom_qty',
+                 'product_uom_qty', 'nx_no_ordenar_motivo',
                  'order_id.state', 'order_id.x_studio_ordenado_a_fabricante',
                  'purchase_line_ids.order_id.state', 'purchase_line_ids.qty_received',
                  'purchase_line_ids.product_qty')
@@ -130,6 +168,9 @@ class SaleOrderLine(models.Model):
             elif order.state == 'sale' and float_is_zero(line.product_uom_qty, precision_digits=4):
                 # Toda la cantidad se reasignó a otro pedido: la línea se cierra (verde)
                 line.nx_estado = 'reasignado'
+            elif line.nx_no_ordenar_motivo and not line._nx_linea_compra_activa():
+                # El PM decidió no ordenarla (hay stock, EOL, espera anticipo, etc.)
+                line.nx_estado = 'no_ordenar'
             elif order.state != 'sale' or not order.x_studio_ordenado_a_fabricante:
                 line.nx_estado = 'solicitado'
             else:
@@ -150,10 +191,38 @@ class SaleOrderLine(models.Model):
                     else:
                         line.nx_estado = 'confirmada'
 
-    @api.depends('nx_estado')
+    @api.depends('nx_estado', 'nx_no_ordenar_motivo')
     def _compute_nx_cerrado(self):
         for line in self:
-            line.nx_cerrado = line.nx_estado in ('facturado', 'reasignado')
+            line.nx_cerrado = (
+                line.nx_estado in ('facturado', 'reasignado')
+                or (line.nx_estado == 'no_ordenar' and line.nx_no_ordenar_motivo in MOTIVOS_CERRADOS))
+
+    @api.depends('nx_estado', 'nx_no_ordenar_motivo')
+    def _compute_nx_pendiente_con(self):
+        siguiente = {
+            'solicitado': 'pm',
+            'por_asignar': 'logistica',
+            'en_oc': 'compras',
+            'confirmada': 'fabricante',
+            'parcial': 'fabricante',
+            'recibido': 'facturacion',
+        }
+        for line in self:
+            if line.nx_estado == 'no_ordenar':
+                # Si espera anticipo o autorización, el PM debe liberarla
+                line.nx_pendiente_con = 'pm' if line.nx_no_ordenar_motivo not in MOTIVOS_CERRADOS else False
+            else:
+                line.nx_pendiente_con = siguiente.get(line.nx_estado, False)
+
+    @api.constrains('nx_no_ordenar_motivo', 'x_studio_oc_id')
+    def _check_nx_no_ordenar(self):
+        for line in self:
+            if line.nx_no_ordenar_motivo and line.x_studio_oc_id:
+                raise ValidationError(_(
+                    'La línea "%s" ya está asignada a la OC %s: no se puede marcar como "No se ordena". '
+                    'Logística debe quitar la OC primero.')
+                    % (line.product_id.display_name, line.x_studio_oc_id.name))
 
     @api.depends('nx_estado', 'order_id.state')
     def _compute_nx_asignable(self):

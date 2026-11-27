@@ -17,7 +17,6 @@
             </xpath>
         </field>
     </record>
-
     <!-- Pestaña con SOLO las líneas solicitadas a fábrica + sus notas de Ventas -->
     <record id="view_order_form_nx_fabrica_datos" model="ir.ui.view">
         <field name="name">sale.order.form.nx.fabrica.datos</field>
@@ -39,6 +38,10 @@
                             <field name="product_id" readonly="1"/>
                             <field name="product_uom_qty" string="Cantidad" readonly="1"/>
                             <field name="nx_estado" string="Estado" widget="badge" readonly="1"/>
+                            <field name="nx_pendiente_con" string="Pendiente con" widget="badge" readonly="1"/>
+                            <field name="nx_tipo_solicitud" string="Venta / Stock"/>
+                            <field name="nx_proyecto" string="Proyecto / Quote"/>
+                            <field name="nx_no_ordenar_motivo" string="No se ordena (PM)"/>
                             <field name="x_studio_nota_venta" string="Nota (Ventas)"/>
                         </list>
                     </field>
