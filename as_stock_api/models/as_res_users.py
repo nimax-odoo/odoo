@@ -303,11 +303,11 @@ class AsResPartner(models.Model):
     #     help='Cliente que se utilizará por defecto en las consultas de la API de Stock con precios. '
     #          'Si se especifica, no será necesario incluir el parámetro partner_id en las llamadas a la API.',
     # )
-    user_api_ecommerce_ids = fields.One2many(
-        comodel_name='res.users',
-        inverse_name='as_partner_id',
-        string='Usuarios',
-    )
+    # user_api_ecommerce_ids = fields.One2many(
+    #     comodel_name='res.users',
+    #     inverse_name='as_partner_id',
+    #     string='Usuarios',
+    # )
 
 
     def _as_get_root_partner(self):
