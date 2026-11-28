@@ -17,13 +17,31 @@ class Pricelist(models.Model):
     _inherit = "product.pricelist"
 
 
-    # def _compute_price_rule(self, products, quantity, currency=None, date=False, start_date=None, end_date=None,**kwargs):
-    #     res = super()._compute_price_rule(products, quantity, currency=currency, date=date, start_date=start_date, end_date=end_date,**kwargs)
-    #     for list in res:
-    #         price = self.get_price_pricelist_nimax(list, res[list][0], quantity)
-    #         res[list] = (price if price else res[list][0], res[list][1])
-    #     return res
-    
+    def _compute_price_rule(self, products, quantity, currency=None, date=False, start_date=None, end_date=None,**kwargs):
+        res = super()._compute_price_rule(products, quantity, currency=currency, date=date, start_date=start_date, end_date=end_date,**kwargs)
+        if 'website_id' in self.env.context and self.env.user.as_partner_id:
+            pricelist = self
+            partner_def = self.env.user.as_partner_id
+            if not partner_def:
+                partner_def = self.env.user.partner_id
+            all_model_price = self.env['sd.compute.product.price'].sudo().extract_prices(partner_id = partner_def.id, pricelist_id = pricelist.id)
+        
+            for product_id in res:
+                row_price = all_model_price.get((partner_def.id, product_id), {})
+                nimax_price_usd = row_price.get('usd', 0)
+                nimax_price_mxn = row_price.get('mxn', 0)
+                # time.sleep(10)
+                if currency == self.env.ref('base.USD'):
+                    price_new = nimax_price_usd
+                elif currency == self.env.ref('base.MXN'):
+                    price_new = nimax_price_mxn
+                else:
+                    price_new = False
+                if price_new:
+                    res[product_id] = (price_new, res[product_id][1])
+  
+        return res
+
 
     def get_price_pricelist_nimax(self, product, price, qty = 1):
         pricelist = self
@@ -125,33 +143,33 @@ class PricelistItem(models.Model):
         else:
             return self.env['product.product'].search([('product_tmpl_id','=',product.id)],limit=1)
 
-    def _compute_price(self, product, quantity, uom, date, currency=None, **kwargs):
-        price = super()._compute_price(product, quantity, uom, date, currency, **kwargs)
-        if 'website_id' in self.env.context and self.env.user.sd_pricelist_ids:
-            product = self.selected_product(product)
-            pricelist = self.pricelist_id
-            if not pricelist and self.env.user.sd_pricelist_ids:
-                pricelist = self.env.user.sd_pricelist_ids[0]
-            price_new = pricelist.get_price_pricelist_nimax(product.id, price, quantity)
-            # time.sleep(10)
-            if price_new:
-                price = price_new
-        if 'website_id' in self.env.context:
-            product = self.selected_product(product)
-            pricelist = self.pricelist_id
-            if not pricelist and self.env.user.sd_pricelist_ids:
-                pricelist = self.env.user.sd_pricelist_ids[0]
-            promos_disponibles = request.env['coupon.program'].sudo().search_promo_disponibles_ecommerce()
-            partner_id = self.env.user.partner_id.id
-            if promos_disponibles and partner_id:
-                promociones = request.env['coupon.program'].sudo().search_promo_ecommerce(product,partner_id,promos_disponibles)
-                if promociones[0]:
-                    price = promociones[1]
-                    moneda_usd = self.env.ref('base.USD', raise_if_not_found=False) or self.env['res.currency'].search([('name','=','USD')], limit=1)
-                    if moneda_usd != pricelist.currency_id:
-                        price = moneda_usd._convert(
-                            from_amount=promociones[1],
-                            to_currency=pricelist.currency_id,
-                            company=self.env.company
-                        )
-        return price
+    # def _compute_price(self, product, quantity, uom, date, currency=None, **kwargs):
+    #     price = super()._compute_price(product, quantity, uom, date, currency, **kwargs)
+    #     if 'website_id' in self.env.context and self.env.user.sd_pricelist_ids:
+    #         product = self.selected_product(product)
+    #         pricelist = self.pricelist_id
+    #         if not pricelist and self.env.user.sd_pricelist_ids:
+    #             pricelist = self.env.user.sd_pricelist_ids[0]
+    #         price_new = pricelist.get_price_pricelist_nimax(product.id, price, quantity)
+    #         # time.sleep(10)
+    #         if price_new:
+    #             price = price_new
+    #     if 'website_id' in self.env.context:
+    #         product = self.selected_product(product)
+    #         pricelist = self.pricelist_id
+    #         if not pricelist and self.env.user.sd_pricelist_ids:
+    #             pricelist = self.env.user.sd_pricelist_ids[0]
+    #         promos_disponibles = request.env['coupon.program'].sudo().search_promo_disponibles_ecommerce()
+    #         # partner_id = self.env.user.partner_id.id
+    #         # if promos_disponibles and partner_id:
+    #         #     promociones = request.env['coupon.program'].sudo().search_promo_ecommerce(product,partner_id,promos_disponibles)
+    #         #     if promociones[0]:
+    #         #         price = promociones[1]
+    #         #         moneda_usd = self.env.ref('base.USD', raise_if_not_found=False) or self.env['res.currency'].search([('name','=','USD')], limit=1)
+    #         #         if moneda_usd != pricelist.currency_id:
+    #         #             price = moneda_usd._convert(
+    #         #                 from_amount=promociones[1],
+    #         #                 to_currency=pricelist.currency_id,
+    #         #                 company=self.env.company
+    #         #             )
+    #     return price

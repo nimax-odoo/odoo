@@ -18,6 +18,8 @@
         "views/sale_order.xml",
         "views/account_move.xml",
         "views/request_logger.xml",
+        "views/res_partner.xml",
+        "views/sd_compute_product_price.xml",
         "data/cron.xml",
     ],
     'installable': True,

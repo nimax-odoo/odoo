@@ -17,6 +17,8 @@ _logger = logging.getLogger(__name__)
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
+    
+
     @api.onchange('parent_id')
     def depends_parent_id(self):
         for partner in self:

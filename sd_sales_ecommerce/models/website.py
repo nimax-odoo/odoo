@@ -16,12 +16,54 @@ from odoo.exceptions import AccessError, MissingError
 class Website(models.Model):
     _inherit = 'website'
 
+    def get_pricelist_available(self, show_visible=False):
+        """ Return the list of pricelists that can be used on website for the current user.
+        Country restrictions will be detected with GeoIP (if installed).
+        :param bool show_visible: if True, we don't display pricelist where selectable is False (Eg: Code promo)
+        :returns: pricelist recordset
+        """
+        self.ensure_one()
+
+        ProductPricelist = self.env['product.pricelist']
+
+        if not self.env['res.groups']._is_feature_enabled('product.group_product_pricelist'):
+            return ProductPricelist  # Skip pricelist computation if pricelists are disabled.
+
+        country_code = self._get_geoip_country_code()
+        website = self.with_company(self.company_id)
+        partner_sudo = website.env.user.partner_id
+        if website.env.user.as_partner_id:
+            partner_sudo = website.env.user.as_partner_id
+        is_user_public = self.env.user._is_public()
+        if not is_user_public:
+            # Don't needlessly trigger `depends_context` recompute
+            ctx = {'country_code': country_code} if country_code else {}
+            partner_pricelist_id = website.env.user.as_pricelist.id
+            if not website.env.user.as_pricelist.id:
+                partner_pricelist_id = partner_sudo.with_context(**ctx).property_product_pricelist.id
+        else:  # public user: do not compute partner pl (not used)
+            partner_pricelist_id = False
+        website_pricelists = website.sudo().pricelist_ids
+
+        current_pricelist_id = request and request.session.get(PRICELIST_SESSION_CACHE_KEY) or None
+
+        pricelist_ids = website._get_pl_partner_order(
+            country_code,
+            show_visible,
+            current_pl_id=current_pricelist_id,
+            website_pricelist_ids=tuple(website_pricelists.ids),
+            partner_pl_id=partner_pricelist_id,
+        )
+
+        return ProductPricelist.browse(pricelist_ids)
+
+
     def sale_reset(self):
         request.session.pop(CART_SESSION_CACHE_KEY, None)
         request.session.pop('website_sale_cart_quantity', None)
-        # request.session.pop(PRICELIST_SESSION_CACHE_KEY, None)
+        request.session.pop(PRICELIST_SESSION_CACHE_KEY, None)
         request.session.pop(FISCAL_POSITION_SESSION_CACHE_KEY, None)
-        # request.session.pop(PRICELIST_SELECTED_SESSION_CACHE_KEY, None)
+        request.session.pop(PRICELIST_SELECTED_SESSION_CACHE_KEY, None)
         
     def _get_and_cache_current_cart(self):
         """ Retrieves and caches the current cart for the session.
@@ -142,8 +184,8 @@ class Website(models.Model):
         free_qty = super()._get_product_available_qty(product, **kwargs)
         # Aplicar el porcentaje de stock configurado por el usuario
         user =  request.env.user
-        if user.sd_desc_percentaje and user.sd_desc_percentaje != 1.0:
-            stock_factor = user.sd_desc_percentaje
+        if user.as_stock_percentaje and user.as_stock_percentaje != 1.0:
+            stock_factor = user.as_stock_percentaje
             free_qty = round(free_qty * stock_factor)
         return free_qty
 
@@ -170,8 +212,8 @@ class Website(models.Model):
         res = super()._get_pl_partner_order(
             country_code, show_visible, current_pl_id, website_pricelist_ids, partner_pl_id=False
         )
-        if self.env.user.sd_pricelist_ids:
-            return self.env.user.sd_pricelist_ids.sudo().ids
+        if self.env.user.as_pricelist:
+            return self.env.user.as_pricelist.sudo().ids
         return res
     
 

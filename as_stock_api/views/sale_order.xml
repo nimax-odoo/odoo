@@ -8,6 +8,7 @@
             <field name="arch" type="xml">
             	<xpath expr="//field[@name='source_id']" position="after">
                     <field name="sd_waybills" />
+                    <field name="sd_fecha_guia" />
                     <field name="sd_carrier_id" />
                 </xpath>
                

@@ -8,10 +8,16 @@
         <field name="arch" type="xml">
             <notebook position="inside">
                 <page string="Ecommerce" groups="base.group_system">
-                <header><button name="action_cleaner_cache" type="object" string="Actualizar Cache" class="oe_highlight" /></header>
+                <header>
+                <button name="action_cleaner_cache" type="object" string="Actualizar Cache" class="oe_highlight" />
+                <button name="oe_highlight" />
+                <button name="compute_price_api" type="object" string="Calcular Precios" class="oe_highlight" />
+                
+                </header>
                     <group>
-                        <field name="sd_desc_percentaje" widget="percentage"/>
-                         <field name="sd_pricelist_ids"  widget="many2many_tags"/>
+                        <field name="as_partner_id"/>
+                        <field name="as_stock_percentaje" widget="percentage"/>
+                         <field name="as_pricelist" />
                         <field name="sd_reserva_stock"/>
                     </group>
                 </page>
@@ -25,12 +31,25 @@
         <field name="arch" type="xml">
             <notebook position="inside">
                 <page string="Ecommerce" groups="base.group_system">
-                <header><button name="action_cleaner_cache" type="object" string="Actualizar Cache" class="oe_highlight" /></header>
+                <header><button name="action_cleaner_cache" type="object" string="Actualizar Cache" class="oe_highlight" />
+                <button name="compute_price_api" type="object" string="Calcular Precios" class="oe_highlight" />
+                </header>
                     <group>
-                        <field name="sd_desc_percentaje" widget="percentage"/>
-                        <field name="sd_pricelist_ids"  widget="many2many_tags"/>
+                        <field name="as_partner_id"/>
+                        <field name="as_stock_percentaje" widget="percentage"/>
+                        <field name="property_product_pricelist"/>
                         <field name="sd_reserva_stock"/>
                     </group>
+                    <field name="user_api_ecommerce_ids">
+                        <list>
+                            <field name="create_date"/>
+                            <field name="name"/>
+                            <field name="as_partner_id"/>
+                            <field name="property_product_pricelist"/>
+                            <field name="as_stock_percentaje" widget="percentage"/>
+
+                        </list>
+                    </field>
                 </page>
             </notebook>
         </field>

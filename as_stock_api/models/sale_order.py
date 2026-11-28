@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+    # -*- coding: utf-8 -*-
 import logging
 import uuid
 from odoo import api, fields, models, _
@@ -9,6 +9,7 @@ class SaleOrder(models.Model):
     
     sd_waybills = fields.Char('Seguimiento Guia Remisión')
     sd_carrier_id = fields.Many2one('delivery.carrier',string='Seguimiento Guia Remisión')
+    sd_fecha_guia = fields.Datetime('Fecha Guia Remisión')
 
     def get_extra_print_items(self):
         """ Helper to dynamically add items in the 'Print' menu of list and form of sale.order.
@@ -22,6 +23,7 @@ class SaleOrder(models.Model):
                 },
             ]
         return []
+    
 
     def _get_move_zip_export_docs(self):
         self.ensure_one()

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="bi_view_res_partner_add_inherit" model="ir.ui.view">
+            <field name="name">view.res.partner.field.add.inherit</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+            	<xpath expr="//div[@class='o_address_format']" position="after">
+                    <field name="is_access_api" widget="badge"
+                    decoration-success="is_access_api == 'on'"
+                    decoration-warning="is_access_api == 'parent'"
+                    decoration-muted="is_access_api == 'off'"/>
+                    <field name="is_access_ecommerce" widget="badge"
+                    decoration-success="is_access_ecommerce == 'on'"
+                    decoration-warning="is_access_ecommerce == 'parent'"
+                    decoration-muted="is_access_ecommerce == 'off'"
+                    />
+                </xpath>
+                <xpath expr="//div[@t-if='record.phone.raw_value']" position="after">
+                    <div t-if="record.is_access_api.raw_value">
+                    API: 
+                    <field name="is_access_api" widget="badge"
+                    decoration-success="is_access_api == 'on'"
+                    decoration-warning="is_access_api == 'parent'"
+                    decoration-muted="is_access_api == 'off'"/>
+                    </div>
+                    <div t-if="record.is_access_ecommerce.raw_value">
+                    Ecommerce: 
+                    <field name="is_access_ecommerce" widget="badge"
+                    decoration-success="is_access_ecommerce == 'on'"
+                    decoration-warning="is_access_ecommerce == 'parent'"
+                    decoration-muted="is_access_ecommerce == 'off'"/>
+                    </div>
+                </xpath>
+
+            </field>
+        </record>
+    </data>
+</odoo>

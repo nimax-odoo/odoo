@@ -6,7 +6,8 @@
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
+from attrs import fields
 from odoo import http, _
 from odoo.http import request, Response
 from odoo.exceptions import AccessError, ValidationError
@@ -282,6 +283,7 @@ class ApiCyberpuerta(http.Controller):
         if not order:
             return Response(json.dumps({"result": 0}),status=400,content_type='application/json')
         order.sd_waybills = waybills
+        order.sd_fecha_guia = fields.Datetime.now() - timedelta(hours=6)
         carrier_id = env['delivery.carrier'].sudo().search([('name','=',carrier)])
         if not carrier_id:
             delivery_product = self.env['product.product'].sudo().create({'name': carrier})

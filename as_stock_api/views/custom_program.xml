@@ -9,6 +9,9 @@
             	<xpath expr="//field[@name='promo_code_usage']" position="after">
                     <field name="sd_apply_toprunner_api" />
                 </xpath>
+                <xpath expr="//button[@name='action_view_coupon_program_statistics']" position="after">
+                    <button name="compute_promo" string="Calcular precios" type="object" />
+                </xpath>
             </field>
         </record>
     </data>
