@@ -293,21 +293,21 @@ class AsResPartner(models.Model):
         string='Acceso ecommerce',
         default='off', compute="_compute_action_api"
     )
-    # as_stock_percentaje = fields.Float(
-    #     string='Porcentaje de Stock',
-    #     help='Porcentaje de stock que se utilizará por defecto en la API de Stock. Si se deja vacío, se usará el porcentaje del cliente.'
-    # )
-    # as_partner_id = fields.Many2one(
-    #     comodel_name='res.partner',
-    #     string="Cliente Predeterminado",
-    #     help='Cliente que se utilizará por defecto en las consultas de la API de Stock con precios. '
-    #          'Si se especifica, no será necesario incluir el parámetro partner_id en las llamadas a la API.',
-    # )
-    # user_api_ecommerce_ids = fields.One2many(
-    #     comodel_name='res.users',
-    #     inverse_name='as_partner_id',
-    #     string='Usuarios',
-    # )
+    as_stock_percentaje = fields.Float(
+        string='Porcentaje de Stock',
+        help='Porcentaje de stock que se utilizará por defecto en la API de Stock. Si se deja vacío, se usará el porcentaje del cliente.'
+    )
+    as_partner_id = fields.Many2one(
+        comodel_name='res.partner',
+        string="Cliente Predeterminado",
+        help='Cliente que se utilizará por defecto en las consultas de la API de Stock con precios. '
+             'Si se especifica, no será necesario incluir el parámetro partner_id en las llamadas a la API.',
+    )
+    user_api_ecommerce_ids = fields.One2many(
+        comodel_name='res.users',
+        inverse_name='as_partner_id',
+        string='Usuarios',
+    )
 
 
     def _as_get_root_partner(self):
